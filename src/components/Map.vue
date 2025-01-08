@@ -522,7 +522,6 @@ const toggleMarkers = () => {
   })
 }
 
-
 // 添加分类相关的变量
 const categories = ['宿舍', '食堂', '文化风景', '教学科研', '行政', '重要场馆']
 
@@ -533,32 +532,27 @@ const categoryColors = {
   '教学科研': '#2196F3',
   '行政': '#9C27B0',
   '重要场馆': '#FFD700'
-};
+}
 
 const selectedCategories = ref(categories.slice())
 const showCategoryBtns = ref(false)
 
-// 添加分类切换方法
+// 修改分类切换方法
 const toggleCategory = (category) => {
   const index = selectedCategories.value.indexOf(category)
   if (index > -1) {
-    // 从选中类别中移除
     selectedCategories.value.splice(index, 1)
   } else {
-    // 添加到选中类别中
     selectedCategories.value.push(category)
   }
   
-  // 更新标记的显示状态
   locations.forEach((location, idx) => {
     const marker = markers.value[idx]
     if (selectedCategories.value.includes(location.category)) {
-      // 如果该类别被选中，显示标记
       if (!map.value.hasLayer(marker)) {
         marker.addTo(map.value)
       }
     } else {
-      // 如果该类别未被选中，隐藏标记
       if (map.value.hasLayer(marker)) {
         marker.removeFrom(map.value)
       }
@@ -566,10 +560,8 @@ const toggleCategory = (category) => {
   })
 }
 
-// 添加新的响应式变量控制图标状态
 const isExpanded = ref(false)
 
-// 修改触发器按钮的点击处理方法
 const toggleCategoryPanel = () => {
   showCategoryBtns.value = !showCategoryBtns.value
   isExpanded.value = !isExpanded.value
