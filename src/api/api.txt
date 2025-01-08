@@ -1,0 +1,409 @@
+校园圈子接口文档
+
+一、帖子相关接口
+
+1. 获取帖子列表
+请求方法：GET
+请求路径：/api/posts
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "posts": [
+      {
+        "id": 1,
+        "username": "师大学子",
+        "avatar": "/avatars/default.png",
+        "content": "今天在图书馆学习，感觉氛围真好！",
+        "images": ["/images/library.jpg"],
+        "time": "10分钟前",
+        "likes": 23,
+        "comments": 5,
+        "isLiked": false,
+        "isCollected": false
+      }
+    ]
+  }
+}
+
+2. 点赞/取消点赞帖子
+请求方法：POST/DELETE
+请求路径：/api/posts/{postId}/like
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "isLiked": true,
+    "likes": 24
+  }
+}
+
+3. 收藏/取消收藏帖子
+请求方法：POST/DELETE
+请求路径：/api/posts/{postId}/collect
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "isCollected": true
+  }
+}
+
+4. 获取帖子评论
+请求方法：GET
+请求路径：/api/posts/{postId}/comments
+请求头：
+- Authorization: Bearer {token}
+请求参数：
+- page: 页码（必填，从1开始）
+- pageSize: 每页数量（必填，建议20）
+- sortBy: 排序方式（可选，time-按时间，likes-按点赞数）
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "total": 100,
+    "pageSize": 20,
+    "currentPage": 1,
+    "totalPages": 5,
+    "comments": [
+      {
+        "id": 1,
+        "userId": 1,
+        "username": "同学A",
+        "avatar": "/avatars/default.png",
+        "content": "评论内容",
+        "images": ["/images/comment1.jpg"],
+        "time": "2024-03-20 14:30:00",
+        "likes": 3,
+        "isLiked": false,
+        "mentionUsers": [
+          {
+            "id": 2,
+            "username": "同学B"
+          }
+        ],
+        "replies": [
+          {
+            "id": 11,
+            "userId": 2,
+            "username": "同学B",
+            "avatar": "/avatars/default.png",
+            "content": "回复内容",
+            "images": [],
+            "time": "2024-03-20 14:35:00",
+            "likes": 1,
+            "isLiked": false,
+            "replyTo": {
+              "userId": 1,
+              "username": "同学A"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+
+5. 发表评论
+请求方法：POST
+请求路径：/api/posts/{postId}/comments
+请求头：
+- Authorization: Bearer {token}
+- Content-Type: multipart/form-data  // 如果上传图片
+请求参数：
+{
+  "content": "评论内容",
+  "type": "comment" | "reply",  // 评论类型：comment-评论，reply-回复
+  "replyTo": {  // 回复时必填
+    "commentId": 1,  // 被回复的评论ID
+    "userId": 1      // 被回复的用户ID
+  },
+  "images": [  // 可选，评论图片
+    File对象1,
+    File对象2
+  ],
+  "mentionUsers": [1, 2]  // 可选，@的用户ID列表
+}
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "id": 2,
+    "userId": 3,
+    "username": "当前用户",
+    "avatar": "/avatars/default.png",
+    "content": "评论内容",
+    "type": "comment",
+    "images": ["/images/comment1.jpg"],
+    "time": "2024-03-20 14:40:00",
+    "likes": 0,
+    "isLiked": false,
+    "mentionUsers": [
+      {
+        "id": 1,
+        "username": "张同学"
+      }
+    ],
+    "replyTo": {  // 回复时才有
+      "commentId": 1,
+      "userId": 1,
+      "username": "同学A"
+    },
+    "commentsCount": 6  // 更新后的评论总数
+  }
+}
+
+6. 点赞/取消点赞评论
+请求方法：POST/DELETE
+请求路径：/api/comments/{commentId}/like
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "isLiked": true,
+    "likes": 4
+  }
+}
+
+二、通用说明
+
+1. 响应格式
+所有接口的通用响应格式：
+- code: 0 表示成功，非 0 表示失败
+- message: 错误信息（当 code 非 0 时）
+- data: 响应数据
+
+2. 错误码说明
+- 401: 未登录或登录已过期
+- 403: 权限不足
+- 404: 资源不存在
+- 500: 服务器错误 
+
+三、用户相关接口
+
+1. 获取当前登录用户信息
+请求方法：GET
+请求路径：/api/user/current
+请求头：
+- Authorization: Bearer {token}
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "id": 1,
+    "name": "师大同学",
+    "avatar": "/avatars/default.png",
+    "posts": 12,
+    "followers": 56,
+    "following": 34,
+    "collections": 8
+  }
+}
+
+2. 获取当前登录用户动态列表
+请求方法：GET
+请求路径：/api/user/current/posts
+请求头：
+- Authorization: Bearer {token}
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "posts": [
+      {
+        "id": 1,
+        "username": "师大同学",
+        "avatar": "/avatars/default.png",
+        "content": "今天在图书馆学习，感觉氛围真好！",
+        "images": ["/images/library.jpg"],
+        "time": "2小时前",
+        "likes": 23,
+        "comments": 5,
+        "isLiked": false,
+        "isCollected": false
+      }
+    ]
+  }
+}
+
+3. 获取当前登录用户收藏列表
+请求方法：GET
+请求路径：/api/user/current/collections
+请求头：
+- Authorization: Bearer {token}
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "posts": [
+      {
+        "id": 1,
+        "username": "校园达人",
+        "avatar": "/avatars/default.png",
+        "content": "逸夫图书馆介绍...",
+        "images": ["/images/library.jpg"],
+        "time": "2024-03-15",
+        "likes": 45,
+        "comments": 12,
+        "isLiked": false,
+        "isCollected": true
+      }
+    ]
+  }
+}
+
+4. 获取当前登录用户粉丝列表
+请求方法：GET
+请求路径：/api/user/current/followers
+请求头：
+- Authorization: Bearer {token}
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "name": "张同学",
+        "avatar": "/avatars/default.png",
+        "bio": "师大计算机系学生",
+        "isFollowing": true
+      }
+    ]
+  }
+}
+
+5. 获取当前登录用户关注列表
+请求方法：GET
+请求路径：/api/user/current/following
+请求头：
+- Authorization: Bearer {token}
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "name": "李同学",
+        "avatar": "/avatars/default.png",
+        "bio": "热爱摄影的师大学子",
+        "isFollowing": true
+      }
+    ]
+  }
+} 
+
+四、个人中心帖子交互接口
+
+1. 点赞/取消点赞个人动态或收藏的帖子
+请求方法：POST/DELETE
+请求路径：/api/posts/{postId}/like
+请求头：
+- Authorization: Bearer {token}
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "isLiked": true,
+    "likes": 24
+  }
+}
+
+2. 收藏/取消收藏个人动态
+请求方法：POST/DELETE
+请求路径：/api/posts/{postId}/collect
+请求头：
+- Authorization: Bearer {token}
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "isCollected": true,
+    "collectionsCount": 9  // 更新后的收藏总数
+  }
+}
+
+3. 获取个人动态或收藏帖子的评论
+请求方法：GET
+请求路径：/api/posts/{postId}/comments
+请求头：
+- Authorization: Bearer {token}
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "comments": [
+      {
+        "id": 1,
+        "username": "同学A",
+        "avatar": "/avatars/default.png",
+        "content": "评论内容",
+        "time": "5分钟前",
+        "likes": 3,
+        "isLiked": false,
+        "replies": [
+          {
+            "id": 11,
+            "username": "同学B",
+            "avatar": "/avatars/default.png",
+            "content": "回复内容",
+            "time": "3分钟前",
+            "likes": 1,
+            "isLiked": false,
+            "replyTo": "同学A"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+4. 评论个人动态或收藏的帖子
+请求方法：POST
+请求路径：/api/posts/{postId}/comments
+请求头：
+- Authorization: Bearer {token}
+请求参数：
+{
+  "content": "评论内容",
+  "type": "comment" | "reply",  // 评论类型：comment-评论，reply-回复
+  "replyTo": 1,  // 可选，回复的评论ID
+  "images": [  // 可选，评论图片
+    "/images/comment1.jpg",
+    "/images/comment2.jpg"
+  ],
+  "mentionUsers": [1, 2]  // 可选，@的用户ID列表
+}
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "id": 2,
+    "content": "评论内容",
+    "type": "comment",
+    "images": ["/images/comment1.jpg"],
+    "mentionUsers": [
+      {
+        "id": 1,
+        "username": "张同学"
+      }
+    ],
+    "commentsCount": 6  // 更新后的评论总数
+  }
+}
+
+5. 点赞/取消点赞评论
+请求方法：POST/DELETE
+请求路径：/api/comments/{commentId}/like
+请求头：
+- Authorization: Bearer {token}
+响应格式：
+{
+  "code": 0,
+  "data": {
+    "isLiked": true,
+    "likes": 4
+  }
+} 
