@@ -23,7 +23,7 @@ export const postApi = {
   // 发布帖子
   createPost(formData) {
     return request({
-      url: '/post/create',
+      url: '/post/addPost',
       method: 'post',
       data: formData,
       headers: {
