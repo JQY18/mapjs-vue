@@ -7,8 +7,15 @@ export const postApi = {
   },
 
   // 发布帖子
-  createPost(data) {
-    return request.post('/api/posts', data)
+  createPost(formData) {
+    return request({
+      url: '/api/posts',
+      method: 'post',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
   },
 
   // 点赞帖子

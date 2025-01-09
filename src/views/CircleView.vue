@@ -1,5 +1,74 @@
 <template>
   <div class="circle-container">
+    <!-- 添加发布按钮 -->
+    <div class="publish-btn" @click="openPublishDialog">
+      <Icon icon="mdi:plus" />
+      <span>发布</span>
+    </div>
+
+    <!-- 添加发布对话框 -->
+    <div v-if="showPublishDialog" class="publish-dialog-overlay">
+      <div class="publish-dialog">
+        <div class="dialog-header">
+          <h3>发布新帖子</h3>
+          <button class="close-btn" @click="closePublishDialog">
+            <Icon icon="mdi:close" />
+          </button>
+        </div>
+        
+        <div class="dialog-content">
+          <textarea 
+            v-model="newPost.content" 
+            placeholder="分享你的想法..."
+            class="post-content-input"
+          ></textarea>
+          
+          <div class="image-upload-section">
+            <div class="image-preview-list">
+              <div 
+                v-for="(image, index) in newPost.images" 
+                :key="index"
+                class="image-preview-item"
+              >
+                <img :src="image.url" />
+                <div class="remove-image" @click="removeImage(index)">
+                  <Icon icon="mdi:close" />
+                </div>
+              </div>
+              
+              <div 
+                v-if="newPost.images.length < 9" 
+                class="image-upload-btn"
+                @click="triggerImageUpload"
+              >
+                <Icon icon="mdi:image-plus" />
+                <input 
+                  type="file" 
+                  ref="imageInput"
+                  accept="image/*"
+                  multiple
+                  @change="handleImageUpload"
+                  style="display: none"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="dialog-footer">
+          <button 
+            class="cancel-btn" 
+            @click="closePublishDialog"
+          >取消</button>
+          <button 
+            class="publish-submit-btn" 
+            :disabled="!newPost.content.trim() && newPost.images.length === 0"
+            @click="submitPost"
+          >发布</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 添加一个滚动容器 -->
     <div class="scroll-container">
       <div class="content-list">
@@ -179,6 +248,8 @@ import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import ImageDialog from '../components/ImageDialog.vue'
 import { postApi } from '../api/post'
+import { ElMessage } from 'element-plus'
+import 'element-plus/dist/index.css'
 
 const router = useRouter()
 
@@ -286,11 +357,43 @@ const fetchPosts = async () => {
   try {
     const { data } = await postApi.getPosts()
     if (data.code === 0) {
-      posts.value = data.data.posts
+      posts.value = data.data.map(post => ({
+        id: post.id,
+        username: post.username,
+        avatar: post.avatar || '/public/icon/icon.jpeg',
+        time: formatTime(post.createTime),
+        content: post.content,
+        images: post.images || [],
+        likes: post.likes || 0,
+        comments: post.comments || 0,
+        isLiked: post.isLiked || false,
+        isCollected: post.isCollected || false
+      }))
     }
   } catch (error) {
     console.error('获取帖子列表失败:', error)
+    ElMessage.error('获取帖子列表失败')
   }
+}
+
+// 添加时间格式化函数
+const formatTime = (timestamp) => {
+  if (!timestamp) return '刚刚'
+  
+  const now = new Date()
+  const postTime = new Date(timestamp)
+  const diff = now - postTime
+  
+  if (diff < 60000) {
+    return '刚刚'
+  }
+  if (diff < 3600000) {
+    return `${Math.floor(diff / 60000)}分钟前`
+  }
+  if (diff < 86400000) {
+    return `${Math.floor(diff / 3600000)}小时前`
+  }
+  return postTime.toLocaleDateString()
 }
 
 // 修改点赞方法
@@ -449,6 +552,105 @@ const closeImageViewer = () => {
 onMounted(() => {
   fetchPosts()
 })
+
+// 在现有的 ref 声明后添加
+const showPublishDialog = ref(false)
+const imageInput = ref(null)
+const newPost = ref({
+  content: '',
+  images: []
+})
+
+// 添加发布相关方法
+const openPublishDialog = () => {
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
+  showPublishDialog.value = true
+}
+
+const closePublishDialog = () => {
+  showPublishDialog.value = false
+  newPost.value = {
+    content: '',
+    images: []
+  }
+}
+
+const triggerImageUpload = () => {
+  imageInput.value.click()
+}
+
+const handleImageUpload = (event) => {
+  const files = Array.from(event.target.files)
+  const remainingSlots = 9 - newPost.value.images.length
+  
+  files.slice(0, remainingSlots).forEach(file => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      newPost.value.images.push({
+        file,
+        url: e.target.result
+      })
+    }
+    reader.readAsDataURL(file)
+  })
+  
+  // 清空 input 以允许重复选择相同文件
+  event.target.value = ''
+}
+
+const removeImage = (index) => {
+  newPost.value.images.splice(index, 1)
+}
+
+const submitPost = async () => {
+  if (!newPost.value.content.trim() && newPost.value.images.length === 0) return
+  
+  try {
+    const formData = new FormData()
+    formData.append('content', newPost.value.content)
+    
+    // 添加用户信息
+    const user = JSON.parse(localStorage.getItem('user'))
+    formData.append('userId', user.id)
+    formData.append('username', user.username)
+    formData.append('avatar', user.avatar || '/public/icon/icon.jpeg')
+    
+    // 处理图片上传
+    newPost.value.images.forEach(image => {
+      formData.append('images', image.file)
+    })
+    
+    const { data } = await postApi.createPost(formData)
+    
+    if (data.code === 0) {
+      // 添加新帖子到列表开头
+      const newPostData = {
+        id: data.data.id,
+        content: newPost.value.content,
+        username: user.username,
+        avatar: user.avatar || '/public/icon/icon.jpeg',
+        time: '刚刚',
+        images: data.data.images || [],
+        likes: 0,
+        comments: 0,
+        isLiked: false,
+        isCollected: false
+      }
+      
+      posts.value.unshift(newPostData)
+      closePublishDialog()
+      ElMessage.success('发布成功')
+    } else {
+      ElMessage.error(data.message || '发布失败')
+    }
+  } catch (error) {
+    console.error('发布帖子失败:', error)
+    ElMessage.error('发布失败，请稍后重试')
+  }
+}
 </script>
 
 <style scoped>
@@ -866,5 +1068,169 @@ onMounted(() => {
 
 .action-item:hover {
   background-color: #f5f5f5;
+}
+
+.publish-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 24px;
+  background: #1890ff;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.35);
+  z-index: 100;
+  transition: all 0.3s;
+}
+
+.publish-btn:hover {
+  background: #40a9ff;
+  transform: translateY(-2px);
+}
+
+.publish-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.publish-dialog {
+  background: white;
+  width: 90%;
+  max-width: 600px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.dialog-header {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dialog-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.dialog-content {
+  padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.post-content-input {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  margin-bottom: 16px;
+}
+
+.image-upload-section {
+  margin-top: 16px;
+}
+
+.image-preview-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.image-preview-item {
+  position: relative;
+  padding-bottom: 100%;
+}
+
+.image-preview-item img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.remove-image {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.image-upload-btn {
+  border: 2px dashed #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding-bottom: 100%;
+  position: relative;
+}
+
+.image-upload-btn .iconify {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  color: #999;
+}
+
+.dialog-footer {
+  padding: 16px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.dialog-footer button {
+  padding: 8px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+}
+
+.cancel-btn {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.publish-submit-btn {
+  background: #1890ff;
+  color: white;
+}
+
+.publish-submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 </style> 
