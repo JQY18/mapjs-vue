@@ -67,6 +67,18 @@
       <button class="plan-route-btn" @click="planRoute" :disabled="!selectedStart || !selectedEnd">
         规划路线
       </button>
+      <div class="recommended-routes">
+        <h4>推荐路线</h4>
+        <div class="route-list">
+          <div v-for="route in recommendedRoutes" 
+               :key="route.id" 
+               class="route-item"
+               @click="selectRecommendedRoute(route)">
+            <div class="route-name">{{ route.name }}</div>
+            <div class="route-desc">{{ route.description }}</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 地图控制按钮 -->
@@ -198,6 +210,33 @@ const locations = [
   { name: '田径场', coords: [28.18723, 112.94695], description: '湖南师范大学田径场', image: '/images/byPlayground.png', detailId: 'byPlayground', category: '重要场馆' }
 ]
 
+// 在 locations 数组后添加推荐路线数据
+const recommendedRoutes = [
+  {
+    id: 1,
+    name: '学术与历史之旅',
+    description: '适合对学校的历史和学术研究有兴趣的学生或访客',
+    points: ['红楼', '教务处', '忠烈祠', '岳王亭', '世承书院', '外国语学院', '图书馆']
+  },
+  {
+    id: 2,
+    name: '校园生活体验',
+    description: '了解学生的日常生活，包括饮食、住宿和休闲活动',
+    points: ['兰桂苑', '研一舍', '研二舍', '研三舍', '木兰食堂', '江湾体育馆']
+  },
+  {
+    id: 3,
+    name: '科技与创新探索',
+    description: '展示学校的科研实力，适合对科学和技术感兴趣的访客',
+    points: ['理学院', '工学院', '化工院', '生命科学学院', '国际学术报告厅']
+  },
+  {
+    id: 4,
+    name: '文化与艺术欣赏',
+    description: '参观与文化艺术相关的地点',
+    points: ['服装设计系', '理仁楼', '至善楼', '文渊楼', '木兰楼']
+  }
+]
 
 const mapRef = ref(null)
 const map = ref(null)
@@ -607,6 +646,86 @@ markers.value.forEach(location => {
     })
 })
 
+const selectRecommendedRoute = (route) => {
+  clearRoute()
+  
+  const waypoints = route.points.map(pointName => {
+    const location = locations.find(loc => loc.name === pointName)
+    return location ? L.latLng(location.coords[0], location.coords[1]) : null
+  }).filter(point => point !== null)
+  
+  const control = L.Routing.control({
+    waypoints,
+    router: L.Routing.osrmv1({
+      serviceUrl: 'https://router.project-osrm.org/route/v1',
+      profile: 'foot',
+      geometryOnly: true
+    }),
+    lineOptions: {
+      styles: [
+        { 
+          color: getRouteColor(route.id), 
+          weight: 4,
+          opacity: 0.8,
+          dashArray: '12, 12',  // 添加虚线样式
+          className: 'animated-path' // 添加动画类名
+        },
+        { 
+          color: '#fff',  // 白色边框
+          weight: 8,
+          opacity: 0.3,
+          offset: -2
+        }
+      ],
+      extendedOptions: {
+        animate: {
+          duration: 3000,
+          iterations: Infinity
+        }
+      }
+    },
+    createMarker: (i, wp, nWps) => {
+      const isLastPoint = i === nWps - 1
+      return L.marker(wp.latLng, {
+        icon: L.divIcon({
+          className: 'custom-div-icon',
+          html: `
+            <div class='marker-circle' style='background-color: ${getRouteColor(route.id)}'>
+              <span class='marker-number'>${i + 1}</span>
+              ${!isLastPoint ? '<div class="route-arrow">▶</div>' : ''}
+            </div>
+          `,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        })
+      })
+    },
+    addWaypoints: false,
+    draggableWaypoints: false,
+    fitSelectedRoutes: true,
+    showAlternatives: false,
+    show: false
+  })
+  
+  routingControl.value = control
+  control.addTo(map.value)
+  
+  startPoint.value = route.points[0]
+  endPoint.value = route.points[route.points.length - 1]
+  selectedStart.value = locations.find(loc => loc.name === route.points[0])
+  selectedEnd.value = locations.find(loc => loc.name === route.points[route.points.length - 1])
+}
+
+const getRouteColor = (routeId) => {
+  const colors = {
+    1: '#FF6B6B',
+    2: '#4ECDC4',
+    3: '#45B7D1',
+    4: '#96CEB4'
+  }
+  return colors[routeId] || '#3388ff'
+}
+
 </script>
 
 <style scoped>
@@ -993,5 +1112,105 @@ input:focus {
   /* 高亮边框颜色 */
   background-color: rgba(24, 144, 255, 0.1);
   /* 高亮背景颜色 */
+}
+
+.recommended-routes {
+  margin-top: 20px;
+  width: 100%;
+}
+
+.recommended-routes h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.route-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.route-item {
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.route-item:hover {
+  background: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+.route-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.route-desc {
+  font-size: 12px;
+  color: #666;
+}
+
+.custom-div-icon {
+  background: none;
+  border: none;
+}
+
+.marker-circle {
+  width: 32px;
+  height: 32px;
+  background: #3388ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.marker-number {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.route-arrow {
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 14px;
+  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.3));
+}
+
+:deep(.animated-path) {
+  stroke-dasharray: 12;
+  animation: dash 1s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* 隐藏路由控制面板 */
+:deep(.leaflet-routing-container) {
+  display: none;
+}
+
+/* 优化路线样式 */
+:deep(.leaflet-routing-alternatives-container) {
+  display: none;
 }
 </style>
