@@ -645,21 +645,15 @@ const triggerImageUpload = () => {
 }
 
 const handleImageUpload = (event) => {
-  const files = Array.from(event.target.files)
-  const remainingSlots = 9 - newPost.value.images.length
-  
-  files.slice(0, remainingSlots).forEach(file => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
+  const files = event.target.files
+  if (files) {
+    Array.from(files).forEach(file => {
       newPost.value.images.push({
-        file,
-        url: e.target.result
+        file: file,
+        url: URL.createObjectURL(file)
       })
-    }
-    reader.readAsDataURL(file)
-  })
-  
-  event.target.value = ''
+    })
+  }
 }
 
 const removeImage = (index) => {
@@ -667,34 +661,32 @@ const removeImage = (index) => {
 }
 
 const submitPost = async () => {
-  if (!newPost.value.content.trim() && newPost.value.images.length === 0) return
-  
   try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    // 创建 FormData 对象
     const formData = new FormData()
+    formData.append('userId', user.id)
     formData.append('content', newPost.value.content)
     
-    // 添加用户信息
-    const user = JSON.parse(localStorage.getItem('user'))
-    formData.append('userId', user.id)
-    
-    // 处理图片上传
+    // 添加图片文件
     newPost.value.images.forEach(image => {
       formData.append('images', image.file)
     })
-    
+
     const { data } = await postApi.createPost(formData)
-    
+
     if (data.code === 1) {
-      // 重新获取帖子列表
-      await fetchPosts()
+      // 发布成功后刷新帖子列表
+      fetchPosts()
+      // 清空表单
+      newPost.value = {
+        content: '',
+        images: []
+      }
       closePublishDialog()
-      ElMessage.success('发布成功')
-    } else {
-      ElMessage.error(data.message || '发布失败')
     }
   } catch (error) {
-    console.error('发布帖子失败:', error)
-    ElMessage.error('发布失败，请稍后重试')
+    console.error('发布失败:', error)
   }
 }
 </script>

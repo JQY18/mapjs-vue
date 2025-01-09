@@ -22,7 +22,8 @@ export const userApi = {
 
   // 获取当前登录用户的动态列表
   getCurrentUserPosts() {
-    return request.get('/api/user/current/posts')
+    const user = JSON.parse(localStorage.getItem('user'))
+    return request.get('/post/all', { params: { userId: user.id } })
   },
 
   // 获取当前登录用户的收藏列表
@@ -51,8 +52,9 @@ export const userApi = {
   },
 
   // 获取用户信息
-  getUserInfo(userId) {
-    return request.get(`/user/info?postUserId=${userId}`)
+  getUserInfo() {
+    const user = JSON.parse(localStorage.getItem('user'))
+    return request.get(`/user/info?userId=${user.id}`)
     // 返回格式：
     // {
     //   code: 1,
@@ -75,5 +77,35 @@ export const userApi = {
     localStorage.removeItem('user')
     // 可以添加退出登录的接口请求，如果后端需要
     // return request.post('/user/logout')
+  },
+
+  // 更新用户信息
+  updateUserInfo(formData) {
+    return request({
+      url: '/user/update',
+      method: 'post',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    // 请求体：FormData 包含以下字段
+    // - avatar: File (可选)
+    // - nickname: string
+    // - gender: string
+    // - age: number
+    // 返回格式：
+    // {
+    //   code: 1,
+    //   msg: "success",
+    //   data: {
+    //     id: number,
+    //     username: string,
+    //     nickname: string,
+    //     gender: string,
+    //     age: number,
+    //     avatar: string
+    //   }
+    // }
   }
 } 

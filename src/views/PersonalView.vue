@@ -2,8 +2,30 @@
   <div class="personal-container">
     <!-- 用户信息头部 -->
     <div class="user-header">
+      <div class="edit-btn" @click="showEditDialog = true">
+        <Icon icon="mdi:edit" />
+      </div>
       <img :src="userInfo.avatar" class="user-avatar" />
-      <h2 class="username">{{ userInfo.name }}</h2>
+      <div class="user-info">
+        <div class="user-detail">
+          <div class="detail-item">
+            <span class="label">用户名：</span>
+            <span class="value">{{ userInfo.username }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">昵称：</span>
+            <span class="value">{{ userInfo.nickname }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">性别：</span>
+            <span class="gender">{{ userInfo.gender }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">年龄：</span>
+            <span class="age">{{ userInfo.age }}岁</span>
+          </div>
+        </div>
+      </div>
       <div class="user-stats">
         <div 
           class="stat-item"
@@ -287,6 +309,59 @@
         </button>
       </div>
     </div>
+
+    <!-- 添加修改信息对话框 -->
+    <div v-if="showEditDialog" class="edit-dialog-overlay">
+      <div class="edit-dialog">
+        <div class="dialog-header">
+          <h3>修改个人信息</h3>
+          <button class="close-btn" @click="showEditDialog = false">
+            <Icon icon="mdi:close" />
+          </button>
+        </div>
+        
+        <div class="dialog-content">
+          <!-- 头像修改 -->
+          <div class="avatar-edit">
+            <img :src="editForm.avatar || userInfo.avatar" class="preview-avatar" />
+            <div class="upload-btn" @click="triggerAvatarUpload">
+              <Icon icon="mdi:camera" />
+              <input
+                type="file"
+                ref="avatarInput"
+                accept="image/*"
+                style="display: none"
+                @change="handleAvatarChange"
+              />
+            </div>
+          </div>
+          
+          <!-- 其他信息修改 -->
+          <div class="form-item">
+            <label>昵称</label>
+            <input v-model="editForm.nickname" placeholder="请输入昵称" />
+          </div>
+          
+          <div class="form-item">
+            <label>性别</label>
+            <select v-model="editForm.gender">
+              <option value="男">男</option>
+              <option value="女">女</option>
+            </select>
+          </div>
+          
+          <div class="form-item">
+            <label>年龄</label>
+            <input type="number" v-model="editForm.age" placeholder="请输入年龄" />
+          </div>
+        </div>
+        
+        <div class="dialog-footer">
+          <button class="cancel-btn" @click="showEditDialog = false">取消</button>
+          <button class="submit-btn" @click="handleSubmit">保存</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -340,36 +415,19 @@ interface Post {
   isCollected?: boolean
 }
 
+const router = useRouter()
 const currentTab = ref('posts')  // 默认显示动态
 
-const switchTab = (tab: string) => {
+// 添加切换标签的方法
+const switchTab = (tab) => {
   currentTab.value = tab
 }
 
-const userInfo = ref({
-  name: '师大同学',
-  avatar: '/avatars/default.png',
-  posts: 12,
-  followers: 56,
-  following: 34,
-  collections: 8
-})
+// 修改用户信息的初始状态
+const userInfo = ref({})
 
 // 用户动态数据
-const userPosts = ref([
-  {
-    id: 1,
-    username: '师大同学',
-    avatar: '/public/icon/icon.jpeg',
-    content: '今天在图书馆学习，感觉氛围真好！',
-    images: ['/public/icon/icon.jpeg'],
-    time: '2小时前',
-    likes: 23,
-    comments: 5,
-    isLiked: false,
-    isCollected: false
-  }
-])
+const userPosts = ref([])
 
 // 粉丝数据
 const followers = ref([
@@ -532,7 +590,6 @@ const replyToComment = (comment: Comment, reply?: Reply) => {
   }
 }
 
-const router = useRouter()
 
 const handleInputClick = () => {
   if (!isLoggedIn.value) {
@@ -563,7 +620,7 @@ const submitComment = () => {
       time: '刚刚',
       likes: 0,
       isLiked: false,
-      replyTo: replyTo.value.reply ? replyTo.value.username : replyTo.value.comment.username
+      replyTo: reply ? reply.username : replyTo.value.comment.username
     }
 
     if (!replyTo.value.comment.replies) {
@@ -607,9 +664,20 @@ const toggleReplies = (comment: Comment) => {
 // 获取用户信息
 const fetchUserInfo = async () => {
   try {
-    const { data } = await userApi.getCurrentUserInfo()
-    if (data.code === 0) {
-      userInfo.value = data.data
+    const { data } = await userApi.getUserInfo()
+    if (data.code === 1) {
+      userInfo.value = {
+        username: data.data.username,  // 用户名
+        nickname: data.data.nickname,  // 昵称
+        avatar: data.data.avatar,
+        gender: data.data.gender,
+        age: data.data.age,
+        id: data.data.id,
+        posts: 0,
+        followers: 0,
+        following: 0,
+        collections: 0
+      }
     }
   } catch (error) {
     console.error('获取用户信息失败:', error)
@@ -620,8 +688,24 @@ const fetchUserInfo = async () => {
 const fetchUserPosts = async () => {
   try {
     const { data } = await userApi.getCurrentUserPosts()
-    if (data.code === 0) {
-      userPosts.value = data.data.posts
+    if (data.code === 1) {
+      // 更新动态数量
+      userInfo.value.posts = data.data.length
+      
+      // 转换数据格式以匹配前端展示需求
+      userPosts.value = data.data.map(post => ({
+        id: post.id,
+        username: userInfo.value.name,
+        avatar: userInfo.value.avatar,
+        content: post.content,
+        images: post.images || [],
+        time: post.createTime,
+        title: post.title,
+        likes: 0,
+        comments: 0,
+        isLiked: false,
+        isCollected: false
+      }))
     }
   } catch (error) {
     console.error('获取用户动态失败:', error)
@@ -682,11 +766,82 @@ watch(currentTab, (newTab) => {
   }
 })
 
+// 监听用户信息变化，当获取到用户信息后再获取动态列表
+watch(() => userInfo.value, (newValue) => {
+  if (newValue && newValue.id) {
+    fetchUserPosts()
+  }
+}, { immediate: true })
+
 // 组件挂载时获取用户信息
 onMounted(() => {
-  fetchUserInfo()
-  fetchUserPosts() // 默认加载动态列表
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  if (user.id) {
+    fetchUserInfo()
+  } else {
+    router.push('/login')
+  }
 })
+
+// 添加编辑相关的状态
+const showEditDialog = ref(false)
+const editForm = ref({
+  avatar: '',
+  nickname: '',
+  gender: '',
+  age: null
+})
+
+// 打开编辑对话框时初始化表单数据
+watch(showEditDialog, (newVal) => {
+  if (newVal) {
+    editForm.value = {
+      avatar: userInfo.value.avatar,
+      nickname: userInfo.value.nickname,
+      gender: userInfo.value.gender,
+      age: userInfo.value.age
+    }
+  }
+})
+
+// 处理头像上传
+const handleAvatarChange = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    editForm.value.avatar = URL.createObjectURL(file)
+    editForm.value.avatarFile = file
+  }
+}
+
+const avatarInput = ref(null)
+
+const triggerAvatarUpload = () => {
+  avatarInput.value?.click()
+}
+
+// 提交修改
+const handleSubmit = async () => {
+  try {
+    const formData = new FormData()
+    if (editForm.value.avatarFile) {
+      formData.append('avatar', editForm.value.avatarFile)
+    }
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    formData.append('id', user.id)
+    formData.append('nickname', editForm.value.nickname)
+    formData.append('gender', editForm.value.gender)
+    formData.append('age', editForm.value.age)
+
+    const { data } = await userApi.updateUserInfo(formData)
+    if (data.code === 1) {
+      showEditDialog.value = false
+      //刷新用户信息
+      fetchUserInfo()
+    }
+  } catch (error) {
+    console.error('更新用户信息失败:', error)
+  }
+}
 </script>
 
 <style scoped>
@@ -713,9 +868,53 @@ onMounted(() => {
   margin-bottom: 12px;
 }
 
+.user-info {
+  margin-bottom: 16px;
+}
+
 .username {
-  margin: 0 0 16px 0;
+  font-size: 20px;
   color: #333;
+  margin: 0 0 8px;
+}
+
+.user-detail {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+  text-align: left;
+  padding: 0;
+  width: fit-content;
+  margin: 16px auto 0;  /* 居中显示 */
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 16px;  /* 右侧间距 */
+}
+
+.label {
+  color: #999;
+  min-width: 45px;  /* 减小标签宽度 */
+}
+
+.value {
+  color: #333;
+}
+
+.nickname {
+  color: #1890ff;
+}
+
+.gender, .age {
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #666;
 }
 
 .user-stats {
@@ -1242,5 +1441,124 @@ onMounted(() => {
 .replies-content.expanded {
   max-height: 1000px;
   transition: max-height 0.3s ease-in;
+}
+
+.edit-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 8px;
+  background: #f5f5f5;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.edit-btn:hover {
+  background: #e8e8e8;
+}
+
+.edit-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.edit-dialog {
+  width: 90%;
+  max-width: 400px;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dialog-header {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dialog-content {
+  padding: 20px;
+}
+
+.avatar-edit {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 20px;
+}
+
+.preview-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.upload-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.form-item {
+  margin-bottom: 16px;
+}
+
+.form-item label {
+  display: block;
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.form-item input,
+.form-item select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  outline: none;
+}
+
+.dialog-footer {
+  padding: 16px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-btn,
+.submit-btn {
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background: #f5f5f5;
+  border: none;
+  color: #666;
+}
+
+.submit-btn {
+  background: #1890ff;
+  border: none;
+  color: white;
 }
 </style> 

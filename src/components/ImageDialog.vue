@@ -14,7 +14,7 @@
         <button 
           v-if="images.length > 1" 
           class="nav-btn prev"
-          @click="prevImage"
+          @click="() => changeImage('prev')"
         >
           <Icon icon="mdi:chevron-left" />
         </button>
@@ -29,7 +29,7 @@
         <button 
           v-if="images.length > 1" 
           class="nav-btn next"
-          @click="nextImage"
+          @click="() => changeImage('next')"
         >
           <Icon icon="mdi:chevron-right" />
         </button>
@@ -63,12 +63,15 @@ import { Icon } from '@iconify/vue'
 const props = defineProps({
   show: Boolean,
   images: Array,
-  initialIndex: Number
+  initialIndex: {
+    type: Number,
+    default: 0
+  }
 })
 
-const emit = defineEmits(['close', 'update:show'])
+const emit = defineEmits(['update:show', 'close'])
 
-const currentIndex = ref(props.initialIndex || 0)
+const currentIndex = ref(props.initialIndex)
 
 watch(() => props.show, (newVal) => {
   if (newVal) {
@@ -81,16 +84,21 @@ const handleClose = () => {
   emit('update:show', false)
 }
 
-const nextImage = () => {
-  if (currentIndex.value < props.images.length - 1) {
-    currentIndex.value++
+const changeImage = (direction) => {
+  if (direction === 'next') {
+    currentIndex.value = currentIndex.value === props.images.length - 1 
+      ? 0  // 如果是最后一张，则切换到第一张
+      : currentIndex.value + 1
+  } else {
+    currentIndex.value = currentIndex.value === 0 
+      ? props.images.length - 1  // 如果是第一张，则切换到最后一张
+      : currentIndex.value - 1
   }
 }
 
-const prevImage = () => {
-  if (currentIndex.value > 0) {
-    currentIndex.value--
-  }
+const closeDialog = () => {
+  emit('update:show', false)
+  emit('close')
 }
 </script>
 
@@ -154,10 +162,13 @@ const prevImage = () => {
 }
 
 .image-container {
-  flex: 1;
+  width: 60vw;
+  height: 60vh;
+  max-width: 800px;
+  max-height: 600px;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   position: relative;
   padding: 20px;
   background: #f8f8f8;
@@ -168,12 +179,14 @@ const prevImage = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 10px;
 }
 
 .image-wrapper img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  border-radius: 4px;
   transition: transform 0.3s ease;
   animation: fadeIn 0.3s ease;
 }
@@ -214,6 +227,8 @@ const prevImage = () => {
   background: white;
   overflow-x: auto;
   border-top: 1px solid #eee;
+  position: relative;
+  z-index: 1;
 }
 
 .thumbnail {
