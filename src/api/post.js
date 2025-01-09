@@ -21,19 +21,34 @@ export const postApi = {
   },
 
   // 获取帖子评论
-  getComments(postId) {
-    return request.get(`/api/post/${postId}/comments`)
+  getComments(postId, userId) {
+    return request.get(`/comments/${postId}?userId=${userId}`)
     // 返回格式：
     // {
     //   code: 1,
     //   msg: "success",
     //   data: [{
     //     id: number,
-    //     userId: number,
+    //     postId: number,
+    //     commenterId: number,
+    //     commenterNickname: string,
+    //     commenterAvatar: string,
     //     content: string,
+    //     like: number,
     //     createTime: string,
-    //     likes: number,
-    //     replies: Array
+    //     reply: [{
+    //       id: number,
+    //       fatherId: number,
+    //       commenterId: number,
+    //       commenterNickname: string,
+    //       commenterAvatar: string,
+    //       content: string,
+    //       replierId: number,
+    //       replierNickname: string,
+    //       replierAvatar: string,
+    //       createTime: string
+    //     }],
+    //     isLiked: boolean
     //   }]
     // }
   },
