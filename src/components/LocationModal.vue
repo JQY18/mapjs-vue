@@ -124,6 +124,7 @@ export default {
   cursor: pointer;
   font-size: 24px;
   color: #666;
+  z-index: 10;
 }
 
 .location-image {
@@ -131,11 +132,13 @@ export default {
   cursor: pointer;
   overflow: hidden;
   border-radius: 8px;
+  height: 200px;
+  margin-top: 20px;
 }
 
 .location-image img {
   width: 100%;
-  height: 250px;
+  height: 100%;
   object-fit: cover;
 }
 

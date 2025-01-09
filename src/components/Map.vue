@@ -18,6 +18,7 @@
             v-for="location in filteredLocations" 
             :key="location.name"
             class="search-result-item"
+            :class="{ 'highlighted': selectedLocation && selectedLocation.name === location.name }"
             @mousedown="navigateToLocation(location)"
           >
             <Icon icon="mdi:map-marker" class="location-icon" />
@@ -152,6 +153,7 @@
       v-if="showLocationModal"
       :show="showLocationModal"
       :location="selectedLocation"
+      :clickPosition="modalPosition"
       @close="showLocationModal = false"
       @plan-route="handlePlanRoute"
     />
@@ -593,6 +595,7 @@ const toggleCategoryPanel = () => {
   isExpanded.value = !isExpanded.value
 }
 
+<<<<<<< Updated upstream
 // 修改关闭路线规划面板的处理方法
 const closeRoutePanel = () => {
   showRoutePanel.value = false
@@ -603,6 +606,28 @@ const closeRoutePanel = () => {
   selectedStart.value = null
   selectedEnd.value = null
 }
+=======
+const modalPosition = ref({ x: 0, y: 0 })
+
+// 修改打开modal的方法
+const openLocationModal = (location, event) => {
+  selectedLocation.value = location
+  modalPosition.value = {
+    x: event.clientX,
+    y: event.clientY
+  }
+  showLocationModal.value = true
+}
+
+// 在marker点击事件中调用
+markers.value.forEach(location => {
+  const marker = L.marker(location.coords)
+    .addTo(mapInstance)
+    .on('click', (e) => {
+      openLocationModal(location, e.originalEvent)
+    })
+})
+>>>>>>> Stashed changes
 </script>
 
 <style scoped>
@@ -966,5 +991,10 @@ input:focus {
 
 .trigger-btn {
   z-index: 1;
+}
+
+.highlighted {
+  border: 2px solid #1890ff; /* 高亮边框颜色 */
+  background-color: rgba(24, 144, 255, 0.1); /* 高亮背景颜色 */
 }
 </style>
