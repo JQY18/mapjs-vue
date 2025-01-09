@@ -23,13 +23,25 @@ export const postApi = {
   // 发布帖子
   createPost(formData) {
     return request({
-      url: '/api/posts',
+      url: '/post/create',
       method: 'post',
       data: formData,
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     })
+    // 返回格式：
+    // {
+    //   code: 1,
+    //   msg: "success",
+    //   data: {
+    //     id: number,
+    //     userId: number,
+    //     content: string,
+    //     images: string[],
+    //     createTime: string
+    //   }
+    // }
   },
 
   // 点赞帖子

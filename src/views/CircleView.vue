@@ -3,7 +3,6 @@
     <!-- 添加发布按钮 -->
     <div class="publish-btn" @click="openPublishDialog">
       <Icon icon="mdi:plus" />
-      <span>发布</span>
     </div>
 
     <!-- 添加发布对话框 -->
@@ -278,6 +277,8 @@ import ImageDialog from "../components/ImageDialog.vue";
 import { postApi } from "../api/post";
 import request from "../api/request";
 import { userApi } from '../api/user'
+import { ElMessage } from 'element-plus/es'
+import 'element-plus/es/components/message/style/css'
 
 const router = useRouter();
 
@@ -605,6 +606,89 @@ const openImageViewer = (images) => {
 const closeImageViewer = () => {
   showImageViewer.value = false;
 };
+
+// 发布相关的状态
+const showPublishDialog = ref(false)
+const imageInput = ref(null)
+const newPost = ref({
+  content: '',
+  images: []
+})
+
+// 发布相关的方法
+const openPublishDialog = () => {
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
+  showPublishDialog.value = true
+}
+
+const closePublishDialog = () => {
+  showPublishDialog.value = false
+  newPost.value = {
+    content: '',
+    images: []
+  }
+}
+
+const triggerImageUpload = () => {
+  imageInput.value.click()
+}
+
+const handleImageUpload = (event) => {
+  const files = Array.from(event.target.files)
+  const remainingSlots = 9 - newPost.value.images.length
+  
+  files.slice(0, remainingSlots).forEach(file => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      newPost.value.images.push({
+        file,
+        url: e.target.result
+      })
+    }
+    reader.readAsDataURL(file)
+  })
+  
+  event.target.value = ''
+}
+
+const removeImage = (index) => {
+  newPost.value.images.splice(index, 1)
+}
+
+const submitPost = async () => {
+  if (!newPost.value.content.trim() && newPost.value.images.length === 0) return
+  
+  try {
+    const formData = new FormData()
+    formData.append('content', newPost.value.content)
+    
+    // 添加用户信息
+    const user = JSON.parse(localStorage.getItem('user'))
+    formData.append('userId', user.id)
+    
+    // 处理图片上传
+    newPost.value.images.forEach(image => {
+      formData.append('images', image.file)
+    })
+    
+    const { data } = await postApi.createPost(formData)
+    
+    if (data.code === 1) {
+      // 重新获取帖子列表
+      await fetchPosts()
+      closePublishDialog()
+      ElMessage.success('发布成功')
+    } else {
+      ElMessage.error(data.message || '发布失败')
+    }
+  } catch (error) {
+    console.error('发布帖子失败:', error)
+    ElMessage.error('发布失败，请稍后重试')
+  }
+}
 </script>
 
 <style scoped>
@@ -1035,5 +1119,224 @@ const closeImageViewer = () => {
   padding: 0 4px;
   background: #f0f0f0;
   border-radius: 2px;
+}
+
+/* 发布按钮样式 */
+.publish-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 56px;
+  height: 56px;
+  background: #1890ff;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.35);
+  z-index: 100;
+  transition: all 0.3s;
+}
+
+.publish-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(24, 144, 255, 0.45);
+}
+
+.publish-btn .iconify {
+  font-size: 24px;
+}
+
+/* 发布对话框样式 */
+.publish-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.publish-dialog {
+  width: 90%;
+  max-width: 500px;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  animation: dialogSlideIn 0.3s ease;
+}
+
+@keyframes dialogSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dialog-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dialog-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog-content {
+  padding: 20px;
+}
+
+.post-content-input {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.post-content-input:focus {
+  outline: none;
+  border-color: #1890ff;
+}
+
+.image-upload-section {
+  margin-top: 16px;
+}
+
+.image-preview-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.image-preview-item {
+  position: relative;
+  padding-bottom: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.image-preview-item img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-image {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.remove-image:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.image-upload-btn {
+  position: relative;
+  padding-bottom: 100%;
+  border: 2px dashed #e8e8e8;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.image-upload-btn:hover {
+  border-color: #1890ff;
+}
+
+.image-upload-btn .iconify {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  color: #999;
+}
+
+.dialog-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-btn {
+  padding: 8px 20px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 4px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #e8e8e8;
+}
+
+.publish-submit-btn {
+  padding: 8px 20px;
+  background: #1890ff;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.publish-submit-btn:hover {
+  background: #40a9ff;
+}
+
+.publish-submit-btn:disabled {
+  background: #bfbfbf;
+  cursor: not-allowed;
 }
 </style> 
