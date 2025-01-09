@@ -3,7 +3,21 @@ import request from './request'
 export const postApi = {
   // 获取帖子列表
   getPosts() {
-    return request.get('/api/posts')
+    return request.get('/post/all')
+    // 返回格式：
+    // {
+    //   code: 1,
+    //   msg: "success",
+    //   data: [{
+    //     id: number,
+    //     userId: number,
+    //     category: number,
+    //     title: string,
+    //     content: string,
+    //     images: string[],
+    //     createTime: string
+    //   }]
+    // }
   },
 
   // 发布帖子
@@ -20,41 +34,58 @@ export const postApi = {
 
   // 点赞帖子
   likePost(postId) {
-    return request.post(`/api/posts/${postId}/like`)
+    return request.post(`/api/post/${postId}/like`)
+    // 返回格式：
+    // {
+    //   code: 1,
+    //   msg: "success",
+    //   data: {
+    //     likes: number
+    //   }
+    // }
   },
 
-  // 取消点赞
+  // 取消点赞帖子
   unlikePost(postId) {
-    return request.delete(`/api/posts/${postId}/like`)
+    return request.delete(`/api/post/${postId}/like`)
+    // 返回格式同 likePost
   },
 
   // 收藏帖子
   collectPost(postId) {
-    return request.post(`/api/posts/${postId}/collect`)
+    return request.post(`/api/post/${postId}/collect`)
+    // 返回格式：
+    // {
+    //   code: 1,
+    //   msg: "success",
+    //   data: {
+    //     collected: boolean
+    //   }
+    // }
   },
 
-  // 取消收藏
+  // 取消收藏帖子
   uncollectPost(postId) {
-    return request.delete(`/api/posts/${postId}/collect`)
-  },
-
-  // 获取帖子评论
-  getComments(postId, params) {
-    return request.get(`/api/posts/${postId}/comments`, { params })
-  },
-
-  // 发表评论
-  addComment(postId, data) {
-    return request.post(`/api/posts/${postId}/comments`, data)
+    return request.delete(`/api/post/${postId}/collect`)
+    // 返回格式同 collectPost
   },
 
   // 点赞评论
   likeComment(commentId) {
-    return request.post(`/api/comments/${commentId}/like`)
+    return request.post(`/api/comment/${commentId}/like`)
+    // 返回格式：
+    // {
+    //   code: 1,
+    //   msg: "success",
+    //   data: {
+    //     likes: number
+    //   }
+    // }
   },
 
   // 取消点赞评论
   unlikeComment(commentId) {
-    return request.delete(`/api/comments/${commentId}/like`)
+    return request.delete(`/api/comment/${commentId}/like`)
+    // 返回格式同 likeComment
   }
 } 

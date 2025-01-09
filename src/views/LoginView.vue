@@ -65,7 +65,7 @@ const handleSubmit = async () => {
     }
     
     localStorage.setItem('user', JSON.stringify(user))
-    
+  
     // 获取重定向路径
     const redirectPath = localStorage.getItem('redirectPath') || '/'
     localStorage.removeItem('redirectPath')

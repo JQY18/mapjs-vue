@@ -34,5 +34,24 @@ export const userApi = {
   // 取消关注
   unfollowUser(userId) {
     return request.delete(`/api/user/${userId}/follow`)
+  },
+
+  // 获取用户信息
+  getUserInfo(userId) {
+    return request.get(`/user/info?postUserId=${userId}`)
+    // 返回格式：
+    // {
+    //   code: 1,
+    //   msg: "success",
+    //   data: {
+    //     id: number,
+    //     username: string,
+    //     nickname: string,
+    //     gender: string,
+    //     age: number,
+    //     avatar: string,
+    //     school: string
+    //   }
+    // }
   }
 } 

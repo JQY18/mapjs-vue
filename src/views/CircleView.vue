@@ -77,39 +77,44 @@
             <img :src="post.avatar" class="avatar" />
             <div class="user-info">
               <div class="username">{{ post.username }}</div>
+              <div class="user-detail">
+                <span v-if="post.userSchool">{{ post.userSchool }}</span>
+                <span v-if="post.userGender" class="gender">{{ post.userGender }}</span>
+              </div>
               <div class="post-time">{{ post.time }}</div>
             </div>
           </div>
           <div class="post-content">{{ post.content }}</div>
           <div class="post-actions">
-            <div 
+            <div
               class="action-item"
-              :class="{ 'liked': post.isLiked }"
+              :class="{ liked: post.isLiked }"
               @click="toggleLike(post)"
             >
-              <Icon :icon="post.isLiked ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'" /> 
+              <Icon
+                :icon="post.isLiked ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'"
+              />
               {{ post.likes }}
             </div>
-            <div 
-              class="action-item"
-              @click="openComments(post)"
-            >
+            <div class="action-item" @click="openComments(post)">
               <Icon icon="mdi:comment-outline" /> {{ post.comments }}
             </div>
-            <div 
+            <div
               v-if="post.images?.length"
               class="action-item"
               @click="openImageViewer(post.images)"
             >
               <Icon icon="mdi:image" /> {{ post.images.length }}
             </div>
-            <div 
+            <div
               class="action-item"
-              :class="{ 'collected': post.isCollected }"
+              :class="{ collected: post.isCollected }"
               @click="toggleCollect(post)"
             >
-              <Icon :icon="post.isCollected ? 'mdi:star' : 'mdi:star-outline'" /> 
-              {{ post.isCollected ? '已收藏' : '收藏' }}
+              <Icon
+                :icon="post.isCollected ? 'mdi:star' : 'mdi:star-outline'"
+              />
+              {{ post.isCollected ? "已收藏" : "收藏" }}
             </div>
           </div>
         </div>
@@ -117,17 +122,14 @@
     </div>
 
     <!-- 遮罩层 -->
-    <div 
+    <div
       class="drawer-overlay"
-      :class="{ 'show': showComments }"
+      :class="{ show: showComments }"
       @click="showComments = false"
     ></div>
 
     <!-- 评论抽屉 -->
-    <div 
-      class="comments-drawer"
-      :class="{ 'open': showComments }"
-    >
+    <div class="comments-drawer" :class="{ open: showComments }">
       <div class="drawer-header">
         <h3>评论 ({{ currentPost?.comments || 0 }})</h3>
         <button class="close-btn" @click="closeComments">
@@ -135,7 +137,11 @@
         </button>
       </div>
       <div class="comments-list">
-        <div v-for="comment in commentsList" :key="comment.id" class="comment-item">
+        <div
+          v-for="comment in commentsList"
+          :key="comment.id"
+          class="comment-item"
+        >
           <img :src="comment.avatar" class="comment-avatar" />
           <div class="comment-content">
             <div class="comment-user">{{ comment.username }}</div>
@@ -143,58 +149,80 @@
             <div class="comment-footer">
               <span class="comment-time">{{ comment.time }}</span>
               <div class="comment-actions">
-                <div 
+                <div
                   class="comment-action"
-                  :class="{ 'liked': comment.isLiked }"
+                  :class="{ liked: comment.isLiked }"
                   @click="toggleCommentLike(comment)"
                 >
-                  <Icon :icon="comment.isLiked ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'" />
+                  <Icon
+                    :icon="
+                      comment.isLiked ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'
+                    "
+                  />
                   <span v-if="comment.likes">{{ comment.likes }}</span>
                 </div>
-                <div 
-                  class="comment-action"
-                  @click="replyToComment(comment)"
-                >
+                <div class="comment-action" @click="replyToComment(comment)">
                   <Icon icon="mdi:reply" /> 回复
                 </div>
-                <div 
+                <div
                   v-if="comment.replies?.length"
                   class="comment-action"
                   @click="toggleComment(comment)"
                 >
-                  <Icon :icon="comment.showReplies ? 'mdi:chevron-up' : 'mdi:chevron-down'" />
-                  {{ comment.showReplies ? '收起' : `${comment.replies.length}条回复` }}
+                  <Icon
+                    :icon="
+                      comment.showReplies
+                        ? 'mdi:chevron-up'
+                        : 'mdi:chevron-down'
+                    "
+                  />
+                  {{
+                    comment.showReplies
+                      ? "收起"
+                      : `${comment.replies.length}条回复`
+                  }}
                 </div>
               </div>
             </div>
             <!-- 回复列表 -->
-            <div 
-              class="replies" 
+            <div
+              class="replies"
               v-if="comment.replies?.length && comment.showReplies"
-              :class="{ 'expanded': comment.showReplies }"
+              :class="{ expanded: comment.showReplies }"
             >
-              <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
+              <div
+                v-for="reply in comment.replies"
+                :key="reply.id"
+                class="reply-item"
+              >
                 <img :src="reply.avatar" class="reply-avatar" />
                 <div class="reply-content">
                   <div class="reply-user">
                     {{ reply.username }}
                     <span v-if="reply.replyTo" class="reply-to">
-                      回复 <span class="reply-to-name">{{ reply.replyTo }}</span>
+                      回复
+                      <span class="reply-to-name">{{ reply.replyTo }}</span>
                     </span>
                   </div>
                   <div class="reply-text">{{ reply.content }}</div>
                   <div class="reply-footer">
                     <span class="reply-time">{{ reply.time }}</span>
                     <div class="comment-actions">
-                      <div 
+                      <div
                         class="comment-action"
-                        :class="{ 'liked': reply.isLiked }"
+                        :class="{ liked: reply.isLiked }"
                         @click="toggleCommentLike(reply)"
                       >
-                        <Icon :icon="reply.isLiked ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'" />
+                        <Icon
+                          :icon="
+                            reply.isLiked
+                              ? 'mdi:thumb-up'
+                              : 'mdi:thumb-up-outline'
+                          "
+                        />
                         <span v-if="reply.likes">{{ reply.likes }}</span>
                       </div>
-                      <div 
+                      <div
                         class="comment-action"
                         @click="replyToComment(comment, reply)"
                       >
@@ -214,16 +242,16 @@
         <div v-if="replyTo" class="cancel-reply" @click="cancelReply">
           <Icon icon="mdi:close" /> 取消回复
         </div>
-        
-        <input 
-          type="text" 
+
+        <input
+          type="text"
           v-model="newComment"
           :placeholder="getInputPlaceholder()"
           @click="handleInputClick"
           @keyup.enter="handleCommentSubmit"
         />
-        <button 
-          class="submit-btn" 
+        <button
+          class="submit-btn"
           :disabled="!newComment.trim() || !isLoggedIn"
           @click="handleCommentSubmit"
         >
@@ -243,414 +271,340 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { Icon } from '@iconify/vue'
-import { useRouter } from 'vue-router'
-import ImageDialog from '../components/ImageDialog.vue'
-import { postApi } from '../api/post'
-import { ElMessage } from 'element-plus'
-import 'element-plus/dist/index.css'
+import { ref, computed, onMounted } from "vue";
+import { Icon } from "@iconify/vue";
+import { useRouter } from "vue-router";
+import ImageDialog from "../components/ImageDialog.vue";
+import { postApi } from "../api/post";
+import request from "../api/request";
+import { userApi } from '../api/user'
 
-const router = useRouter()
+const router = useRouter();
 
 const posts = ref([
   {
     id: 1,
-    username: '师大学子',
-    avatar: '/public/icon/icon.jpeg',
-    time: '10分钟前',
-    content: '今天在图书馆学习，感觉氛围真好！',
-    images: ['/public/icon/icon.jpeg'],
+    username: "师大学子",
+    avatar: "/public/icon/icon.jpeg",
+    time: "10分钟前",
+    content: "今天在图书馆学习，感觉氛围真好！",
+    images: ["/public/icon/icon.jpeg"],
     likes: 23,
     comments: 5,
-    isLiked: false
+    isLiked: false,
   },
   {
     id: 2,
-    username: '校园达人',
-    avatar: '/avatars/default2.png',
-    time: '1小时前',
-    content: '木兰公寓的樱花开了，大家快来看啊！',
-    images: ['/images/cherry.jpg', '/images/cherry2.jpg'],
+    username: "校园达人",
+    avatar: "/avatars/default2.png",
+    time: "1小时前",
+    content: "木兰公寓的樱花开了，大家快来看啊！",
+    images: ["/images/cherry.jpg", "/images/cherry2.jpg"],
     likes: 45,
-    comments: 12
+    comments: 12,
   },
   {
     id: 3,
-    username: '校园达人',
-    avatar: '/avatars/default2.png',
-    time: '2小时前',
-    content: '今天的晚霞真美！',
-    images: ['/images/cherry.jpg'],
+    username: "校园达人",
+    avatar: "/avatars/default2.png",
+    time: "2小时前",
+    content: "今天的晚霞真美！",
+    images: ["/images/cherry.jpg"],
     likes: 38,
-    comments: 8
+    comments: 8,
   },
   {
     id: 4,
-    username: '师大新生',
-    avatar: '/avatars/default2.png',
-    time: '3小时前',
-    content: '第一次来到师大，校园真大啊！',
-    images: ['/images/cherry.jpg'],
+    username: "师大新生",
+    avatar: "/avatars/default2.png",
+    time: "3小时前",
+    content: "第一次来到师大，校园真大啊！",
+    images: ["/images/cherry.jpg"],
     likes: 56,
-    comments: 15
-  }
-])
+    comments: 15,
+  },
+]);
 
-const showComments = ref(false)
-const currentPost = ref(null)
+const showComments = ref(false);
+const currentPost = ref(null);
 
 const commentsList = ref([
   {
     id: 1,
-    username: '同学A',
-    avatar: '/public/icon/icon.jpeg',
-    content: '图书馆确实很安静！',
-    time: '5分钟前',
+    username: "同学A",
+    avatar: "/public/icon/icon.jpeg",
+    content: "图书馆确实很安静！",
+    time: "5分钟前",
     likes: 3,
     isLiked: false,
     showReplies: false,
     replies: [
       {
         id: 11,
-        username: '同学C',
-        avatar: '/public/icon/icon.jpeg',
-        content: '对啊，特别适合学习',
-        time: '3分钟前',
+        username: "同学C",
+        avatar: "/public/icon/icon.jpeg",
+        content: "对啊，特别适合学习",
+        time: "3分钟前",
         likes: 1,
-        isLiked: false
-      }
-    ]
+        isLiked: false,
+      },
+    ],
   },
   {
     id: 2,
-    username: '同学B',
-    avatar: '/public/icon/icon.jpeg',
-    content: '我也经常去那里学习',
-    time: '3分钟前'
-  }
-])
+    username: "同学B",
+    avatar: "/public/icon/icon.jpeg",
+    content: "我也经常去那里学习",
+    time: "3分钟前",
+  },
+]);
 
-const newComment = ref('')
-const replyTo = ref(null)
+const newComment = ref("");
+const replyTo = ref(null);
 
 const isLoggedIn = computed(() => {
-  return !!localStorage.getItem('user')
-})
+  return !!localStorage.getItem("user");
+});
+
+onMounted(() => {
+  fetchPosts()
+});
 
 const handleInputClick = () => {
   if (!isLoggedIn.value) {
-    router.push('/login')
+    router.push("/login");
   }
-}
+};
 
 const handleCommentSubmit = () => {
   if (!isLoggedIn.value) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
-  submitComment()
+  submitComment();
+};
+
+// 获取用户信息的方法
+const getUserInfo = async (userId) => {
+  try {
+    const { data } = await userApi.getUserInfo(userId)
+    if (data.code === 1) {
+      return data.data
+    }
+    return null
+  } catch (error) {
+    console.error("获取用户信息失败:", error)
+    return null
+  }
 }
 
-// 获取帖子列表
+// 修改获取帖子列表的方法
 const fetchPosts = async () => {
   try {
     const { data } = await postApi.getPosts()
-    if (data.code === 0) {
-      posts.value = data.data.map(post => ({
-        id: post.id,
-        username: post.username,
-        avatar: post.avatar || '/public/icon/icon.jpeg',
-        time: formatTime(post.createTime),
-        content: post.content,
-        images: post.images || [],
-        likes: post.likes || 0,
-        comments: post.comments || 0,
-        isLiked: post.isLiked || false,
-        isCollected: post.isCollected || false
-      }))
+    if (data.code === 1) {
+      // 获取所有帖子的用户信息
+      const postsWithUserInfo = await Promise.all(
+        data.data.map(async post => {
+          const userInfo = await getUserInfo(post.userId)
+          return {
+            id: post.id,
+            username: userInfo?.nickname || userInfo?.username || `用户${post.userId}`, // 优先使用昵称
+            avatar: userInfo?.avatar || "/public/icon/icon.jpeg", // 使用用户头像或默认头像
+            time: formatTime(post.createTime),
+            content: post.content,
+            title: post.title,
+            images: post.images,
+            likes: 0,
+            comments: 0,
+            isLiked: false,
+            isCollected: false,
+            // 可以添加其他用户信息
+            userSchool: userInfo?.school,
+            userGender: userInfo?.gender
+          }
+        })
+      )
+      posts.value = postsWithUserInfo
     }
   } catch (error) {
-    console.error('获取帖子列表失败:', error)
-    ElMessage.error('获取帖子列表失败')
+    console.error("获取帖子列表失败:", error)
   }
 }
 
 // 添加时间格式化函数
 const formatTime = (timestamp) => {
-  if (!timestamp) return '刚刚'
-  
+  const date = new Date(timestamp)
   const now = new Date()
-  const postTime = new Date(timestamp)
-  const diff = now - postTime
-  
-  if (diff < 60000) {
-    return '刚刚'
-  }
+  const diff = now - date
+
+  // 小于1小时，显示xx分钟前
   if (diff < 3600000) {
-    return `${Math.floor(diff / 60000)}分钟前`
+    const minutes = Math.floor(diff / 60000)
+    return `${minutes}分钟前`
   }
+  
+  // 小于24小时，显示xx小时前
   if (diff < 86400000) {
-    return `${Math.floor(diff / 3600000)}小时前`
+    const hours = Math.floor(diff / 3600000)
+    return `${hours}小时前`
   }
-  return postTime.toLocaleDateString()
+  
+  // 其他情况显示具体日期
+  return date.toLocaleDateString()
 }
 
 // 修改点赞方法
 const toggleLike = async (post) => {
   if (!isLoggedIn.value) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
 
   try {
-    const { data } = post.isLiked 
+    const { data } = post.isLiked
       ? await postApi.unlikePost(post.id)
-      : await postApi.likePost(post.id)
-    
+      : await postApi.likePost(post.id);
+
     if (data.code === 0) {
-      post.isLiked = data.data.isLiked
-      post.likes = data.data.likes
+      post.isLiked = data.data.isLiked;
+      post.likes = data.data.likes;
     }
   } catch (error) {
-    console.error('点赞操作失败:', error)
+    console.error("点赞操作失败:", error);
   }
-}
+};
 
 // 修改收藏方法
 const toggleCollect = async (post) => {
   if (!isLoggedIn.value) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
 
   try {
     const { data } = post.isCollected
       ? await postApi.uncollectPost(post.id)
-      : await postApi.collectPost(post.id)
-    
-    if (data.code === 0) {
-      post.isCollected = data.data.isCollected
+      : await postApi.collectPost(post.id);
+
+    if (data.code === 200) {
+      post.isCollected = data.data.isCollected;
     }
   } catch (error) {
-    console.error('收藏操作失败:', error)
+    console.error("收藏操作失败:", error);
   }
-}
+};
 
 // 获取评论列表
 const getComments = async (postId) => {
   try {
-    const { data } = await postApi.getComments(postId)
+    const { data } = await postApi.getComments(postId);
     if (data.code === 0) {
-      commentsList.value = data.data.comments
+      commentsList.value = data.data.comments;
     }
   } catch (error) {
-    console.error('获取评论失败:', error)
+    console.error("获取评论失败:", error);
   }
-}
+};
 
 // 修改评论点赞方法
 const toggleCommentLike = async (comment) => {
   if (!isLoggedIn.value) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
 
   try {
     const { data } = comment.isLiked
       ? await postApi.unlikeComment(comment.id)
-      : await postApi.likeComment(comment.id)
-    
+      : await postApi.likeComment(comment.id);
+
     if (data.code === 0) {
-      comment.isLiked = data.data.isLiked
-      comment.likes = data.data.likes
+      comment.isLiked = data.data.isLiked;
+      comment.likes = data.data.likes;
     }
   } catch (error) {
-    console.error('评论点赞失败:', error)
+    console.error("评论点赞失败:", error);
   }
-}
+};
 
 // 修改提交评论方法
 const submitComment = async () => {
-  if (!newComment.value.trim() || !currentPost.value) return
-  
+  if (!newComment.value.trim() || !currentPost.value) return;
+
   try {
     const { data } = await postApi.addComment(currentPost.value.id, {
       content: newComment.value,
-      replyTo: replyTo.value?.reply?.id || replyTo.value?.comment.id
-    })
-    
+      replyTo: replyTo.value?.reply?.id || replyTo.value?.comment.id,
+    });
+
     if (data.code === 0) {
       // 重新加载评论列表
-      await getComments(currentPost.value.id)
-      newComment.value = ''
-      replyTo.value = null
+      await getComments(currentPost.value.id);
+      newComment.value = "";
+      replyTo.value = null;
     }
   } catch (error) {
-    console.error('发表评论失败:', error)
+    console.error("发表评论失败:", error);
   }
-}
+};
 
 // 修改打开评论方法
 const openComments = async (post) => {
-  currentPost.value = post
-  showComments.value = true
-  await getComments(post.id)
-}
+  currentPost.value = post;
+  showComments.value = true;
+  await getComments(post.id);
+};
 
 const replyToComment = (comment, reply) => {
   if (!isLoggedIn.value) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
   replyTo.value = {
     comment,
     reply,
-    username: reply ? reply.username : comment.username
-  }
-}
+    username: reply ? reply.username : comment.username,
+  };
+};
 
 const getInputPlaceholder = () => {
-  if (!isLoggedIn.value) return '登录后发表评论'
-  if (replyTo.value) return `回复 ${replyTo.value.username}`
-  return '写下你的评论...'
-}
+  if (!isLoggedIn.value) return "登录后发表评论";
+  if (replyTo.value) return `回复 ${replyTo.value.username}`;
+  return "写下你的评论...";
+};
 
 const closeComments = () => {
-  showComments.value = false
-  replyTo.value = null
-  newComment.value = ''
-}
+  showComments.value = false;
+  replyTo.value = null;
+  newComment.value = "";
+};
 
 const toggleComment = (comment) => {
-  comment.showReplies = !comment.showReplies
-}
+  comment.showReplies = !comment.showReplies;
+};
 
 // 添加取消回复方法
 const cancelReply = () => {
-  replyTo.value = null
-  newComment.value = '' // 可选：是否清空输入框内容
-}
+  replyTo.value = null;
+  newComment.value = ""; // 可选：是否清空输入框内容
+};
 
 // 图片查看器状态
-const showImageViewer = ref(false)
-const currentImages = ref([])
-const currentImageIndex = ref(0)
+const showImageViewer = ref(false);
+const currentImages = ref([]);
+const currentImageIndex = ref(0);
 
 // 图片查看器方法
 const openImageViewer = (images) => {
-  currentImages.value = images
-  currentImageIndex.value = 0
-  showImageViewer.value = true
-}
+  currentImages.value = images;
+  currentImageIndex.value = 0;
+  showImageViewer.value = true;
+};
 
 const closeImageViewer = () => {
-  showImageViewer.value = false
-}
-
-// 在组件挂载时获取帖子列表
-onMounted(() => {
-  fetchPosts()
-})
-
-// 在现有的 ref 声明后添加
-const showPublishDialog = ref(false)
-const imageInput = ref(null)
-const newPost = ref({
-  content: '',
-  images: []
-})
-
-// 添加发布相关方法
-const openPublishDialog = () => {
-  if (!isLoggedIn.value) {
-    router.push('/login')
-    return
-  }
-  showPublishDialog.value = true
-}
-
-const closePublishDialog = () => {
-  showPublishDialog.value = false
-  newPost.value = {
-    content: '',
-    images: []
-  }
-}
-
-const triggerImageUpload = () => {
-  imageInput.value.click()
-}
-
-const handleImageUpload = (event) => {
-  const files = Array.from(event.target.files)
-  const remainingSlots = 9 - newPost.value.images.length
-  
-  files.slice(0, remainingSlots).forEach(file => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      newPost.value.images.push({
-        file,
-        url: e.target.result
-      })
-    }
-    reader.readAsDataURL(file)
-  })
-  
-  // 清空 input 以允许重复选择相同文件
-  event.target.value = ''
-}
-
-const removeImage = (index) => {
-  newPost.value.images.splice(index, 1)
-}
-
-const submitPost = async () => {
-  if (!newPost.value.content.trim() && newPost.value.images.length === 0) return
-  
-  try {
-    const formData = new FormData()
-    formData.append('content', newPost.value.content)
-    
-    // 添加用户信息
-    const user = JSON.parse(localStorage.getItem('user'))
-    formData.append('userId', user.id)
-    formData.append('username', user.username)
-    formData.append('avatar', user.avatar || '/public/icon/icon.jpeg')
-    
-    // 处理图片上传
-    newPost.value.images.forEach(image => {
-      formData.append('images', image.file)
-    })
-    
-    const { data } = await postApi.createPost(formData)
-    
-    if (data.code === 0) {
-      // 添加新帖子到列表开头
-      const newPostData = {
-        id: data.data.id,
-        content: newPost.value.content,
-        username: user.username,
-        avatar: user.avatar || '/public/icon/icon.jpeg',
-        time: '刚刚',
-        images: data.data.images || [],
-        likes: 0,
-        comments: 0,
-        isLiked: false,
-        isCollected: false
-      }
-      
-      posts.value.unshift(newPostData)
-      closePublishDialog()
-      ElMessage.success('发布成功')
-    } else {
-      ElMessage.error(data.message || '发布失败')
-    }
-  } catch (error) {
-    console.error('发布帖子失败:', error)
-    ElMessage.error('发布失败，请稍后重试')
-  }
-}
+  showImageViewer.value = false;
+};
 </script>
 
 <style scoped>
@@ -678,7 +632,7 @@ const submitPost = async () => {
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .post-header {
@@ -1042,7 +996,7 @@ const submitPost = async () => {
 }
 
 .reply-item::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -12px;
   top: 16px;
@@ -1070,167 +1024,16 @@ const submitPost = async () => {
   background-color: #f5f5f5;
 }
 
-.publish-btn {
-  position: fixed;
-  right: 16px;
-  bottom: 24px;
-  background: #1890ff;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.35);
-  z-index: 100;
-  transition: all 0.3s;
-}
-
-.publish-btn:hover {
-  background: #40a9ff;
-  transform: translateY(-2px);
-}
-
-.publish-dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.publish-dialog {
-  background: white;
-  width: 90%;
-  max-width: 600px;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-}
-
-.dialog-header {
-  padding: 16px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.dialog-header h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.dialog-content {
-  padding: 16px;
-  flex: 1;
-  overflow-y: auto;
-}
-
-.post-content-input {
-  width: 100%;
-  min-height: 120px;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: vertical;
-  margin-bottom: 16px;
-}
-
-.image-upload-section {
-  margin-top: 16px;
-}
-
-.image-preview-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.image-preview-item {
-  position: relative;
-  padding-bottom: 100%;
-}
-
-.image-preview-item img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.remove-image {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.image-upload-btn {
-  border: 2px dashed #ddd;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding-bottom: 100%;
-  position: relative;
-}
-
-.image-upload-btn .iconify {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 24px;
-  color: #999;
-}
-
-.dialog-footer {
-  padding: 16px;
-  border-top: 1px solid #eee;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.dialog-footer button {
-  padding: 8px 24px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: none;
-}
-
-.cancel-btn {
-  background: #f5f5f5;
+.user-detail {
+  font-size: 12px;
   color: #666;
+  margin-top: 2px;
 }
 
-.publish-submit-btn {
-  background: #1890ff;
-  color: white;
-}
-
-.publish-submit-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
+.gender {
+  margin-left: 8px;
+  padding: 0 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
 }
 </style> 
