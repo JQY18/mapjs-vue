@@ -137,7 +137,10 @@
             @click="toggleCategory(category)"
             :title="category"
           >
-            <Icon :icon="categoryButtonIcons[category]" class="function-icon white-icon"/>
+            <div class="category-btn-content">
+              <Icon :icon="categoryButtonIcons[category]" class="function-icon white-icon"/>
+              <span class="category-text">{{ category }}</span>
+            </div>
           </button>
         </div>
       </div>
@@ -868,10 +871,8 @@ input:focus {
 
 .function-icon {
   font-size: 24px;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  position: static;
+  transform: none;
 }
 
 /* 修改分类按钮组的样式 */
@@ -881,34 +882,52 @@ input:focus {
 
 .category-buttons {
   position: absolute;
-  right: 50px; /* 修改为向左展开 */
-  top: 0;
+  right: 50px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
-  flex-direction: row; /* 改为水平排列 */
+  flex-direction: column;
   gap: 8px;
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
-  transform: translateX(20px); /* 添加位移效果 */
 }
 
 .show-buttons {
   opacity: 1;
   visibility: visible;
-  transform: translateX(0); /* 展开时恢复位置 */
 }
 
 .category-btn {
+  width: 100px;
+  height: 40px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-radius: 8px;
+}
+
+.category-btn-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.white-icon {
+  font-size: 20px;
   color: white;
-  transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
-.category-btn:hover {
-  transform: scale(1.1);
-}
-
-.category-btn.active {
-  box-shadow: 0 0 0 2px white;
+.category-text {
+  font-size: 12px;
+  color: white;
+  text-align: left;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .trigger-btn {
