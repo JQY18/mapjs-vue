@@ -1,5 +1,13 @@
 <template>
   <div class="home">
+    <!-- 添加头部 -->
+    <div class="header">
+      <div class="logo-container">
+        <img src="/images/logo.png" alt="湖南师范大学" class="logo">
+        <div class="gate-bg"></div>
+      </div>
+    </div>
+
     <!-- 顶部选项卡 -->
     <div class="tabs">
       <div 
@@ -112,9 +120,57 @@ const navigateTo = (tabId) => {
   overflow: hidden;
 }
 
+/* 添加头部样式 */
+.header {
+  background-color: #990000;  /* 学校红色背景 */
+  padding: 10px 20px;
+  flex-shrink: 0;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  height: 50px;
+}
+
+.logo {
+  height: 50px;
+  width: auto;
+  margin-left: 20px;
+}
+
+.gate-bg {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 300px;
+  background: url('/images/gate.png') no-repeat right center;
+  background-size: contain;
+  margin-right: 20px;
+}
+
+/* 添加响应式设计 */
+@media (max-width: 768px) {
+  .logo {
+    height: 40px;
+    margin-left: 10px;
+  }
+  
+  .gate-bg {
+    width: 200px;
+    margin-right: 10px;
+  }
+}
+
+/* 调整原有样式以适应新的头部 */
 .tabs {
   display: flex;
-  background-color: #f5f5f5;
+  background-color: rgb(107, 1, 1);
   border-bottom: 1px solid #e8e8e8;
   flex-shrink: 0;
 }
@@ -123,21 +179,22 @@ const navigateTo = (tabId) => {
   padding: 12px 24px;
   cursor: pointer;
   transition: all 0.3s;
+  color: white;
 }
 
 .tab-item:hover {
-  background-color: #e8e8e8;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .tab-item.active {
-  color: #1890ff;
-  border-bottom: 2px solid #1890ff;
+  color: white;
+  border-bottom: 2px solid white;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .content {
   flex: 1;
   position: relative;
-  padding: 0;
   overflow: hidden;
 }
 

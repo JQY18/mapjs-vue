@@ -387,7 +387,7 @@ const clearRoute = () => {
 // 添加路由控制变量
 const routingControl = ref(null)
 
-// 修改 planRoute 函数以不使用 nearest API
+// 修改 planRoute 
 const planRoute = () => {
   if (!selectedStart.value || !selectedEnd.value || !map.value) return;
 
@@ -404,14 +404,21 @@ const planRoute = () => {
       profile: 'foot',  // 使用步行模式
       options: {
         steps: true,
-        alternatives: false,  // 不显示备选路线
+        alternatives: true,  // 显示备选路线
         annotations: false,  // 禁用注释
         geometryOnly: false,
         overview: 'full',
-        // 关键修改：添加参数以忽略道路方向限制
-        ignore_restrictions: true,  // 忽略转弯限制
-        ignore_oneway: true,       // 忽略单行道限制
-        ignore_roads: [],          // 不排除任何道路类型
+        // 关键修改：添加参数以放宽路径限制
+        continue_straight: false,  // 允许转弯
+        use_roads: 0,             // 降低对道路的依赖
+        use_hills: 0,             // 允许穿越高度差
+        use_ferries: false,       // 不使用渡轮
+        waypoints_per_route: 2,   // 只使用起点和终点
+        walking_speed: 1.4,       // 步行速度（米/秒）
+        walking_radius: 50,       // 步行半径（米）
+        // 自定义成本因子，使路线更倾向于直线
+        weight_name: 'distance',  // 使用距离作为权重
+        weight_factor: 1.0,       // 距离权重因子
       }
     }),
     lineOptions: {
