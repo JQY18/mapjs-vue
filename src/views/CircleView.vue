@@ -13,34 +13,35 @@
           </div>
           <div class="post-content">{{ post.content }}</div>
           <div class="post-actions">
-            <div 
+            <div
               class="action-item"
-              :class="{ 'liked': post.isLiked }"
+              :class="{ liked: post.isLiked }"
               @click="toggleLike(post)"
             >
-              <Icon :icon="post.isLiked ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'" /> 
+              <Icon
+                :icon="post.isLiked ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'"
+              />
               {{ post.likes }}
             </div>
-            <div 
-              class="action-item"
-              @click="openComments(post)"
-            >
+            <div class="action-item" @click="openComments(post)">
               <Icon icon="mdi:comment-outline" /> {{ post.comments }}
             </div>
-            <div 
+            <div
               v-if="post.images?.length"
               class="action-item"
               @click="openImageViewer(post.images)"
             >
               <Icon icon="mdi:image" /> {{ post.images.length }}
             </div>
-            <div 
+            <div
               class="action-item"
-              :class="{ 'collected': post.isCollected }"
+              :class="{ collected: post.isCollected }"
               @click="toggleCollect(post)"
             >
-              <Icon :icon="post.isCollected ? 'mdi:star' : 'mdi:star-outline'" /> 
-              {{ post.isCollected ? '已收藏' : '收藏' }}
+              <Icon
+                :icon="post.isCollected ? 'mdi:star' : 'mdi:star-outline'"
+              />
+              {{ post.isCollected ? "已收藏" : "收藏" }}
             </div>
           </div>
         </div>
@@ -48,17 +49,14 @@
     </div>
 
     <!-- 遮罩层 -->
-    <div 
+    <div
       class="drawer-overlay"
-      :class="{ 'show': showComments }"
+      :class="{ show: showComments }"
       @click="showComments = false"
     ></div>
 
     <!-- 评论抽屉 -->
-    <div 
-      class="comments-drawer"
-      :class="{ 'open': showComments }"
-    >
+    <div class="comments-drawer" :class="{ open: showComments }">
       <div class="drawer-header">
         <h3>评论 ({{ currentPost?.comments || 0 }})</h3>
         <button class="close-btn" @click="closeComments">
@@ -66,7 +64,11 @@
         </button>
       </div>
       <div class="comments-list">
-        <div v-for="comment in commentsList" :key="comment.id" class="comment-item">
+        <div
+          v-for="comment in commentsList"
+          :key="comment.id"
+          class="comment-item"
+        >
           <img :src="comment.avatar" class="comment-avatar" />
           <div class="comment-content">
             <div class="comment-user">{{ comment.username }}</div>
@@ -74,58 +76,80 @@
             <div class="comment-footer">
               <span class="comment-time">{{ comment.time }}</span>
               <div class="comment-actions">
-                <div 
+                <div
                   class="comment-action"
-                  :class="{ 'liked': comment.isLiked }"
+                  :class="{ liked: comment.isLiked }"
                   @click="toggleCommentLike(comment)"
                 >
-                  <Icon :icon="comment.isLiked ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'" />
+                  <Icon
+                    :icon="
+                      comment.isLiked ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'
+                    "
+                  />
                   <span v-if="comment.likes">{{ comment.likes }}</span>
                 </div>
-                <div 
-                  class="comment-action"
-                  @click="replyToComment(comment)"
-                >
+                <div class="comment-action" @click="replyToComment(comment)">
                   <Icon icon="mdi:reply" /> 回复
                 </div>
-                <div 
+                <div
                   v-if="comment.replies?.length"
                   class="comment-action"
                   @click="toggleComment(comment)"
                 >
-                  <Icon :icon="comment.showReplies ? 'mdi:chevron-up' : 'mdi:chevron-down'" />
-                  {{ comment.showReplies ? '收起' : `${comment.replies.length}条回复` }}
+                  <Icon
+                    :icon="
+                      comment.showReplies
+                        ? 'mdi:chevron-up'
+                        : 'mdi:chevron-down'
+                    "
+                  />
+                  {{
+                    comment.showReplies
+                      ? "收起"
+                      : `${comment.replies.length}条回复`
+                  }}
                 </div>
               </div>
             </div>
             <!-- 回复列表 -->
-            <div 
-              class="replies" 
+            <div
+              class="replies"
               v-if="comment.replies?.length && comment.showReplies"
-              :class="{ 'expanded': comment.showReplies }"
+              :class="{ expanded: comment.showReplies }"
             >
-              <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
+              <div
+                v-for="reply in comment.replies"
+                :key="reply.id"
+                class="reply-item"
+              >
                 <img :src="reply.avatar" class="reply-avatar" />
                 <div class="reply-content">
                   <div class="reply-user">
                     {{ reply.username }}
                     <span v-if="reply.replyTo" class="reply-to">
-                      回复 <span class="reply-to-name">{{ reply.replyTo }}</span>
+                      回复
+                      <span class="reply-to-name">{{ reply.replyTo }}</span>
                     </span>
                   </div>
                   <div class="reply-text">{{ reply.content }}</div>
                   <div class="reply-footer">
                     <span class="reply-time">{{ reply.time }}</span>
                     <div class="comment-actions">
-                      <div 
+                      <div
                         class="comment-action"
-                        :class="{ 'liked': reply.isLiked }"
+                        :class="{ liked: reply.isLiked }"
                         @click="toggleCommentLike(reply)"
                       >
-                        <Icon :icon="reply.isLiked ? 'mdi:thumb-up' : 'mdi:thumb-up-outline'" />
+                        <Icon
+                          :icon="
+                            reply.isLiked
+                              ? 'mdi:thumb-up'
+                              : 'mdi:thumb-up-outline'
+                          "
+                        />
                         <span v-if="reply.likes">{{ reply.likes }}</span>
                       </div>
-                      <div 
+                      <div
                         class="comment-action"
                         @click="replyToComment(comment, reply)"
                       >
@@ -145,16 +169,16 @@
         <div v-if="replyTo" class="cancel-reply" @click="cancelReply">
           <Icon icon="mdi:close" /> 取消回复
         </div>
-        
-        <input 
-          type="text" 
+
+        <input
+          type="text"
           v-model="newComment"
           :placeholder="getInputPlaceholder()"
           @click="handleInputClick"
           @keyup.enter="handleCommentSubmit"
         />
-        <button 
-          class="submit-btn" 
+        <button
+          class="submit-btn"
           :disabled="!newComment.trim() || !isLoggedIn"
           @click="handleCommentSubmit"
         >
@@ -174,281 +198,283 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { Icon } from '@iconify/vue'
-import { useRouter } from 'vue-router'
-import ImageDialog from '../components/ImageDialog.vue'
-import { postApi } from '../api/post'
+import { ref, computed, onMounted } from "vue";
+import { Icon } from "@iconify/vue";
+import { useRouter } from "vue-router";
+import ImageDialog from "../components/ImageDialog.vue";
+import { postApi } from "../api/post";
+import request from "../api/request";
 
-const router = useRouter()
+const router = useRouter();
 
 const posts = ref([
   {
     id: 1,
-    username: '师大学子',
-    avatar: '/public/icon/icon.jpeg',
-    time: '10分钟前',
-    content: '今天在图书馆学习，感觉氛围真好！',
-    images: ['/public/icon/icon.jpeg'],
+    username: "师大学子",
+    avatar: "/public/icon/icon.jpeg",
+    time: "10分钟前",
+    content: "今天在图书馆学习，感觉氛围真好！",
+    images: ["/public/icon/icon.jpeg"],
     likes: 23,
     comments: 5,
-    isLiked: false
+    isLiked: false,
   },
   {
     id: 2,
-    username: '校园达人',
-    avatar: '/avatars/default2.png',
-    time: '1小时前',
-    content: '木兰公寓的樱花开了，大家快来看啊！',
-    images: ['/images/cherry.jpg', '/images/cherry2.jpg'],
+    username: "校园达人",
+    avatar: "/avatars/default2.png",
+    time: "1小时前",
+    content: "木兰公寓的樱花开了，大家快来看啊！",
+    images: ["/images/cherry.jpg", "/images/cherry2.jpg"],
     likes: 45,
-    comments: 12
+    comments: 12,
   },
   {
     id: 3,
-    username: '校园达人',
-    avatar: '/avatars/default2.png',
-    time: '2小时前',
-    content: '今天的晚霞真美！',
-    images: ['/images/cherry.jpg'],
+    username: "校园达人",
+    avatar: "/avatars/default2.png",
+    time: "2小时前",
+    content: "今天的晚霞真美！",
+    images: ["/images/cherry.jpg"],
     likes: 38,
-    comments: 8
+    comments: 8,
   },
   {
     id: 4,
-    username: '师大新生',
-    avatar: '/avatars/default2.png',
-    time: '3小时前',
-    content: '第一次来到师大，校园真大啊！',
-    images: ['/images/cherry.jpg'],
+    username: "师大新生",
+    avatar: "/avatars/default2.png",
+    time: "3小时前",
+    content: "第一次来到师大，校园真大啊！",
+    images: ["/images/cherry.jpg"],
     likes: 56,
-    comments: 15
-  }
-])
+    comments: 15,
+  },
+]);
 
-const showComments = ref(false)
-const currentPost = ref(null)
+const showComments = ref(false);
+const currentPost = ref(null);
 
 const commentsList = ref([
   {
     id: 1,
-    username: '同学A',
-    avatar: '/public/icon/icon.jpeg',
-    content: '图书馆确实很安静！',
-    time: '5分钟前',
+    username: "同学A",
+    avatar: "/public/icon/icon.jpeg",
+    content: "图书馆确实很安静！",
+    time: "5分钟前",
     likes: 3,
     isLiked: false,
     showReplies: false,
     replies: [
       {
         id: 11,
-        username: '同学C',
-        avatar: '/public/icon/icon.jpeg',
-        content: '对啊，特别适合学习',
-        time: '3分钟前',
+        username: "同学C",
+        avatar: "/public/icon/icon.jpeg",
+        content: "对啊，特别适合学习",
+        time: "3分钟前",
         likes: 1,
-        isLiked: false
-      }
-    ]
+        isLiked: false,
+      },
+    ],
   },
   {
     id: 2,
-    username: '同学B',
-    avatar: '/public/icon/icon.jpeg',
-    content: '我也经常去那里学习',
-    time: '3分钟前'
-  }
-])
+    username: "同学B",
+    avatar: "/public/icon/icon.jpeg",
+    content: "我也经常去那里学习",
+    time: "3分钟前",
+  },
+]);
 
-const newComment = ref('')
-const replyTo = ref(null)
+const newComment = ref("");
+const replyTo = ref(null);
 
 const isLoggedIn = computed(() => {
-  return !!localStorage.getItem('user')
-})
+  return !!localStorage.getItem("user");
+});
+
+onMounted(() => {
+  request.get("/api/posts").then((res) => {
+    posts.value = res.data;
+  });
+});
 
 const handleInputClick = () => {
   if (!isLoggedIn.value) {
-    router.push('/login')
+    router.push("/login");
   }
-}
+};
 
 const handleCommentSubmit = () => {
   if (!isLoggedIn.value) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
-  submitComment()
-}
+  submitComment();
+};
 
 // 获取帖子列表
 const fetchPosts = async () => {
   try {
-    const { data } = await postApi.getPosts()
-    if (data.code === 0) {
-      posts.value = data.data.posts
+    const data = await postApi.getPosts();
+    if (data) {
+      posts.value = data.data;
     }
   } catch (error) {
-    console.error('获取帖子列表失败:', error)
+    console.error("获取帖子列表失败:", error);
   }
-}
+};
 
 // 修改点赞方法
 const toggleLike = async (post) => {
   if (!isLoggedIn.value) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
 
   try {
-    const { data } = post.isLiked 
+    const { data } = post.isLiked
       ? await postApi.unlikePost(post.id)
-      : await postApi.likePost(post.id)
-    
+      : await postApi.likePost(post.id);
+
     if (data.code === 0) {
-      post.isLiked = data.data.isLiked
-      post.likes = data.data.likes
+      post.isLiked = data.data.isLiked;
+      post.likes = data.data.likes;
     }
   } catch (error) {
-    console.error('点赞操作失败:', error)
+    console.error("点赞操作失败:", error);
   }
-}
+};
 
 // 修改收藏方法
 const toggleCollect = async (post) => {
   if (!isLoggedIn.value) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
 
   try {
     const { data } = post.isCollected
       ? await postApi.uncollectPost(post.id)
-      : await postApi.collectPost(post.id)
-    
-    if (data.code === 0) {
-      post.isCollected = data.data.isCollected
+      : await postApi.collectPost(post.id);
+
+    if (data.code === 200) {
+      post.isCollected = data.data.isCollected;
     }
   } catch (error) {
-    console.error('收藏操作失败:', error)
+    console.error("收藏操作失败:", error);
   }
-}
+};
 
 // 获取评论列表
 const getComments = async (postId) => {
   try {
-    const { data } = await postApi.getComments(postId)
+    const { data } = await postApi.getComments(postId);
     if (data.code === 0) {
-      commentsList.value = data.data.comments
+      commentsList.value = data.data.comments;
     }
   } catch (error) {
-    console.error('获取评论失败:', error)
+    console.error("获取评论失败:", error);
   }
-}
+};
 
 // 修改评论点赞方法
 const toggleCommentLike = async (comment) => {
   if (!isLoggedIn.value) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
 
   try {
     const { data } = comment.isLiked
       ? await postApi.unlikeComment(comment.id)
-      : await postApi.likeComment(comment.id)
-    
+      : await postApi.likeComment(comment.id);
+
     if (data.code === 0) {
-      comment.isLiked = data.data.isLiked
-      comment.likes = data.data.likes
+      comment.isLiked = data.data.isLiked;
+      comment.likes = data.data.likes;
     }
   } catch (error) {
-    console.error('评论点赞失败:', error)
+    console.error("评论点赞失败:", error);
   }
-}
+};
 
 // 修改提交评论方法
 const submitComment = async () => {
-  if (!newComment.value.trim() || !currentPost.value) return
-  
+  if (!newComment.value.trim() || !currentPost.value) return;
+
   try {
     const { data } = await postApi.addComment(currentPost.value.id, {
       content: newComment.value,
-      replyTo: replyTo.value?.reply?.id || replyTo.value?.comment.id
-    })
-    
+      replyTo: replyTo.value?.reply?.id || replyTo.value?.comment.id,
+    });
+
     if (data.code === 0) {
       // 重新加载评论列表
-      await getComments(currentPost.value.id)
-      newComment.value = ''
-      replyTo.value = null
+      await getComments(currentPost.value.id);
+      newComment.value = "";
+      replyTo.value = null;
     }
   } catch (error) {
-    console.error('发表评论失败:', error)
+    console.error("发表评论失败:", error);
   }
-}
+};
 
 // 修改打开评论方法
 const openComments = async (post) => {
-  currentPost.value = post
-  showComments.value = true
-  await getComments(post.id)
-}
+  currentPost.value = post;
+  showComments.value = true;
+  await getComments(post.id);
+};
 
 const replyToComment = (comment, reply) => {
   if (!isLoggedIn.value) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
   replyTo.value = {
     comment,
     reply,
-    username: reply ? reply.username : comment.username
-  }
-}
+    username: reply ? reply.username : comment.username,
+  };
+};
 
 const getInputPlaceholder = () => {
-  if (!isLoggedIn.value) return '登录后发表评论'
-  if (replyTo.value) return `回复 ${replyTo.value.username}`
-  return '写下你的评论...'
-}
+  if (!isLoggedIn.value) return "登录后发表评论";
+  if (replyTo.value) return `回复 ${replyTo.value.username}`;
+  return "写下你的评论...";
+};
 
 const closeComments = () => {
-  showComments.value = false
-  replyTo.value = null
-  newComment.value = ''
-}
+  showComments.value = false;
+  replyTo.value = null;
+  newComment.value = "";
+};
 
 const toggleComment = (comment) => {
-  comment.showReplies = !comment.showReplies
-}
+  comment.showReplies = !comment.showReplies;
+};
 
 // 添加取消回复方法
 const cancelReply = () => {
-  replyTo.value = null
-  newComment.value = '' // 可选：是否清空输入框内容
-}
+  replyTo.value = null;
+  newComment.value = ""; // 可选：是否清空输入框内容
+};
 
 // 图片查看器状态
-const showImageViewer = ref(false)
-const currentImages = ref([])
-const currentImageIndex = ref(0)
+const showImageViewer = ref(false);
+const currentImages = ref([]);
+const currentImageIndex = ref(0);
 
 // 图片查看器方法
 const openImageViewer = (images) => {
-  currentImages.value = images
-  currentImageIndex.value = 0
-  showImageViewer.value = true
-}
+  currentImages.value = images;
+  currentImageIndex.value = 0;
+  showImageViewer.value = true;
+};
 
 const closeImageViewer = () => {
-  showImageViewer.value = false
-}
-
-// 在组件挂载时获取帖子列表
-onMounted(() => {
-  fetchPosts()
-})
+  showImageViewer.value = false;
+};
 </script>
 
 <style scoped>
@@ -476,7 +502,7 @@ onMounted(() => {
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .post-header {
@@ -840,7 +866,7 @@ onMounted(() => {
 }
 
 .reply-item::before {
-  content: '';
+  content: "";
   position: absolute;
   left: -12px;
   top: 16px;
