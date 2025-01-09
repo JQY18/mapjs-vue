@@ -167,8 +167,8 @@ import LocationModal from './LocationModal.vue'
 // 重要地点数据
 const locations = [
   // 食堂
-  { name: '兰桂苑', coords: [28.18875, 112.94125], description: '湖南师范大学学生兰桂苑', image: '/images/library.png', detailId: 'library', category: '食堂' },
-  { name: '木兰食堂', coords: [28.18940, 112.94155], description: '湖南师范大学木兰食堂', image: '/images/library.png', detailId: 'library', category: '食堂' },
+  { name: '兰桂苑', coords: [28.18875, 112.94125], description: '湖南师范大学学生兰桂苑', image: '/images/library.png', detailId: 'lgyCanteen', category: '食堂' },
+  { name: '木兰食堂', coords: [28.18940, 112.94155], description: '湖南师范大学木兰食堂', image: '/images/library.png', detailId: 'mlCanteen', category: '食堂' },
   { name: '江边食堂', coords: [28.19045, 112.9487], description: '湖南师范大学江边食堂', image: '/images/jbCanteen.jpg', detailId: 'jbCanteen', category: '食堂' },
 
   // 教学科研
@@ -177,47 +177,48 @@ const locations = [
   { name: '服装设计系', coords: [28.18615, 112.94148], description: '湖南师范大学服装设计系', image: '/images/designMajor.png', detailId: 'designMajor', category: '教学科研' },
   { name: '理仁楼', coords: [28.18565, 112.94078], description: '湖南师范大学理仁楼', image: '/images/lirenlou.png', detailId: 'lirenlou', category: '教学科研' },
   { name: '外国语学院', coords: [28.1905, 112.94110], description: '湖南师范大学外国语学院', image: '/images/waiguoyulou.png', detailId: 'waiguoyulou', category: '教学科研' },
-  { name: '木兰楼', coords: [28.1903, 112.94226], description: '湖南师范大学木兰楼', image: '/images/mulanlou.png', detailId: 'mulanlou.png', category: '教学科研' },
+  { name: '木兰楼', coords: [28.1903, 112.94226], description: '湖南师范大学木兰楼', image: '/images/mulanlou.png', detailId: 'mulanlou', category: '教学科研' },
   { name: '景德楼', coords: [28.1932, 112.94100], description: '湖南师范大学景德楼', image: '/images/jindelou.png', detailId: 'jindelou', category: '教学科研' },
   { name: '经纬楼', coords: [28.1927, 112.94213], description: '湖南师范大学经纬楼', image: '/images/jingweilou.png', detailId: 'jingweilou', category: '教学科研' },
-  { name: '研究生院', coords: [28.19362, 112.94248], description: '湖南师范大学研究生院', image: '/images/library.png', detailId: 'library', category: '教学科研' },
+  { name: '研究生院', coords: [28.19362, 112.94248], description: '湖南师范大学研究生院', image: '/images/library.png', detailId: 'yanjiushengyuan', category: '教学科研' },
   { name: '新闻与传播学院', coords: [28.19345, 112.94315], description: '湖南师范大学新闻与传播学院', image: '/images/xcCollege.png', detailId: 'xcCollege', category: '教学科研' },
   { name: '生命科学学院', coords: [28.19225, 112.94500], description: '湖南师范大学生命科学学院', image: '/images/skCollege.png', detailId: 'skCollege', category: '教学科研' },
   { name: '文渊楼', coords: [28.1920, 112.9416], description: '湖南师范大学文渊楼', image: '/images/wenyuanlou.png', detailId: 'wenyuanlou', category: '教学科研' },
   { name: '中和楼', coords: [28.1911, 112.9419], description: '湖南师范大学中和楼', image: '/images/zhonghelou.png', detailId: 'zhonghelou', category: '教学科研' },
   { name: '化工院', coords: [28.1912, 112.9432], description: '湖南师范大学化工院', image: '/images/hxCollege.png', detailId: 'hxCollege', category: '教学科研' },
-  { name: '工学院', coords: [28.18805, 112.9443], description: '湖南师范大学工学院', image: '/images/gsCollege.png', detailId: 'library', category: '教学科研' },
+  { name: '工学院', coords: [28.18805, 112.9443], description: '湖南师范大学工学院', image: '/images/gsCollege.png', detailId: 'gsCollege', category: '教学科研' },
   { name: '理学院', coords: [28.18705, 112.94497], description: '湖南师范大学理学院', image: '/images/lxCollege.png', detailId: 'lxCollege', category: '教学科研' },
   { name: '教育学院', coords: [28.18727, 112.94815], description: '湖南师范大学教育学院', image: '/images/jyCollege.png', detailId: 'jyCollege', category: '教学科研' },
 
   // 宿舍
-  { name: '研六舍', coords: [28.18935, 112.94075], description: '湖南师范大学研六舍', image: '/images/library.png', detailId: 'library', category: '宿舍' },
-  { name: '研二舍', coords: [28.18815, 112.94135], description: '湖南师范大学研二舍', image: '/images/library.png', detailId: 'library', category: '宿舍' },
-  { name: '研五舍', coords: [28.18950, 112.94208], description: '湖南师范大学研五舍', image: '/images/library.png', detailId: 'library', category: '宿舍' },
-  { name: '研三舍', coords: [28.18865, 112.94208], description: '湖南师范大学研三舍', image: '/images/library.png', detailId: 'library', category: '宿舍' },
-  { name: '研一舍', coords: [28.18765, 112.94138], description: '湖南师范大学研一舍', image: '/images/library.png', detailId: 'library', category: '宿舍' },
-  { name: '二里半宿舍', coords: [28.19305, 112.94435], description: '湖南师范大学二里半宿舍', image: '/images/library.png', detailId: 'library', category: '宿舍' },
-  { name: '江边一舍', coords: [28.18880, 112.9484], description: '湖南师范大学江边一舍', image: '/images/library.png', detailId: 'library', category: '宿舍' },
-  { name: '江边二舍', coords: [28.18933, 112.9484], description: '湖南师范大学江边二舍', image: '/images/library.png', detailId: 'library', category: '宿舍' },
-  { name: '江边三舍', coords: [28.18990, 112.9485], description: '湖南师范大学江边三舍', image: '/images/library.png', detailId: 'library', category: '宿舍' },
+  { name: '研六舍', coords: [28.18935, 112.94075], description: '湖南师范大学研六舍', image: '/images/library.png', detailId: 'yan6', category: '宿舍' },
+  { name: '研二舍', coords: [28.18815, 112.94135], description: '湖南师范大学研二舍', image: '/images/library.png', detailId: 'yan2', category: '宿舍' },
+  { name: '研五舍', coords: [28.18950, 112.94208], description: '湖南师范大学研五舍', image: '/images/library.png', detailId: 'yan5', category: '宿舍' },
+  { name: '研三舍', coords: [28.18865, 112.94208], description: '湖南师范大学研三舍', image: '/images/library.png', detailId: 'yan3', category: '宿舍' },
+  { name: '研一舍', coords: [28.18765, 112.94138], description: '湖南师范大学研一舍', image: '/images/library.png', detailId: 'yan1', category: '宿舍' },
+  { name: '二里半宿舍', coords: [28.19305, 112.94435], description: '湖南师范大学二里半宿舍', image: '/images/library.png', detailId: 'erliban', category: '宿舍' },
+  { name: '江边一舍', coords: [28.18880, 112.9484], description: '湖南师范大学江边一舍', image: '/images/library.png', detailId: 'jiangbian1', category: '宿舍' },
+  { name: '江边二舍', coords: [28.18933, 112.9484], description: '湖南师范大学江边二舍', image: '/images/library.png', detailId: 'jiangbian1', category: '宿舍' },
+  { name: '江边三舍', coords: [28.18990, 112.9485], description: '湖南师范大学江边三舍', image: '/images/library.png', detailId: 'jiangbian3', category: '宿舍' },
 
   // 文化风景
   { name: '忠烈祠', coords: [28.1926, 112.94025], description: '忠烈祠', image: '/images/zhonglie.png', detailId: 'zhonglie', category: '文化风景' },
-  { name: '岳王亭', coords: [28.19247, 112.93953], description: '岳王亭', image: '/images/yuwangting.png', detailId: 'yuwangting', category: '文化风景' },
+  { name: '岳王亭', coords: [28.19247, 112.93953], description: '岳王亭', image: '/images/yuwangting.png', detailId: 'yuewangting', category: '文化风景' },
 
   // 行政
   { name: '红楼', coords: [28.19455, 112.94170], description: '湖南师范大学红楼', image: '/images/honglou.png', detailId: 'honglou', category: '行政' },
-  { name: '教务处', coords: [28.19205, 112.9398], description: '湖南师范大学教务处', image: '/images/library.png', detailId: 'library', category: '行政' },
-  { name: '校工会', coords: [28.19165, 112.94243], description: '湖南师范大学校工会', image: '/images/library.png', detailId: 'library', category: '行政' },
-  { name: '学工处', coords: [28.19041, 112.94898], description: '湖南师范大学学工处', image: '/images/library.png', detailId: 'library', category: '行政' },
+  { name: '教务处', coords: [28.19205, 112.9398], description: '湖南师范大学教务处', image: '/images/library.png', detailId: 'jiaowuchu', category: '行政' },
+  { name: '校工会', coords: [28.19165, 112.94243], description: '湖南师范大学校工会', image: '/images/library.png', detailId: 'xiaogonghui', category: '行政' },
+  { name: '学工处', coords: [28.19041, 112.94898], description: '湖南师范大学学工处', image: '/images/library.png', detailId: 'xuegongchu', category: '行政' },
 
   // 重要场馆
-  { name: '校医院', coords: [28.19005, 112.94010], description: '湖南师范大学校医院', image: '/images/shichengshuyuan.png', detailId: 'shichengshuyuan', category: '重要场馆' },
+  { name: '校医院', coords: [28.19005, 112.94010], description: '湖南师范大学校医院', image: '/images/shichengshuyuan.png', detailId: 'xiaoyiyuan', category: '重要场馆' },
   { name: '图书馆', coords: [28.1895, 112.94335], description: '湖南师范大学逸夫图书馆', image: '/images/library.png', detailId: 'library', category: '重要场馆' },
   { name: '江湾体育馆', coords: [28.18805, 112.9435], description: '湖南师范大学江湾体育馆', image: '/images/jyGym.png', detailId: 'jyGym', category: '重要场馆' },
-  { name: '国际学术报告厅', coords: [28.18675, 112.94492], description: '湖南师范大学国际学术报告厅', image: '/images/library.png', detailId: 'library', category: '重要场馆' },
+  { name: '国际学术报告厅', coords: [28.18675, 112.94492], description: '湖南师范大学国际学术报告厅', image: '/images/library.png', detailId: 'baogaoting', category: '重要场馆' },
   { name: '田径场', coords: [28.18723, 112.94695], description: '湖南师范大学田径场', image: '/images/byPlayground.png', detailId: 'byPlayground', category: '重要场馆' }
 ]
+
 
 const mapRef = ref(null)
 const map = ref(null)
