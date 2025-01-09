@@ -5,6 +5,7 @@ import LocationDetail from '../views/LocationDetail.vue'
 import CircleView from '../views/CircleView.vue'
 import PersonalView from '../views/PersonalView.vue'
 import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -39,6 +40,11 @@ const router = createRouter({
           path: 'login',
           name: 'login',
           component: LoginView
+        },
+        {
+          path: '/register',
+          name: 'register',
+          component: RegisterView
         }
       ]
     }

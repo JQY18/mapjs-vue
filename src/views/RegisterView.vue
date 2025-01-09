@@ -1,15 +1,30 @@
 <template>
-  <div class="login-container">
-    <div class="login-box">
+  <div class="register-container">
+    <div class="register-box">
       <div class="header">
-        <h2>欢迎回来</h2>
-        <p class="subtitle">登录您的账号</p>
+        <h2>注册账号</h2>
+        <p class="subtitle">欢迎加入我们的社区</p>
       </div>
       
-      <form @submit.prevent="handleSubmit" class="login-form">
+      <form @submit.prevent="handleSubmit" class="register-form">
+        <div class="form-group">
+          <label for="nickname">
+            <Icon icon="mdi:account" class="input-icon"/>
+            昵称
+          </label>
+          <input
+            id="nickname"
+            v-model="nickname"
+            type="text"
+            required
+            placeholder="请输入昵称"
+            class="input-with-icon"
+          />
+        </div>
+
         <div class="form-group">
           <label for="username">
-            <Icon icon="mdi:account" class="input-icon"/>
+            <Icon icon="mdi:account-key" class="input-icon"/>
             用户名
           </label>
           <input
@@ -44,15 +59,15 @@
 
         <button type="submit" :disabled="isLoading" class="submit-button">
           <span class="button-content">
-            <Icon :icon="isLoading ? 'mdi:loading' : 'mdi:login'" 
+            <Icon :icon="isLoading ? 'mdi:loading' : 'mdi:account-plus'" 
                   class="button-icon" 
                   :class="{ 'spin': isLoading }"/>
-            {{ isLoading ? '登录中...' : '立即登录' }}
+            {{ isLoading ? '注册中...' : '立即注册' }}
           </span>
         </button>
 
-        <div class="register-link">
-          还没有账号？<router-link to="/register" class="link">去注册</router-link>
+        <div class="login-link">
+          已有账号？<router-link to="/login" class="link">去登录</router-link>
         </div>
       </form>
     </div>
@@ -66,6 +81,7 @@ import { userApi } from '../api/user'
 import { Icon } from '@iconify/vue'
 
 const router = useRouter()
+const nickname = ref('')
 const username = ref('')
 const password = ref('')
 const errorMessage = ref('')
@@ -78,28 +94,20 @@ const handleSubmit = async () => {
   isLoading.value = true
   
   try {
-    const { data } = await userApi.login({
+    const { data } = await userApi.register({
+      nickname: nickname.value,
       username: username.value,
       password: password.value
     })
     
     if (data.code === 1) {
-      // 登录成功，保存用户ID
-      localStorage.setItem('user', JSON.stringify({
-        id: data.data  // 存储返回的用户ID
-      }))
-      
-      // 获取重定向路径
-      const redirectPath = localStorage.getItem('redirectPath') || '/'
-      localStorage.removeItem('redirectPath')
-      
-      // 跳转到目标页面
-      router.push(redirectPath)
+      // 注册成功，跳转到登录页
+      router.push('/login')
     } else {
-      errorMessage.value = data.msg || '登录失败，请检查用户名和密码'
+      errorMessage.value = data.msg || '注册失败，请重试'
     }
   } catch (error) {
-    errorMessage.value = '登录失败，请检查网络连接'
+    errorMessage.value = '注册失败，请检查网络连接'
   } finally {
     isLoading.value = false
   }
@@ -107,7 +115,7 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-.login-container {
+.register-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -116,7 +124,7 @@ const handleSubmit = async () => {
   padding: 20px;
 }
 
-.login-box {
+.register-box {
   background: white;
   padding: 40px;
   border-radius: 16px;
@@ -127,7 +135,7 @@ const handleSubmit = async () => {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.login-box:hover {
+.register-box:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
@@ -246,7 +254,7 @@ label {
   to { transform: rotate(360deg); }
 }
 
-.register-link {
+.login-link {
   text-align: center;
   margin-top: 24px;
   font-size: 14px;
@@ -267,7 +275,7 @@ label {
 
 /* 响应式调整 */
 @media (max-width: 480px) {
-  .login-box {
+  .register-box {
     padding: 30px 20px;
   }
 

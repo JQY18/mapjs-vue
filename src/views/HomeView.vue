@@ -46,6 +46,7 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { userApi } from '../api/user'
 
 const router = useRouter()
 const route = useRoute()
@@ -73,12 +74,12 @@ const confirmLogout = () => {
 }
 
 const handleLogout = () => {
-  localStorage.removeItem('user')
-  isLoggedIn.value = false
+  userApi.logout()
   showLogoutConfirm.value = false
   if (route.path === '/personal') {
     router.push('/')
   }
+  isLoggedIn.value = false
 }
 
 const isActive = (tabId) => {

@@ -1,6 +1,20 @@
 import request from './request'
 
 export const userApi = {
+  // 用户登录
+  login(data) {
+    return request.post('/user/login', data)
+    // 请求体：{ username: string, password: string }
+    // 返回：{ code: 1, msg: "success", data: null }
+  },
+
+  // 用户注册
+  register(data) {
+    return request.post('/user/register', data)
+    // 请求体：{ nickname: string, username: string, password: string }
+    // 返回：{ code: 1, msg: "success", data: null }
+  },
+
   // 获取当前登录用户信息
   getCurrentUserInfo() {
     return request.get('/api/user/current')
@@ -53,5 +67,13 @@ export const userApi = {
     //     school: string
     //   }
     // }
+  },
+
+  // 退出登录
+  logout() {
+    // 清除本地存储的用户信息
+    localStorage.removeItem('user')
+    // 可以添加退出登录的接口请求，如果后端需要
+    // return request.post('/user/logout')
   }
 } 

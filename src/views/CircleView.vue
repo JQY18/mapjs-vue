@@ -144,7 +144,7 @@
           <img :src="comment.avatar" class="comment-avatar" />
           <div class="comment-content">
             <div class="comment-user">{{ comment.username }}</div>
-            <div class="comment-text">{{ comment.content }}</div>
+            <div class="comment-text bold-red">{{ comment.content }}</div>
             <div class="comment-footer">
               <span class="comment-time">{{ comment.time }}</span>
               <div class="comment-actions">
@@ -203,24 +203,10 @@
                       <span class="reply-to-name">{{ reply.replyTo }}</span>
                     </span>
                   </div>
-                  <div class="reply-text">{{ reply.content }}</div>
+                  <div class="reply-text bold-red">{{ reply.content }}</div>
                   <div class="reply-footer">
                     <span class="reply-time">{{ reply.time }}</span>
                     <div class="comment-actions">
-                      <div
-                        class="comment-action"
-                        :class="{ liked: reply.isLiked }"
-                        @click="toggleCommentLike(reply)"
-                      >
-                        <Icon
-                          :icon="
-                            reply.isLiked
-                              ? 'mdi:thumb-up'
-                              : 'mdi:thumb-up-outline'
-                          "
-                        />
-                        <span v-if="reply.likes">{{ reply.likes }}</span>
-                      </div>
                       <div
                         class="comment-action"
                         @click="replyToComment(comment, reply)"
@@ -499,35 +485,64 @@ const toggleCollect = async (post) => {
 // 获取评论列表
 const getComments = async (postId) => {
   try {
-    const { data } = await postApi.getComments(postId);
-    if (data.code === 0) {
-      commentsList.value = data.data.comments;
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const { data } = await postApi.getComments(postId, user.id)
+    if (data.code === 1) {
+      // 转换评论数据格式
+      commentsList.value = data.data.map(comment => ({
+        id: comment.id,
+        username: comment.commenterNickname,
+        avatar: comment.commenterAvatar,
+        content: comment.content,
+        time: formatTime(comment.createTime),
+        likes: comment.like,
+        isLiked: comment.isLiked,
+        showReplies: false,
+        replies: comment.reply.map(reply => ({
+          id: reply.id,
+          username: reply.commenterNickname,
+          avatar: reply.commenterAvatar,
+          content: reply.content,
+          time: formatTime(reply.createTime),
+          replyTo: reply.replierNickname,
+          replyToAvatar: reply.replierAvatar,
+          likes: 0,  // 回复暂时没有点赞数
+          isLiked: false  // 回复暂时没有点赞状态
+        }))
+      }))
     }
   } catch (error) {
-    console.error("获取评论失败:", error);
+    console.error("获取评论失败:", error)
   }
-};
+}
+
+// 修改打开评论方法
+const openComments = async (post) => {
+  currentPost.value = post
+  showComments.value = true
+  await getComments(post.id)
+}
 
 // 修改评论点赞方法
 const toggleCommentLike = async (comment) => {
   if (!isLoggedIn.value) {
-    router.push("/login");
-    return;
+    router.push("/login")
+    return
   }
 
   try {
     const { data } = comment.isLiked
       ? await postApi.unlikeComment(comment.id)
-      : await postApi.likeComment(comment.id);
+      : await postApi.likeComment(comment.id)
 
-    if (data.code === 0) {
-      comment.isLiked = data.data.isLiked;
-      comment.likes = data.data.likes;
+    if (data.code === 1) {
+      comment.isLiked = !comment.isLiked
+      comment.likes = data.data.likes
     }
   } catch (error) {
-    console.error("评论点赞失败:", error);
+    console.error("评论点赞失败:", error)
   }
-};
+}
 
 // 修改提交评论方法
 const submitComment = async () => {
@@ -548,13 +563,6 @@ const submitComment = async () => {
   } catch (error) {
     console.error("发表评论失败:", error);
   }
-};
-
-// 修改打开评论方法
-const openComments = async (post) => {
-  currentPost.value = post;
-  showComments.value = true;
-  await getComments(post.id);
 };
 
 const replyToComment = (comment, reply) => {
@@ -849,8 +857,8 @@ const submitPost = async () => {
 .comment-item {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
+  padding: 12px 16px;
+  gap: 0;
   border-bottom: 1px solid #f0f0f0;
 }
 
@@ -862,20 +870,20 @@ const submitPost = async () => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  margin-right: 12px;
+  margin-right: 0;
 }
 
 .comment-content {
   flex: 1;
-  padding-top: 2px;
+  padding-left: 8px;
 }
 
 .comment-user {
   font-weight: 600;
   color: #1890ff;
   font-size: 14px;
-  line-height: 1;
-  margin-bottom: 6px;
+  line-height: 1.2;
+  margin-bottom: 2px;
 }
 
 .comment-text {
@@ -937,6 +945,7 @@ const submitPost = async () => {
   padding-bottom: 12px;
   border-bottom: 1px solid #f5f5f5;
   position: relative;
+  gap: 0;
 }
 
 .reply-item:last-child {
@@ -948,20 +957,20 @@ const submitPost = async () => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  margin-right: 8px;
+  margin-right: 0;
 }
 
 .reply-content {
   flex: 1;
-  padding-top: 2px;
+  padding-left: 6px;
 }
 
 .reply-user {
   font-weight: 600;
   color: #1890ff;
   font-size: 13px;
-  line-height: 1;
-  margin-bottom: 4px;
+  line-height: 1.2;
+  margin-bottom: 2px;
 }
 
 .reply-text {
