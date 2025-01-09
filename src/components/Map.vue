@@ -595,7 +595,7 @@ const toggleCategoryPanel = () => {
   isExpanded.value = !isExpanded.value
 }
 
-<<<<<<< Updated upstream
+
 // 修改关闭路线规划面板的处理方法
 const closeRoutePanel = () => {
   showRoutePanel.value = false
@@ -606,7 +606,7 @@ const closeRoutePanel = () => {
   selectedStart.value = null
   selectedEnd.value = null
 }
-=======
+
 const modalPosition = ref({ x: 0, y: 0 })
 
 // 修改打开modal的方法
@@ -627,7 +627,7 @@ markers.value.forEach(location => {
       openLocationModal(location, e.originalEvent)
     })
 })
->>>>>>> Stashed changes
+
 </script>
 
 <style scoped>
