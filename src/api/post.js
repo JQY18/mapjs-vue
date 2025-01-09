@@ -20,54 +20,25 @@ export const postApi = {
     // }
   },
 
-  // 获取帖子评论
-  getComments(postId, userId) {
-    return request.get(`/comments/${postId}?userId=${userId}`)
-    // 返回格式：
-    // {
-    //   code: 1,
-    //   msg: "success",
-    //   data: [{
-    //     id: number,
-    //     postId: number,
-    //     commenterId: number,
-    //     commenterNickname: string,
-    //     commenterAvatar: string,
-    //     content: string,
-    //     like: number,
-    //     createTime: string,
-    //     reply: [{
-    //       id: number,
-    //       fatherId: number,
-    //       commenterId: number,
-    //       commenterNickname: string,
-    //       commenterAvatar: string,
-    //       content: string,
-    //       replierId: number,
-    //       replierNickname: string,
-    //       replierAvatar: string,
-    //       createTime: string
-    //     }],
-    //     isLiked: boolean
-    //   }]
-    // }
-  },
-
-  // 发表评论
-  addComment(postId, data) {
-    return request.post(`/api/post/${postId}/comment`, data)
-    // 请求参数：
-    // {
-    //   content: string,
-    //   replyTo?: number  // 回复某条评论时需要
-    // }
+  // 发布帖子
+  createPost(formData) {
+    return request({
+      url: '/post/create',
+      method: 'post',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
     // 返回格式：
     // {
     //   code: 1,
     //   msg: "success",
     //   data: {
     //     id: number,
+    //     userId: number,
     //     content: string,
+    //     images: string[],
     //     createTime: string
     //   }
     // }
