@@ -8,6 +8,10 @@
             <img :src="post.avatar" class="avatar" />
             <div class="user-info">
               <div class="username">{{ post.username }}</div>
+              <div class="user-detail">
+                <span v-if="post.userSchool">{{ post.userSchool }}</span>
+                <span v-if="post.userGender" class="gender">{{ post.userGender }}</span>
+              </div>
               <div class="post-time">{{ post.time }}</div>
             </div>
           </div>
@@ -204,6 +208,7 @@ import { useRouter } from "vue-router";
 import ImageDialog from "../components/ImageDialog.vue";
 import { postApi } from "../api/post";
 import request from "../api/request";
+import { userApi } from '../api/user'
 
 const router = useRouter();
 
@@ -293,9 +298,7 @@ const isLoggedIn = computed(() => {
 });
 
 onMounted(() => {
-  request.get("/api/posts").then((res) => {
-    posts.value = res.data;
-  });
+  fetchPosts()
 });
 
 const handleInputClick = () => {
@@ -312,17 +315,75 @@ const handleCommentSubmit = () => {
   submitComment();
 };
 
-// 获取帖子列表
+// 获取用户信息的方法
+const getUserInfo = async (userId) => {
+  try {
+    const { data } = await userApi.getUserInfo(userId)
+    if (data.code === 1) {
+      return data.data
+    }
+    return null
+  } catch (error) {
+    console.error("获取用户信息失败:", error)
+    return null
+  }
+}
+
+// 修改获取帖子列表的方法
 const fetchPosts = async () => {
   try {
-    const data = await postApi.getPosts();
-    if (data) {
-      posts.value = data.data;
+    const { data } = await postApi.getPosts()
+    if (data.code === 1) {
+      // 获取所有帖子的用户信息
+      const postsWithUserInfo = await Promise.all(
+        data.data.map(async post => {
+          const userInfo = await getUserInfo(post.userId)
+          return {
+            id: post.id,
+            username: userInfo?.nickname || userInfo?.username || `用户${post.userId}`, // 优先使用昵称
+            avatar: userInfo?.avatar || "/public/icon/icon.jpeg", // 使用用户头像或默认头像
+            time: formatTime(post.createTime),
+            content: post.content,
+            title: post.title,
+            images: post.images,
+            likes: 0,
+            comments: 0,
+            isLiked: false,
+            isCollected: false,
+            // 可以添加其他用户信息
+            userSchool: userInfo?.school,
+            userGender: userInfo?.gender
+          }
+        })
+      )
+      posts.value = postsWithUserInfo
     }
   } catch (error) {
-    console.error("获取帖子列表失败:", error);
+    console.error("获取帖子列表失败:", error)
   }
-};
+}
+
+// 添加时间格式化函数
+const formatTime = (timestamp) => {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diff = now - date
+
+  // 小于1小时，显示xx分钟前
+  if (diff < 3600000) {
+    const minutes = Math.floor(diff / 60000)
+    return `${minutes}分钟前`
+  }
+  
+  // 小于24小时，显示xx小时前
+  if (diff < 86400000) {
+    const hours = Math.floor(diff / 3600000)
+    return `${hours}小时前`
+  }
+  
+  // 其他情况显示具体日期
+  return date.toLocaleDateString()
+}
 
 // 修改点赞方法
 const toggleLike = async (post) => {
@@ -892,5 +953,18 @@ const closeImageViewer = () => {
 
 .action-item:hover {
   background-color: #f5f5f5;
+}
+
+.user-detail {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.gender {
+  margin-left: 8px;
+  padding: 0 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
 }
 </style> 
