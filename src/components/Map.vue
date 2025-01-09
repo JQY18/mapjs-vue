@@ -3,24 +3,15 @@
     <!-- 搜索框 -->
     <div class="search-container">
       <div class="search-box">
-        <Icon icon="ic:baseline-search" class="search-icon"/>
-        <input 
-          type="text" 
-          placeholder="搜索校园地点..." 
-          v-model="searchQuery"
-          @focus="showSearchResults = true"
-          @blur="handleSearchBlur"
-        />
+        <Icon icon="ic:baseline-search" class="search-icon" />
+        <input type="text" placeholder="搜索校园地点..." v-model="searchQuery" @focus="showSearchResults = true"
+          @blur="handleSearchBlur" />
       </div>
       <div class="search-results" v-if="showSearchResults">
         <div v-if="filteredLocations.length">
-          <div 
-            v-for="location in filteredLocations" 
-            :key="location.name"
-            class="search-result-item"
+          <div v-for="location in filteredLocations" :key="location.name" class="search-result-item"
             :class="{ 'highlighted': selectedLocation && selectedLocation.name === location.name }"
-            @mousedown="navigateToLocation(location)"
-          >
+            @mousedown="navigateToLocation(location)">
             <Icon icon="mdi:map-marker" class="location-icon" />
             <div class="location-info">
               <div class="location-name">{{ location.name }}</div>
@@ -30,15 +21,10 @@
         </div>
         <div v-else-if="searchHistory.length && !searchQuery" class="search-history">
           <div class="history-title">最近搜索</div>
-          <div 
-            v-for="name in searchHistory" 
-            :key="name"
-            class="search-result-item"
-            @mousedown="() => {
-              const location = locations.find(l => l.name === name)
-              if (location) navigateToLocation(location)
-            }"
-          >
+          <div v-for="name in searchHistory" :key="name" class="search-result-item" @mousedown="() => {
+            const location = locations.find(l => l.name === name)
+            if (location) navigateToLocation(location)
+          }">
             <Icon icon="mdi:history" class="history-icon" />
             <span>{{ name }}</span>
           </div>
@@ -57,50 +43,28 @@
       <div class="route-inputs">
         <div class="route-input">
           <Icon icon="ic:baseline-location-on" class="route-icon start" />
-          <input 
-            type="text" 
-            v-model="startPoint"
-            placeholder="选择起点..."
-            @focus="showStartSuggestions = true"
-            @blur="handleSuggestionBlur('start')"
-          />
+          <input type="text" v-model="startPoint" placeholder="选择起点..." @focus="showStartSuggestions = true"
+            @blur="handleSuggestionBlur('start')" />
         </div>
         <div class="suggestions" v-if="showStartSuggestions && startSuggestions.length">
-          <div 
-            v-for="location in startSuggestions" 
-            :key="location.name"
-            class="suggestion-item"
-            @mousedown="selectStart(location)"
-          >
+          <div v-for="location in startSuggestions" :key="location.name" class="suggestion-item"
+            @mousedown="selectStart(location)">
             {{ location.name }}
           </div>
         </div>
         <div class="route-input">
           <Icon icon="ic:baseline-flag" class="route-icon end" />
-          <input 
-            type="text" 
-            v-model="endPoint"
-            placeholder="选择终点..."
-            @focus="showEndSuggestions = true"
-            @blur="handleSuggestionBlur('end')"
-          />
+          <input type="text" v-model="endPoint" placeholder="选择终点..." @focus="showEndSuggestions = true"
+            @blur="handleSuggestionBlur('end')" />
         </div>
         <div class="suggestions" v-if="showEndSuggestions && endSuggestions.length">
-          <div 
-            v-for="location in endSuggestions" 
-            :key="location.name"
-            class="suggestion-item"
-            @mousedown="selectEnd(location)"
-          >
+          <div v-for="location in endSuggestions" :key="location.name" class="suggestion-item"
+            @mousedown="selectEnd(location)">
             {{ location.name }}
           </div>
         </div>
       </div>
-      <button 
-        class="plan-route-btn" 
-        @click="planRoute"
-        :disabled="!selectedStart || !selectedEnd"
-      >
+      <button class="plan-route-btn" @click="planRoute" :disabled="!selectedStart || !selectedEnd">
         规划路线
       </button>
     </div>
@@ -108,16 +72,16 @@
     <!-- 地图控制按钮 -->
     <div class="map-controls">
       <button class="control-btn" @click="zoomIn" title="放大">
-        <Icon icon="mdi:plus" class="function-icon"/>
+        <Icon icon="mdi:plus" class="function-icon" />
       </button>
       <button class="control-btn" @click="zoomOut" title="缩小">
-        <Icon icon="mdi:minus" class="function-icon"/>
+        <Icon icon="mdi:minus" class="function-icon" />
       </button>
       <button class="control-btn" @click="resetView" title="返回学校">
-        <Icon icon="mdi:home" class="function-icon"/>
+        <Icon icon="mdi:home" class="function-icon" />
       </button>
       <button class="control-btn" @click="showRoutePanel = true" title="路线规划">
-        <Icon icon="mdi:routes" class="function-icon"/>
+        <Icon icon="mdi:routes" class="function-icon" />
       </button>
       <!-- 保留项目，总体图标显示/隐藏 -->
       <!-- <button class="control-btn" @click="toggleMarkers" title="显示/隐藏地点">
@@ -126,20 +90,14 @@
       <!-- 新增的分类触发器按钮和弹出按钮组 -->
       <div class="category-controls">
         <button class="control-btn trigger-btn" @click="toggleCategoryPanel" title="地点分类">
-          <Icon :icon="isExpanded ? 'meteor-icons:chevron-right' : 'meteor-icons:chevron-left'" class="function-icon"/>
+          <Icon :icon="isExpanded ? 'meteor-icons:chevron-right' : 'meteor-icons:chevron-left'" class="function-icon" />
         </button>
         <div class="category-buttons" :class="{ 'show-buttons': showCategoryBtns }">
-          <button 
-            v-for="category in categories" 
-            :key="category"
-            class="control-btn category-btn"
+          <button v-for="category in categories" :key="category" class="control-btn category-btn"
             :class="{ active: selectedCategories.includes(category) }"
-            :style="{ backgroundColor: categoryColors[category] }"
-            @click="toggleCategory(category)"
-            :title="category"
-          >
+            :style="{ backgroundColor: categoryColors[category] }" @click="toggleCategory(category)" :title="category">
             <div class="category-btn-content">
-              <Icon :icon="categoryButtonIcons[category]" class="function-icon white-icon"/>
+              <Icon :icon="categoryButtonIcons[category]" class="function-icon white-icon" />
               <span class="category-text">{{ category }}</span>
             </div>
           </button>
@@ -149,14 +107,8 @@
 
     <div id="map" ref="mapRef"></div>
 
-    <LocationModal
-      v-if="showLocationModal"
-      :show="showLocationModal"
-      :location="selectedLocation"
-      :clickPosition="modalPosition"
-      @close="showLocationModal = false"
-      @plan-route="handlePlanRoute"
-    />
+    <LocationModal v-if="showLocationModal" :show="showLocationModal" :location="selectedLocation"
+      :clickPosition="modalPosition" @close="showLocationModal = false" @plan-route="handlePlanRoute" />
   </div>
 </template>
 
@@ -261,7 +213,7 @@ const INITIAL_ZOOM = 16
 const filteredLocations = computed(() => {
   if (!searchQuery.value) return []
   const query = searchQuery.value.toLowerCase()
-  return locations.filter(location => 
+  return locations.filter(location =>
     location.name.toLowerCase().includes(query) ||
     (location.description?.toLowerCase().includes(query) || false)
   ).slice(0, 5)
@@ -291,17 +243,44 @@ const showLocationModal = ref(false)
 const selectedLocation = ref(null)
 
 const navigateToLocation = (location) => {
+  // 先关闭已经打开的 modal
+  showLocationModal.value = false
+  
+  // 设置选中的位置
+  selectedLocation.value = location
+  
+  // 添加一次性事件监听器，等待地图移动完成
+  const onMoveEnd = () => {
+    // 获取 marker 在屏幕上的像素坐标
+    const point = map.value.latLngToContainerPoint(location.coords)
+    modalPosition.value = {
+      x: point.x,
+      y: point.y
+    }
+    
+    // 显示 modal
+    showLocationModal.value = true
+    
+    // 移除事件监听器
+    map.value.off('moveend', onMoveEnd)
+  }
+  
+  // 添加事件监听器
+  map.value.on('moveend', onMoveEnd)
+  
+  // 移动地图到目标位置
   map.value?.setView(location.coords, 18)
+  
+  // 更新其他状态
   markers.value.forEach(marker => {
     if (marker.getLatLng().equals(location.coords)) {
       marker.openPopup()
     }
   })
+  
   addToHistory(location)
   showSearchResults.value = false
   searchQuery.value = location.name
-  selectedLocation.value = location
-  showLocationModal.value = true
 }
 
 const handleSearchBlur = () => {
@@ -323,14 +302,14 @@ const selectedEnd = ref(null)
 // 添加建议列表计算属性
 const startSuggestions = computed(() => {
   if (!startPoint.value) return []
-  return locations.filter(location => 
+  return locations.filter(location =>
     location.name.toLowerCase().includes(startPoint.value.toLowerCase())
   )
 })
 
 const endSuggestions = computed(() => {
   if (!endPoint.value) return []
-  return locations.filter(location => 
+  return locations.filter(location =>
     location.name.toLowerCase().includes(endPoint.value.toLowerCase())
   )
 })
@@ -384,8 +363,8 @@ const planRoute = () => {
       serviceUrl: 'https://router.project-osrm.org/route/v1',
       profile: 'foot',
       options: {
-      continue_straight: true // 尽量避免掉头
-    }
+        continue_straight: true // 尽量避免掉头
+      }
     }),
     lineOptions: {
       styles: [{ color: '#3388ff', weight: 6, opacity: 0.7, dashArray: '10, 10' }]
@@ -489,7 +468,7 @@ onMounted(() => {
   if (mapRef.value) {
     // 计算所有标记点的边界
     const bounds = L.latLngBounds(locations.map(loc => loc.coords))
-    
+
     // 初始化地图，调整缩放范围
     const mapInstance = L.map(mapRef.value, {
       attributionControl: false,
@@ -498,11 +477,17 @@ onMounted(() => {
       maxBounds: bounds.pad(0.1),
       maxBoundsViscosity: 0.8
     }).setView(HNNU_CENTER, INITIAL_ZOOM)
-    
+
     map.value = mapInstance
 
     // 添加图层
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {}).addTo(mapInstance)
+
+    // 添加地图点击事件监听器
+    mapInstance.on('click', () => {
+      // 点击地图时关闭 LocationModal
+      showLocationModal.value = false
+    })
 
     // 添加标记
     locations.forEach(location => {
@@ -510,16 +495,17 @@ onMounted(() => {
         icon: categoryIcons[location.category]
       })
         .addTo(mapInstance)
-        .on('click', () => {
-          selectedLocation.value = location
-          showLocationModal.value = true
+        .on('click', (e) => {
+          // 阻止事件冒泡，防止触发地图的点击事件
+          L.DomEvent.stopPropagation(e)
+          openLocationModal(location, e)
         })
-      
+
       // 根据初始类别状态决定是否显示标记
       if (!selectedCategories.value.includes(location.category)) {
         marker.removeFrom(mapInstance)
       }
-      
+
       markers.value.push(marker)
     })
 
@@ -537,18 +523,7 @@ const handlePlanRoute = () => {
   }
 }
 
-const showMarkers = ref(true)
 
-const toggleMarkers = () => {
-  showMarkers.value = !showMarkers.value
-  markers.value.forEach(marker => {
-    if (showMarkers.value) {
-      marker.addTo(map.value)
-    } else {
-      marker.removeFrom(map.value)
-    }
-  })
-}
 
 // 添加分类相关的变量
 const categories = ['宿舍', '食堂', '文化风景', '教学科研', '行政', '重要场馆']
@@ -567,13 +542,15 @@ const showCategoryBtns = ref(false)
 
 // 修改分类切换方法
 const toggleCategory = (category) => {
-  const index = selectedCategories.value.indexOf(category)
-  if (index > -1) {
-    selectedCategories.value.splice(index, 1)
+  // 如果当前分类已经被选中，则显示所有分类
+  if (selectedCategories.value.length === 1 && selectedCategories.value[0] === category) {
+    selectedCategories.value = categories.slice() // 重置为所有分类
   } else {
-    selectedCategories.value.push(category)
+    // 否则只显示选中的分类
+    selectedCategories.value = [category]
   }
   
+  // 更新地图上的标记显示状态
   locations.forEach((location, idx) => {
     const marker = markers.value[idx]
     if (selectedCategories.value.includes(location.category)) {
@@ -612,9 +589,11 @@ const modalPosition = ref({ x: 0, y: 0 })
 // 修改打开modal的方法
 const openLocationModal = (location, event) => {
   selectedLocation.value = location
+  // 获取点击位置相对于视口的坐标
+  const point = map.value.latLngToContainerPoint(location.coords);
   modalPosition.value = {
-    x: event.clientX,
-    y: event.clientY
+    x: point.x,
+    y: point.y
   }
   showLocationModal.value = true
 }
@@ -765,7 +744,8 @@ input:focus {
   margin-top: 2px;
 }
 
-.location-icon, .history-icon {
+.location-icon,
+.history-icon {
   color: #666;
   font-size: 18px;
   margin-right: 4px;
@@ -965,6 +945,21 @@ input:focus {
   align-items: center;
   justify-content: flex-start;
   border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.category-btn:not(.active) {
+  background-color: #f5f5f5 !important;
+}
+
+.category-btn:not(.active) .white-icon,
+.category-btn:not(.active) .category-text {
+  color: #666;
+}
+
+.category-btn.active {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .category-btn-content {
@@ -994,7 +989,9 @@ input:focus {
 }
 
 .highlighted {
-  border: 2px solid #1890ff; /* 高亮边框颜色 */
-  background-color: rgba(24, 144, 255, 0.1); /* 高亮背景颜色 */
+  border: 2px solid #1890ff;
+  /* 高亮边框颜色 */
+  background-color: rgba(24, 144, 255, 0.1);
+  /* 高亮背景颜色 */
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
-  <div v-if="show" class="modal-overlay" @click="$emit('close')">
-    <div class="modal-content" @click.stop>
+  <div v-if="show" class="popup-modal" :style="popupStyle">
+    <div class="popup-content" @click.stop>
       <button class="close-button" @click="$emit('close')">
         <Icon icon="mdi:close" />
       </button>
@@ -34,6 +34,8 @@
           到这去
         </button>
       </div>
+      
+      <div class="popup-arrow"></div>
     </div>
   </div>
 </template>
@@ -41,15 +43,29 @@
 <script setup>
 import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
+import { computed } from 'vue'
 
 const props = defineProps({
   show: Boolean,
-  location: Object
+  location: Object,
+  clickPosition: {
+    type: Object,
+    default: () => ({ x: 0, y: 0 })
+  }
 })
 
 const emit = defineEmits(['close', 'plan-route', 'set-start', 'set-end'])
 
 const router = useRouter()
+
+// 计算弹窗位置
+const popupStyle = computed(() => {
+  const { x, y } = props.clickPosition
+  return {
+    left: `${x}px`,
+    top: `${y - 10}px`, // 向上偏移10px，为箭头留出空间
+  }
+})
 
 const goToDetail = () => {
   if (props.location?.detailId) {
@@ -93,47 +109,54 @@ export default {
 </script>
 
 <style scoped>
-.modal-overlay {
+.popup-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
   z-index: 2000;
+  transform: translate(-50%, -100%); /* 居中并向上移动 */
 }
 
-.modal-content {
+.popup-content {
   background: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  padding: 15px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   position: relative;
+}
+
+/* 添加指向箭头 */
+.popup-arrow {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid white;
 }
 
 .close-button {
   position: absolute;
-  right: 12px;
-  top: 12px;
+  right: 8px;
+  top: 8px;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 24px;
+  font-size: 20px;
   color: #666;
   z-index: 10;
+  padding: 4px;
 }
 
 .location-image {
   position: relative;
   cursor: pointer;
   overflow: hidden;
-  border-radius: 8px;
-  height: 200px;
-  margin-top: 20px;
+  border-radius: 6px;
+  height: 150px;
+  margin-top: 15px;
 }
 
 .location-image img {
@@ -149,7 +172,7 @@ export default {
   right: 0;
   background: rgba(0, 0, 0, 0.6);
   color: white;
-  padding: 8px;
+  padding: 6px;
   text-align: center;
   transform: translateY(100%);
   transition: transform 0.3s ease;
@@ -160,32 +183,35 @@ export default {
 }
 
 .location-info {
-  margin: 20px 0;
+  margin: 15px 0;
 }
 
 .location-info h2 {
-  margin: 0 0 10px 0;
+  margin: 0 0 8px 0;
   color: #333;
+  font-size: 1.2em;
 }
 
 .location-info p {
   margin: 0;
   color: #666;
+  font-size: 0.9em;
 }
 
 .action-buttons {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 8px;
+  margin-top: 15px;
 }
 
 .action-buttons button {
   flex: 1;
-  padding: 10px;
+  padding: 8px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
+  font-size: 0.9em;
 }
 
 .detail-button {
@@ -200,25 +226,26 @@ export default {
 
 .route-action-buttons {
   display: flex;
-  gap: 10px;
-  margin-top: 12px;
-  padding-top: 12px;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid #eee;
 }
 
 .start-button,
 .end-button {
   flex: 1;
-  padding: 10px;
+  padding: 8px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   transition: all 0.3s;
+  font-size: 0.9em;
 }
 
 .start-button {
@@ -240,6 +267,6 @@ export default {
 }
 
 .button-icon {
-  font-size: 18px;
+  font-size: 16px;
 }
 </style> 
