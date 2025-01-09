@@ -393,20 +393,35 @@ const planRoute = () => {
 
   clearRoute();
 
+  const startPoint = L.latLng(selectedStart.value.coords[0], selectedStart.value.coords[1]);
+  const endPoint = L.latLng(selectedEnd.value.coords[0], selectedEnd.value.coords[1]);
+
+  // 创建路线控制器
   const control = L.Routing.control({
-    waypoints: [
-      L.latLng(selectedStart.value.coords[0], selectedStart.value.coords[1]),
-      L.latLng(selectedEnd.value.coords[0], selectedEnd.value.coords[1])
-    ],
+    waypoints: [startPoint, endPoint],
     router: L.Routing.osrmv1({
       serviceUrl: 'https://router.project-osrm.org/route/v1',
-      profile: 'foot',
+      profile: 'foot',  // 使用步行模式
       options: {
-        continue_straight: true // 尽量避免掉头
+        steps: true,
+        alternatives: false,  // 不显示备选路线
+        annotations: false,  // 禁用注释
+        geometryOnly: false,
+        overview: 'full',
+        // 关键修改：添加参数以忽略道路方向限制
+        ignore_restrictions: true,  // 忽略转弯限制
+        ignore_oneway: true,       // 忽略单行道限制
+        ignore_roads: [],          // 不排除任何道路类型
       }
     }),
     lineOptions: {
-      styles: [{ color: '#3388ff', weight: 6, opacity: 0.7, dashArray: '10, 10' }]
+      styles: [{ 
+        color: '#3388ff', 
+        weight: 6, 
+        opacity: 0.7 
+      }],
+      addWaypoints: false,
+      missingRouteTolerance: 10 // 增加容差以更好地吸附到道路
     },
     createMarker: () => null,
     addWaypoints: false,
@@ -418,7 +433,13 @@ const planRoute = () => {
 
   routingControl.value = control;
   control.addTo(map.value);
-}
+
+  // 添加路由错误处理
+  control.on('routingerror', () => {
+    ElMessage.error('路线规划失败，请尝试其他路线');
+    clearRoute();
+  });
+};
 
 // 添加样式
 const customizeRoutingControl = () => {
