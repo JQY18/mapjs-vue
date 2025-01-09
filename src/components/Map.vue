@@ -49,7 +49,7 @@
     <div class="route-panel" v-if="showRoutePanel">
       <div class="route-header">
         <h3>路线规划</h3>
-        <button class="close-btn" @click="showRoutePanel = false">
+        <button class="close-btn" @click="closeRoutePanel">
           <Icon icon="ic:baseline-close" />
         </button>
       </div>
@@ -156,13 +156,35 @@
 </template>
 
 <script setup>
-import { onMounted, ref, computed, onUnmounted } from 'vue'
+import { onMounted, ref, computed, onUnmounted, watch } from 'vue'
 import { Icon } from '@iconify/vue';
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.js'
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
 import LocationModal from './LocationModal.vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+// 监听路由参数变化
+watch(
+  () => route.query,
+  (query) => {
+    if (query.openRoute === 'true') {
+      showRoutePanel.value = true
+      if (query.startPoint) {
+        startPoint.value = query.startPoint
+        selectedStart.value = locations.find(loc => loc.name === query.startPoint)
+      }
+      if (query.endPoint) {
+        endPoint.value = query.endPoint
+        selectedEnd.value = locations.find(loc => loc.name === query.endPoint)
+      }
+    }
+  },
+  { immediate: true }
+)
 
 // 重要地点数据
 const locations = [
@@ -566,6 +588,17 @@ const isExpanded = ref(false)
 const toggleCategoryPanel = () => {
   showCategoryBtns.value = !showCategoryBtns.value
   isExpanded.value = !isExpanded.value
+}
+
+// 修改关闭路线规划面板的处理方法
+const closeRoutePanel = () => {
+  showRoutePanel.value = false
+  // 清除路线和输入
+  clearRoute()
+  startPoint.value = ''
+  endPoint.value = ''
+  selectedStart.value = null
+  selectedEnd.value = null
 }
 </script>
 

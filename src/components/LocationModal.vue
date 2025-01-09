@@ -23,6 +23,17 @@
           规划路线
         </button>
       </div>
+
+      <div class="route-action-buttons">
+        <button class="start-button" @click="setAsStart">
+          <Icon icon="mdi:flag-outline" class="button-icon" />
+          从这出发
+        </button>
+        <button class="end-button" @click="setAsEnd">
+          <Icon icon="mdi:flag-checkered" class="button-icon" />
+          到这去
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -36,7 +47,7 @@ const props = defineProps({
   location: Object
 })
 
-const emit = defineEmits(['close', 'plan-route'])
+const emit = defineEmits(['close', 'plan-route', 'set-start', 'set-end'])
 
 const router = useRouter()
 
@@ -48,6 +59,30 @@ const goToDetail = () => {
 
 const planRoute = () => {
   emit('plan-route')
+}
+
+const setAsStart = () => {
+  emit('set-start', props.location)
+  emit('close')
+  router.push({
+    path: '/',
+    query: {
+      openRoute: 'true',
+      startPoint: props.location.name
+    }
+  })
+}
+
+const setAsEnd = () => {
+  emit('set-end', props.location)
+  emit('close')
+  router.push({
+    path: '/',
+    query: {
+      openRoute: 'true',
+      endPoint: props.location.name
+    }
+  })
 }
 </script>
 
@@ -158,5 +193,50 @@ export default {
 .route-button {
   background: #4CAF50;
   color: white;
+}
+
+.route-action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.start-button,
+.end-button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.3s;
+}
+
+.start-button {
+  background: #e6f4ff;
+  color: #1890ff;
+}
+
+.start-button:hover {
+  background: #bae0ff;
+}
+
+.end-button {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.end-button:hover {
+  background: #d9f7be;
+}
+
+.button-icon {
+  font-size: 18px;
 }
 </style> 
