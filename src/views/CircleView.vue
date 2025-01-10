@@ -77,7 +77,7 @@
             <div class="user-info">
               <div class="username">{{ post.username }}</div>
               <div class="user-detail">
-                <span v-if="post.userSchool">{{ post.userSchool }}</span>
+                <!-- <span v-if="post.userSchool">{{ post.userSchool }}</span> -->
                 <span v-if="post.userGender" class="gender">{{ post.userGender }}</span>
               </div>
               <div class="post-time">{{ post.time }}</div>
