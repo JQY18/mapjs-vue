@@ -134,7 +134,7 @@ import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
 import LocationModal from './LocationModal.vue'
 import { useRoute } from 'vue-router'
 import request from '../api/request';
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
