@@ -658,9 +658,13 @@ const openLocationModal = (location, event) => {
   selectedLocation.value = location
   // 获取点击位置相对于视口的坐标
   const point = map.value.latLngToContainerPoint(location.coords);
+  
+  // 计算header和tabs的总高度
+  const headerHeight = 70;  // header高度 (50px + padding)
+  
   modalPosition.value = {
-    x: point.x,
-    y: point.y
+    x: point.x + 20, // 向右偏移20px，为箭头留出空间
+    y: point.y -headerHeight
   }
   showLocationModal.value = true
 }
