@@ -158,7 +158,7 @@ watch(
 // 重要地点数据
 const locations = [
   // 食堂
-  { name: '兰桂苑', coords: [28.18875, 112.94125], description: '湖南师范大学学生兰桂苑', image: '/images/library.png', detailId: 'lgyCanteen', category: '食堂' },
+  { name: '兰桂苑', coords: [28.1887, 112.94155], description: '湖南师范大学学生兰桂苑', image: '/images/library.png', detailId: 'lgyCanteen', category: '食堂' },
   { name: '木兰食堂', coords: [28.18940, 112.94155], description: '湖南师范大学木兰食堂', image: '/images/library.png', detailId: 'mlCanteen', category: '食堂' },
   { name: '江边食堂', coords: [28.19045, 112.9487], description: '湖南师范大学江边食堂', image: '/images/jbCanteen.jpg', detailId: 'jbCanteen', category: '食堂' },
 
@@ -175,8 +175,8 @@ const locations = [
   { name: '新闻与传播学院', coords: [28.19345, 112.94315], description: '湖南师范大学新闻与传播学院', image: '/images/xcCollege.png', detailId: 'xcCollege', category: '教学科研' },
   { name: '生命科学学院', coords: [28.19225, 112.94500], description: '湖南师范大学生命科学学院', image: '/images/skCollege.png', detailId: 'skCollege', category: '教学科研' },
   { name: '文渊楼', coords: [28.1920, 112.9416], description: '湖南师范大学文渊楼', image: '/images/wenyuanlou.png', detailId: 'wenyuanlou', category: '教学科研' },
-  { name: '中和楼', coords: [28.1911, 112.9419], description: '湖南师范大学中和楼', image: '/images/zhonghelou.png', detailId: 'zhonghelou', category: '教学科研' },
-  { name: '化工院', coords: [28.1912, 112.9432], description: '湖南师范大学化工院', image: '/images/hxCollege.png', detailId: 'hxCollege', category: '教学科研' },
+  { name: '中和楼', coords: [28.1911, 112.9416], description: '湖南师范大学中和楼', image: '/images/zhonghelou.png', detailId: 'zhonghelou', category: '教学科研' },
+  { name: '化工院', coords: [28.1911, 112.9430], description: '湖南师范大学化工院', image: '/images/hxCollege.png', detailId: 'hxCollege', category: '教学科研' },
   { name: '工学院', coords: [28.18805, 112.9443], description: '湖南师范大学工学院', image: '/images/gsCollege.png', detailId: 'gsCollege', category: '教学科研' },
   { name: '理学院', coords: [28.18705, 112.94497], description: '湖南师范大学理学院', image: '/images/lxCollege.png', detailId: 'lxCollege', category: '教学科研' },
   { name: '教育学院', coords: [28.18727, 112.94815], description: '湖南师范大学教育学院', image: '/images/jyCollege.png', detailId: 'jyCollege', category: '教学科研' },
@@ -760,6 +760,69 @@ const getRouteColor = (routeId) => {
   return colors[routeId] || '#3388ff'
 }
 
+// 添加紧急设施标记变量
+const emergencyMarker = ref(null)
+
+// 监听路由参数变化
+watch(
+  () => route.query,
+  (query) => {
+    // 处理紧急设施显示
+    if (query.showEmergencyMarker === 'true' && query.coords) {
+      // 隐藏所有常规标记
+      markers.value.forEach(marker => {
+        marker.removeFrom(map.value)
+      })
+
+      // 移除已存在的紧急标记
+      if (emergencyMarker.value) {
+        emergencyMarker.value.removeFrom(map.value)
+      }
+
+      // 创建紧急标记的自定义图标
+      const coords = query.coords.split(',').map(Number)
+      const customIcon = L.divIcon({
+        className: 'emergency-marker',
+        html: `
+          <div class="emergency-marker-inner">
+            <div class="emergency-pulse"></div>
+            <div class="emergency-icon">
+              <Icon icon="mdi:heart-pulse" />
+            </div>
+          </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+      })
+
+      // 添加新的紧急标记
+      emergencyMarker.value = L.marker(coords, { icon: customIcon })
+        .addTo(map.value)
+        .bindPopup(`
+          <div class="emergency-popup">
+            <h3>${query.name}</h3>
+            <p>${query.description}</p>
+          </div>
+        `)
+
+      // 设置地图视图到紧急标记位置
+      map.value.setView(coords, 18)
+      
+      // 自动打开弹窗
+      emergencyMarker.value.openPopup()
+    } else {
+      // 如果不显示紧急标记，恢复所有常规标记
+      if (emergencyMarker.value) {
+        emergencyMarker.value.removeFrom(map.value)
+      }
+      markers.value.forEach(marker => {
+        marker.addTo(map.value)
+      })
+    }
+  },
+  { immediate: true }
+)
+
 </script>
 
 <style scoped>
@@ -1246,5 +1309,71 @@ input:focus {
 /* 优化路线样式 */
 :deep(.leaflet-routing-alternatives-container) {
   display: none;
+}
+
+/* 紧急标记样式 */
+:deep(.emergency-marker) {
+  background: none;
+  border: none;
+}
+
+:deep(.emergency-marker-inner) {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+:deep(.emergency-pulse) {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 77, 79, 0.4);
+  border-radius: 50%;
+  animation: emergency-pulse 2s infinite;
+}
+
+:deep(.emergency-icon) {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  background: #ff4d4f;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.5);
+}
+
+@keyframes emergency-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+:deep(.emergency-popup) {
+  text-align: center;
+  padding: 8px;
+}
+
+:deep(.emergency-popup h3) {
+  color: #ff4d4f;
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+:deep(.emergency-popup p) {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
 }
 </style>

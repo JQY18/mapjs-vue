@@ -175,12 +175,15 @@ const handleFacilityClick = (option) => {
 
 const handleSelectFacility = (facility) => {
   showFacilityList.value = false
-  // 这里可以添加跳转到地图并标记位置的逻辑
   router.push({
     path: '/',
     query: {
       facility: selectedFacilityType.value.id,
-      id: facility.id
+      id: facility.id,
+      coords: facility.coords.join(','),
+      name: facility.name,
+      description: facility.description,
+      showEmergencyMarker: 'true'
     }
   })
 }

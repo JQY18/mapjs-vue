@@ -46,10 +46,77 @@ const emit = defineEmits(['close', 'select-facility'])
 const currentType = ref(props.type)
 const facilities = ref([])
 
-// 这里后续会根据实际数据进行修改
+// 添加 AED 设施数据
+const aedLocations = [
+  {
+    id: 'aed-1',
+    name: '红楼大厅',
+    description: '位于红楼一楼大厅',
+    coords: [28.19455, 112.94170]
+  },
+  {
+    id: 'aed-2',
+    name: '中和楼中厅',
+    description: '位于中和楼中厅',
+    coords: [28.1911, 112.9416]
+  },
+  {
+    id: 'aed-3',
+    name: '化工学院',
+    description: '位于化学楼正门入口处',
+    coords: [28.1911, 112.9430]
+  },
+  {
+    id: 'aed-4',
+    name: '兰桂苑食堂',
+    description: '位于木兰路兰桂苑食堂中门入口处',
+    coords: [28.1887, 112.94155]
+  },
+  {
+    id: 'aed-5',
+    name: '校医院',
+    description: '位于校医院正门入口处',
+    coords: [28.19005, 112.94010]
+  },
+  {
+    id: 'aed-6',
+    name: '至善楼',
+    description: '位于至善楼大厅入口处',
+    coords: [28.18765, 112.94228]
+  },
+  {
+    id: 'aed-7',
+    name: '图书馆',
+    description: '位于图书馆正门入口处',
+    coords: [28.1895, 112.9430]
+  },
+  {
+    id: 'aed-8',
+    name: '格物楼',
+    description: '位于格物楼正门入口处',
+    coords: [28.18705, 112.94497]
+  },
+  {
+    id: 'aed-9',
+    name: '体育场医务室',
+    description: '位于体育场内医务室',
+    coords: [28.19005, 112.94010]
+  },
+  {
+    id: 'aed-10',
+    name: '江边三舍',
+    description: '位于江边三舍正门入口处',
+    coords: [28.18990, 112.9485]
+  }
+]
+
 onMounted(() => {
-  // 模拟数据，后续替换为真实数据
-  facilities.value = []
+  // 根据设施类型加载对应数据
+  if (props.type.id === 'aed') {
+    facilities.value = aedLocations
+  } else {
+    facilities.value = [] // 其他类型暂时显示为空
+  }
 })
 
 const handleItemClick = (facility) => {
@@ -119,10 +186,14 @@ const handleItemClick = (facility) => {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+  margin-bottom: 8px;
 }
 
 .facility-list-item:hover {
   background: #f5f5f5;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .item-info {
@@ -132,12 +203,14 @@ const handleItemClick = (facility) => {
 .item-name {
   font-weight: 500;
   color: #333;
+  font-size: 16px;
 }
 
 .item-desc {
   font-size: 12px;
   color: #666;
   margin-top: 4px;
+  line-height: 1.4;
 }
 
 .item-arrow {
@@ -170,5 +243,29 @@ const handleItemClick = (facility) => {
 .close-btn:hover {
   background-color: rgba(0, 0, 0, 0.05);
   color: #333;
+}
+
+/* 添加紧急标识 */
+.facility-list-item::before {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  background-color: #ff4d4f;
+  border-radius: 50%;
+  margin-right: 12px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 77, 79, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+  }
 }
 </style> 
