@@ -195,6 +195,7 @@ const locations = [
   // 文化风景
   { name: '忠烈祠', coords: [28.1926, 112.94025], description: '忠烈祠', image: '/images/zhonglie.png', detailId: 'zhonglie', category: '文化风景' },
   { name: '岳王亭', coords: [28.19247, 112.93953], description: '岳王亭', image: '/images/yuwangting.png', detailId: 'yuewangting', category: '文化风景' },
+  { name: '校门', coords: [28.19230, 112.94302], description: '校门', image: '/images/yuwangting.png', detailId: 'yuewangting', category: '文化风景' },
 
   // 行政
   { name: '红楼', coords: [28.19455, 112.94170], description: '湖南师范大学红楼', image: '/images/honglou.png', detailId: 'honglou', category: '行政' },
@@ -203,6 +204,7 @@ const locations = [
   { name: '学工处', coords: [28.19041, 112.94898], description: '湖南师范大学学工处', image: '/images/library.png', detailId: 'xuegongchu', category: '行政' },
 
   // 重要场馆
+  { name: '天文馆', coords: [28.19107, 112.94120], description: '湖南师范大学天文馆', image: '/images/library.png', detailId: 'library2', category: '重要场馆' },
   { name: '校医院', coords: [28.19005, 112.94010], description: '湖南师范大学校医院', image: '/images/shichengshuyuan.png', detailId: 'xiaoyiyuan', category: '重要场馆' },
   { name: '图书馆', coords: [28.1895, 112.94335], description: '湖南师范大学逸夫图书馆', image: '/images/library.png', detailId: 'library', category: '重要场馆' },
   { name: '江湾体育馆', coords: [28.18805, 112.9435], description: '湖南师范大学江湾体育馆', image: '/images/jyGym.png', detailId: 'jyGym', category: '重要场馆' },
