@@ -110,10 +110,34 @@ const aedLocations = [
   }
 ]
 
+// 添加食堂设施数据
+const canteenLocations = [
+  {
+    id: 'canteen-1',
+    name: '兰桂苑',
+    description: '湖南师范大学兰桂苑食堂',
+    coords: [28.1887, 112.94155]
+  },
+  {
+    id: 'canteen-2',
+    name: '木兰食堂',
+    description: '湖南师范大学木兰食堂',
+    coords: [28.18940, 112.94155]
+  },
+  {
+    id: 'canteen-3',
+    name: '江边食堂',
+    description: '湖南师范大学江边食堂',
+    coords: [28.19045, 112.9487]
+  }
+]
+
 onMounted(() => {
   // 根据设施类型加载对应数据
   if (props.type.id === 'aed') {
     facilities.value = aedLocations
+  } else if (props.type.id === 'canteen') {
+    facilities.value = canteenLocations
   } else {
     facilities.value = [] // 其他类型暂时显示为空
   }

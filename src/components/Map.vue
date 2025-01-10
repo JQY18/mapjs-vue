@@ -132,9 +132,10 @@ import 'leaflet/dist/leaflet.css'
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.js'
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
 import LocationModal from './LocationModal.vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 
 // 监听路由参数变化
 watch(
@@ -802,8 +803,27 @@ watch(
           <div class="emergency-popup">
             <h3>${query.name}</h3>
             <p>${query.description}</p>
+            <button class="emergency-navigate-btn" onclick="window.handleEmergencyNavigate()">到这去</button>
           </div>
-        `)
+        `, {
+          // 添加 popup 关闭事件处理
+          closeOnClick: false,
+          closeButton: true,
+          className: 'emergency-popup-container'
+        })
+        .on('popupclose', () => {
+          // 当弹窗关闭时，移除紧急标记并返回主页
+          if (emergencyMarker.value) {
+            emergencyMarker.value.removeFrom(map.value)
+            emergencyMarker.value = null
+          }
+          // 恢复所有常规标记
+          markers.value.forEach(marker => {
+            marker.addTo(map.value)
+          })
+          // 使用路由导航回主页
+          router.push('/')
+        })
 
       // 设置地图视图到紧急标记位置
       map.value.setView(coords, 18)
@@ -822,6 +842,55 @@ watch(
   },
   { immediate: true }
 )
+
+// 在 script setup 部分添加全局处理函数
+const handleEmergencyNavigate = () => {
+  const query = route.query
+  if (!query.coords || !query.name) return
+  
+  // 关闭弹窗
+  emergencyMarker.value?.closePopup()
+  
+  // 打开路线规划面板并设置终点
+  showRoutePanel.value = true
+  selectedEnd.value = {
+    name: query.name,
+    coords: query.coords.split(',').map(Number)
+  }
+  endPoint.value = query.name
+}
+
+// 将处理函数挂载到 window 对象
+onMounted(() => {
+  window.handleEmergencyNavigate = handleEmergencyNavigate
+})
+
+// 在组件卸载时清理
+onUnmounted(() => {
+  delete window.handleEmergencyNavigate
+})
+
+// 添加相应的 CSS 样式
+const style = document.createElement('style')
+style.textContent = `
+  .emergency-navigate-btn {
+    background: #ff4d4f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    margin-top: 8px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+
+  .emergency-navigate-btn:hover {
+    background: #ff7875;
+  }
+`
+document.head.appendChild(style)
 
 </script>
 
