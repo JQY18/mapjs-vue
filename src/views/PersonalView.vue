@@ -2,9 +2,6 @@
   <div class="personal-container">
     <!-- 用户信息头部 -->
     <div class="user-header">
-      <div class="edit-btn" @click="showEditDialog = true">
-        <Icon icon="mdi:edit" />
-      </div>
       <img :src="userInfo.avatar" class="user-avatar" />
       <div class="user-info">
         <div class="user-detail">
@@ -23,6 +20,9 @@
           <div class="detail-item">
             <span class="label">年龄：</span>
             <span class="age">{{ userInfo.age }}岁</span>
+          </div>
+          <div class="edit-btn" @click="showEditDialog = true">
+            <Icon icon="mdi:edit" />
           </div>
         </div>
       </div>
@@ -879,27 +879,33 @@ const handleSubmit = async () => {
 }
 
 .user-detail {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   color: #666;
   font-size: 14px;
   text-align: left;
   padding: 0;
   width: fit-content;
-  margin: 16px auto 0;  /* 居中显示 */
+  margin: 16px auto 0;
 }
 
 .detail-item {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-right: 16px;  /* 右侧间距 */
+  gap: 2px;
+  margin-right: 16px;
+  white-space: nowrap;
+}
+
+.detail-item:last-child {
+  margin-right: 0;
 }
 
 .label {
   color: #999;
-  min-width: 45px;  /* 减小标签宽度 */
+  min-width: 40px;
 }
 
 .value {
@@ -942,25 +948,31 @@ const handleSubmit = async () => {
 .content-area {
   flex: 1;
   overflow: hidden;
-  padding: 8px;
+  height: calc(100vh - 250px); /* 增加减去的高度 */
 }
 
 .scroll-container {
   height: 100%;
   overflow-y: auto;
-  padding-bottom: 16px;
+  padding: 16px 16px 80px; /* 增加底部内边距 */
+  box-sizing: border-box;
 }
 
 .tab-content {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-bottom: 40px; /* 增加底部内边距 */
 }
 
 .post-card {
   background: white;
   border-radius: 8px;
-  padding: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .post-header {
@@ -1444,18 +1456,27 @@ const handleSubmit = async () => {
 }
 
 .edit-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
   padding: 8px;
-  background: #f5f5f5;
+  background: #1890ff;
+  color: white;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.3s;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
 }
 
 .edit-btn:hover {
-  background: #e8e8e8;
+  background: #40a9ff;
+  transform: translateY(-1px);
+}
+
+.edit-btn .iconify {
+  font-size: 16px;
 }
 
 .edit-dialog-overlay {

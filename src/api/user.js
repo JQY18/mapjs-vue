@@ -52,9 +52,12 @@ export const userApi = {
   },
 
   // 获取用户信息
-  getUserInfo() {
-    const user = JSON.parse(localStorage.getItem('user'))
-    return request.get(`/user/info?userId=${user.id}`)
+  getUserInfo(userId) {
+    if (userId === undefined || userId === null) {
+      const user = JSON.parse(localStorage.getItem('user'))
+      return request.get(`/user/info?userId=${user.id}`)
+    }
+    return request.get(`/user/info?userId=${userId}`)
     // 返回格式：
     // {
     //   code: 1,
