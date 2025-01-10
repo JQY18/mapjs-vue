@@ -46,7 +46,8 @@ export const postApi = {
 
   // 点赞帖子
   likePost(postId) {
-    return request.post(`/api/post/${postId}/like`)
+    const user = JSON.parse(localStorage.getItem('user'))
+    return request.post(`/post/${postId}/like/${user.id}`)
     // 返回格式：
     // {
     //   code: 1,
@@ -59,7 +60,8 @@ export const postApi = {
 
   // 取消点赞帖子
   unlikePost(postId) {
-    return request.delete(`/api/post/${postId}/like`)
+    const user = JSON.parse(localStorage.getItem('user'))
+    return request.delete(`/post/${postId}/like/${user.id}`)
     // 返回格式同 likePost
   },
 
