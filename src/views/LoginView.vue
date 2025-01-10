@@ -56,6 +56,17 @@
         </div>
       </form>
     </div>
+    
+    <!-- 添加管理员入口 -->
+    <div class="admin-entry">
+      <el-button 
+        type="text" 
+        class="admin-link"
+        @click="goToAdminLogin"
+      >
+        管理员登录
+      </el-button>
+    </div>
   </div>
 </template>
 
@@ -103,6 +114,10 @@ const handleSubmit = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+const goToAdminLogin = () => {
+  router.push('/admin/login')
 }
 </script>
 
@@ -273,6 +288,23 @@ label {
 
   h2 {
     font-size: 24px;
+  }
+}
+
+.admin-entry {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  
+  .admin-link {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    transition: all 0.3s;
+    
+    &:hover {
+      color: white;
+      text-decoration: underline;
+    }
   }
 }
 </style> 
