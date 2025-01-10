@@ -130,12 +130,38 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Icon } from '@iconify/vue'
+import request from '../api/request'
 
 const route = useRoute()
 const router = useRouter()
 
 const detail = ref(null)
 
+// api获取地点详情
+onMounted(() => {
+  // window.alert(route.params.id)
+
+  // 请求地点详情
+  request.get(`/locations/detail/${route.params.id}`)
+    .then(res => {
+      // locationData = res.data.data
+      // detail.value = res.data.data
+      const val = res.data.data
+      if (val) {
+        detail.value = val
+      }else {
+        detail.value = locationData[route.params.id] || null
+      }
+    })
+
+    // 请求地点评论
+    request.get(`/locations/comments/${route.params.id}`).then(res => {
+    comments.value = res.data.data
+  })
+})
+
+
+//地点详情
 const locationData = {
   'library': {
     name: "逸夫图书馆",
@@ -1027,6 +1053,8 @@ const tabs = [
   { label: '视频', value: 'videos' }
 ]
 
+
+//评论区内容
 const comments = ref([
   {
     id: "1",
@@ -1083,27 +1111,30 @@ const prevVideo = () => {
     : currentVideoIndex.value - 1
 }
 
-onMounted(async () => {
-  // 根据路由参数获取对应的位置数据
-  const locationId = route.params.id
-  // 在实际项目中，这里应该是API调用
-  // const response = await fetchLocationDetail(locationId)
-  // detail.value = response.data
+// onMounted(async () => {
+//   // 根据路由参数获取对应的位置数据
+//   const locationId = route.params.id
+//   // 在实际项目中，这里应该是API调用
+//   // const response = await fetchLocationDetail(locationId)
+//   // detail.value = response.data
   
-  // 现在使用本地数据
-  detail.value = locationData[locationId] || null
-})
+//   // 现在使用本地数据
+//   detail.value = locationData[locationId] || null
+// })
 
 const isLoggedIn = computed(() => {
   return !!localStorage.getItem('user')
 })
 
+
+// 点击评输入框
 const handleCommentClick = () => {
   if (!isLoggedIn.value) {
     router.push('/login')
   }
 }
 
+// 提交评论
 const handleAddComment = () => {
   if (!isLoggedIn.value) {
     router.push('/login')
@@ -1113,12 +1144,24 @@ const handleAddComment = () => {
   if (!newComment.value.trim()) return
   
   const user = JSON.parse(localStorage.getItem('user') || '{}')
-  
-  comments.value.unshift({
-    id: String(comments.value.length + 1),
-    username: user.username || '访客用户',
-    time: new Date().toLocaleString(),
-    content: newComment.value
+
+  const myContent = newComment.value
+
+  request.post('/locations/comments/add',{
+    detailId: route.params.id,
+    userId: user.id,
+    content: newComment.value,
+  }).then(response => {
+
+    comments.value.unshift({
+      id: String(comments.value.length + 1),
+      username: response.data.data,
+      time: new Date().toLocaleString(),
+      content: myContent
+    })
+
+  }).catch(error => {
+    console.log(error)
   })
   
   newComment.value = ''

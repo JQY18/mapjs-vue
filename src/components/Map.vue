@@ -133,6 +133,7 @@ import 'leaflet-routing-machine/dist/leaflet-routing-machine.js'
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
 import LocationModal from './LocationModal.vue'
 import { useRoute } from 'vue-router'
+import request from '../api/request';
 
 const route = useRoute()
 
@@ -154,6 +155,13 @@ watch(
   },
   { immediate: true }
 )
+
+
+onMounted(() => {
+  request.get('/locations').then(res => {
+    locations = res.data.data
+  })
+})
 
 // 重要地点数据
 const locations = [
