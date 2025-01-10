@@ -1,4 +1,4 @@
-<LocationModal
+<!-- <LocationModal
   v-if="showLocationModal"
   :show="showLocationModal"
   :location="selectedLocation"
@@ -116,4 +116,4 @@ const handlePlanRoute = () => {
 .button-icon {
   font-size: 18px;
 }
-</style> 
+</style>  -->

@@ -112,7 +112,6 @@ export default {
 .popup-modal {
   position: fixed;
   z-index: 2000;
-  transform: translate(-50%, -100%); /* 居中并向上移动 */
 }
 
 .popup-content {
@@ -124,17 +123,17 @@ export default {
   position: relative;
 }
 
-/* 添加指向箭头 */
+/* 修改箭头位置和方向 */
 .popup-arrow {
   position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 0;
   height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 10px solid white;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 10px solid white;
 }
 
 .close-button {
