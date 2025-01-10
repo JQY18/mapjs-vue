@@ -42,6 +42,35 @@
       </div>
     </div>
 
+    <!-- 生活措施对话框 -->
+    <div v-if="showFacilitiesDialog" class="facilities-dialog-overlay" @click="showFacilitiesDialog = false">
+      <div class="facilities-dialog" @click.stop>
+        <div class="facilities-header">
+          <h3>生活设施</h3>
+          <button class="close-btn" @click="showFacilitiesDialog = false">
+            <Icon icon="mdi:close" />
+          </button>
+        </div>
+        <div class="facilities-grid">
+          <div v-for="option in facilityOptions" 
+               :key="option.id" 
+               class="facility-item"
+               @click="handleFacilityClick(option)">
+            <Icon :icon="option.icon" class="facility-icon" />
+            <span class="facility-name">{{ option.name }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设施列表对话框 -->
+    <FacilityList
+      v-if="showFacilityList"
+      :type="selectedFacilityType"
+      @close="showFacilityList = false"
+      @select-facility="handleSelectFacility"
+    />
+
     <!-- 内容区域 -->
     <div class="content">
       <router-view v-slot="{ Component }">
@@ -55,6 +84,8 @@
 import { computed, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { userApi } from '../api/user'
+import { Icon } from '@iconify/vue'
+import FacilityList from '../components/FacilityList.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -72,6 +103,7 @@ onMounted(() => {
 const allTabs = [
   { id: 'map', name: '地图', path: '/' },
   { id: 'circle', name: '师大圈', path: '/circle' },
+  { id: 'facilities', name: '生活设施', path: '#' },
   { id: 'personal', name: '我的', path: '/personal' }
 ]
 
@@ -98,9 +130,31 @@ const isActive = (tabId) => {
   return path === `/${tabId}`
 }
 
+const showFacilitiesDialog = ref(false)
+
+const facilityOptions = [
+  { id: 'canteen', name: '食堂餐厅', icon: 'mdi:food-fork-drink' },
+  { id: 'shop', name: '购物超市', icon: 'mdi:cart' },
+  { id: 'medical', name: '校内医疗', icon: 'mdi:hospital' },
+  { id: 'express', name: '邮寄快递', icon: 'mdi:truck-delivery' },
+  { id: 'dorm', name: '学生浴室', icon: 'mdi:shower' },
+  { id: 'stadium', name: '校内场馆', icon: 'mdi:stadium' },
+  { id: 'print', name: '打字复印', icon: 'mdi:printer' },
+  { id: 'bank', name: '银行网点', icon: 'mdi:currency-cny' },
+  { id: 'aed', name: 'AED', icon: 'mdi:heart-pulse' },
+  { id: 'telecom', name: '通信营业厅', icon: 'mdi:phone' },
+  { id: 'parking', name: '停车场', icon: 'mdi:parking' },
+  { id: 'entrance', name: '出入口', icon: 'mdi:exit-to-app' }
+]
+
 const navigateTo = (tabId) => {
   if (tabId === 'login') {
     router.push('/login')
+    return
+  }
+  
+  if (tabId === 'facilities') {
+    showFacilitiesDialog.value = true
     return
   }
   
@@ -108,6 +162,27 @@ const navigateTo = (tabId) => {
   if (tab) {
     router.push(tab.path)
   }
+}
+
+const showFacilityList = ref(false)
+const selectedFacilityType = ref(null)
+
+const handleFacilityClick = (option) => {
+  showFacilitiesDialog.value = false
+  selectedFacilityType.value = option
+  showFacilityList.value = true
+}
+
+const handleSelectFacility = (facility) => {
+  showFacilityList.value = false
+  // 这里可以添加跳转到地图并标记位置的逻辑
+  router.push({
+    path: '/',
+    query: {
+      facility: selectedFacilityType.value.id,
+      id: facility.id
+    }
+  })
 }
 </script>
 
@@ -261,5 +336,107 @@ const navigateTo = (tabId) => {
 
 .confirm-btn:hover {
   background: #ff7875;
+}
+
+.facilities-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.facilities-dialog {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.facilities-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.facilities-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+.facilities-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.facility-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  background: rgb(107, 1, 1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+}
+
+.facility-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.facility-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.facility-name {
+  font-size: 14px;
+  text-align: center;
+}
+
+/* 添加响应式设计 */
+@media (max-width: 768px) {
+  .facilities-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .facilities-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>
