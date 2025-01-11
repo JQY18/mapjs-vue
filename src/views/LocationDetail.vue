@@ -120,6 +120,17 @@
               <p class="comment-content">{{ comment.content }}</p>
             </div>
           </div>
+
+          <div class="ai-comment-section">
+            <button 
+              class="ai-comment-btn" 
+              @click="generateAIComment"
+              :disabled="isGeneratingAI"
+            >
+              <Icon icon="mdi:robot" class="robot-icon" />
+              {{ isGeneratingAI ? 'AI生成中...' : 'AI评论' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1166,6 +1177,163 @@ const handleAddComment = () => {
   
   newComment.value = ''
 }
+
+// 添加 AI 评论相关的状态
+const wsUrl = 'wss://spark-api.xf-yun.com/v1.1/chat'
+const appid = '8e6a9d95'
+const apiKey = 'd794969468ef586748a76c8291ba5f14'
+const apiSecret = 'ZjFiNzg0YjU2MWFhMDc1NmJmMWZmNjI1'
+const domain = 'lite'
+const ws = ref(null)
+const isGeneratingAI = ref(false)
+
+// 创建 WebSocket URL
+const createUrl = async () => {
+  const host = new URL(wsUrl).host
+  const path = new URL(wsUrl).pathname
+  const date = new Date().toUTCString()
+  
+  const signatureOrigin = `host: ${host}\ndate: ${date}\nGET ${path} HTTP/1.1`
+  
+  const encoder = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(apiSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    encoder.encode(signatureOrigin)
+  )
+  
+  const signatureShaBase64 = btoa(
+    String.fromCharCode.apply(null, new Uint8Array(signature))
+  )
+  
+  const authorizationOrigin = 
+    `api_key="${apiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signatureShaBase64}"`
+  
+  const authorization = btoa(unescape(encodeURIComponent(authorizationOrigin)))
+  
+  const params = new URLSearchParams({
+    authorization,
+    date,
+    host
+  })
+  
+  return `${wsUrl}?${params.toString()}`
+}
+
+// 连接 WebSocket
+const connectWebSocket = () => {
+  return new Promise((resolve, reject) => {
+    createUrl()
+      .then(url => {
+        ws.value = new WebSocket(url)
+        
+        ws.value.onopen = () => {
+          console.log('WebSocket连接已建立')
+          resolve()
+        }
+        
+        ws.value.onerror = (error) => {
+          console.error('WebSocket错误:', error)
+          reject(error)
+        }
+        
+        ws.value.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data)
+            if (data.header.code !== 0) {
+              console.error('请求错误:', data)
+              ws.value.close()
+              return
+            }
+            
+            const choices = data.payload.choices
+            if (choices && choices.text && choices.text[0]) {
+              const content = choices.text[0].content
+              
+              // 将 AI 评论添加到评论列表
+              if (choices.status === 2) {
+                comments.value.unshift({
+                  id: String(comments.value.length + 1),
+                  username: 'AI助手',
+                  time: new Date().toLocaleString(),
+                  content: content
+                })
+                ws.value.close()
+                isGeneratingAI.value = false
+              }
+            }
+          } catch (error) {
+            console.error('处理消息时出错:', error)
+          }
+        }
+        
+        ws.value.onclose = () => {
+          console.log('WebSocket连接已关闭')
+        }
+      })
+      .catch(error => {
+        console.error('创建WebSocket连接失败:', error)
+        reject(error)
+      })
+  })
+}
+
+// 修改 generateAIComment 函数
+const generateAIComment = async () => {
+  if (isGeneratingAI.value) return
+  
+  isGeneratingAI.value = true
+  
+  try {
+    if (!ws.value || ws.value.readyState !== WebSocket.OPEN) {
+      await connectWebSocket()
+    }
+    
+    // 将所有评论内容组合成一段文本
+    const commentsText = comments.value
+      .map(comment => comment.content)
+      .join('\n')
+    
+    // 修改提示语，要求生成连贯的一段话
+    const prompt = `作为一个评论分析助手，请对以下用户评论进行分析，生成一段30-60字的连贯评价。
+    评价需要包含整体评价、用户感受和场所优点，并将这些自然地融合在一段话中。
+    请用流畅的语言直接给出评价，不要分点叙述：\n${commentsText}`
+    
+    const params = {
+      header: {
+        app_id: appid,
+        uid: "1234"
+      },
+      parameter: {
+        chat: {
+          domain: domain,
+          temperature: 0.5,
+          max_tokens: 4096,
+          auditing: "default"
+        }
+      },
+      payload: {
+        message: {
+          text: [{ role: "user", content: prompt }]
+        }
+      }
+    }
+    
+    ws.value.send(JSON.stringify(params))
+    
+  } catch (error) {
+    console.error('生成AI评论失败:', error)
+    isGeneratingAI.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -1535,5 +1703,51 @@ h1 {
   margin: 1rem 0;
   line-height: 1.5;
 
+}
+
+.ai-comment-section {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.ai-comment-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #333;
+  font-size: 14px;
+}
+
+.ai-comment-btn:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+.robot-icon {
+  font-size: 18px;
+  color: #666;
+}
+
+/* 添加动画效果 */
+.ai-comment-btn {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style> 

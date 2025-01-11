@@ -77,7 +77,7 @@
             <div class="user-info">
               <div class="username">{{ post.username }}</div>
               <div class="user-detail">
-                <span v-if="post.userSchool">{{ post.userSchool }}</span>
+                <!-- <span v-if="post.userSchool">{{ post.userSchool }}</span> -->
                 <span v-if="post.userGender" class="gender">{{ post.userGender }}</span>
               </div>
               <div class="post-time">{{ post.time }}</div>
@@ -402,9 +402,9 @@ const fetchPosts = async () => {
             content: post.content,
             title: post.title,
             images: post.images,
-            likes: 0,
+            likes: post.likes,
             comments: 0,
-            isLiked: false,
+            isLiked: post.isLiked,
             isCollected: false,
             // 可以添加其他用户信息
             userSchool: userInfo?.school,
@@ -421,25 +421,31 @@ const fetchPosts = async () => {
 
 // 添加时间格式化函数
 const formatTime = (timestamp) => {
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diff = now - date
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now - date;
 
   // 小于1小时，显示xx分钟前
   if (diff < 3600000) {
-    const minutes = Math.floor(diff / 60000)
-    return `${minutes}分钟前`
+    const minutes = Math.floor(diff / 60000);
+    return `${minutes}分钟前`;
   }
-  
+
   // 小于24小时，显示xx小时前
   if (diff < 86400000) {
-    const hours = Math.floor(diff / 3600000)
-    return `${hours}小时前`
+    const hours = Math.floor(diff / 3600000);
+    return `${hours}小时前`;
   }
-  
-  // 其他情况显示具体日期
-  return date.toLocaleDateString()
-}
+
+  // 其他情况显示具体日期和时间
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
 
 // 修改点赞方法
 const toggleLike = async (post) => {
@@ -449,13 +455,17 @@ const toggleLike = async (post) => {
   }
 
   try {
-    const { data } = post.isLiked
-      ? await postApi.unlikePost(post.id)
-      : await postApi.likePost(post.id);
+    // const { data } = post.isLiked
+    //   ? await postApi.unlikePost(post.id)
+    //   : await postApi.likePost(post.id);
+    const res = await postApi.likePost(post.id);
 
-    if (data.code === 0) {
-      post.isLiked = data.data.isLiked;
-      post.likes = data.data.likes;
+    if (res.data.code === 1) {
+      post.isLiked = true;
+      post.likes = post.likes + 1;
+    }else if(res.data.code === 0){
+      post.isLiked = false;
+      post.likes = post.likes - 1;
     }
   } catch (error) {
     console.error("点赞操作失败:", error);
