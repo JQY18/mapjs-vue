@@ -154,7 +154,15 @@ const navigateTo = (tabId) => {
   }
   
   if (tabId === 'facilities') {
-    showFacilitiesDialog.value = true
+    if (route.path !== '/') {
+      router.push('/').then(() => {
+        setTimeout(() => {
+          showFacilitiesDialog.value = true
+        }, 100)
+      })
+    } else {
+      showFacilitiesDialog.value = true
+    }
     return
   }
   
