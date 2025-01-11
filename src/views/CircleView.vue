@@ -1,5 +1,24 @@
 <template>
   <div class="circle-container">
+    <!-- 添加搜索框 -->
+    <div class="search-box">
+      <div class="search-input">
+        <Icon icon="mdi:magnify" class="search-icon"/>
+        <input 
+          v-model="searchQuery"
+          type="text"
+          placeholder="搜索帖子内容..."
+          @input="handleSearch"
+        />
+        <Icon 
+          v-if="searchQuery"
+          icon="mdi:close" 
+          class="clear-icon"
+          @click="clearSearch"
+        />
+      </div>
+    </div>
+
     <!-- 添加发布按钮 -->
     <div class="publish-btn" @click="openPublishDialog">
       <Icon icon="mdi:plus" />
@@ -71,7 +90,7 @@
     <!-- 添加一个滚动容器 -->
     <div class="scroll-container">
       <div class="content-list">
-        <div v-for="post in posts" :key="post.id" class="post-card">
+        <div v-for="post in filteredPosts" :key="post.id" class="post-card">
           <div class="post-header">
             <img :src="post.avatar" class="avatar" />
             <div class="user-info">
@@ -268,49 +287,51 @@ import 'element-plus/es/components/message/style/css'
 
 const router = useRouter();
 
-const posts = ref([
-  {
-    id: 1,
-    username: "师大学子",
-    avatar: "/public/icon/icon.jpeg",
-    time: "10分钟前",
-    content: "今天在图书馆学习，感觉氛围真好！",
-    images: ["/public/icon/icon.jpeg"],
-    likes: 23,
-    comments: 5,
-    isLiked: false,
-  },
-  {
-    id: 2,
-    username: "校园达人",
-    avatar: "/avatars/default2.png",
-    time: "1小时前",
-    content: "木兰公寓的樱花开了，大家快来看啊！",
-    images: ["/images/cherry.jpg", "/images/cherry2.jpg"],
-    likes: 45,
-    comments: 12,
-  },
-  {
-    id: 3,
-    username: "校园达人",
-    avatar: "/avatars/default2.png",
-    time: "2小时前",
-    content: "今天的晚霞真美！",
-    images: ["/images/cherry.jpg"],
-    likes: 38,
-    comments: 8,
-  },
-  {
-    id: 4,
-    username: "师大新生",
-    avatar: "/avatars/default2.png",
-    time: "3小时前",
-    content: "第一次来到师大，校园真大啊！",
-    images: ["/images/cherry.jpg"],
-    likes: 56,
-    comments: 15,
-  },
-]);
+const posts = ref([]);
+
+// const posts = ref([
+//   {
+//     id: 1,
+//     username: "师大学子",
+//     avatar: "/public/icon/icon.jpeg",
+//     time: "10分钟前",
+//     content: "今天在图书馆学习，感觉氛围真好！",
+//     images: ["/public/icon/icon.jpeg"],
+//     likes: 23,
+//     comments: 5,
+//     isLiked: false,
+//   },
+//   {
+//     id: 2,
+//     username: "校园达人",
+//     avatar: "/avatars/default2.png",
+//     time: "1小时前",
+//     content: "木兰公寓的樱花开了，大家快来看啊！",
+//     images: ["/images/cherry.jpg", "/images/cherry2.jpg"],
+//     likes: 45,
+//     comments: 12,
+//   },
+//   {
+//     id: 3,
+//     username: "校园达人",
+//     avatar: "/avatars/default2.png",
+//     time: "2小时前",
+//     content: "今天的晚霞真美！",
+//     images: ["/images/cherry.jpg"],
+//     likes: 38,
+//     comments: 8,
+//   },
+//   {
+//     id: 4,
+//     username: "师大新生",
+//     avatar: "/avatars/default2.png",
+//     time: "3小时前",
+//     content: "第一次来到师大，校园真大啊！",
+//     images: ["/images/cherry.jpg"],
+//     likes: 56,
+//     comments: 15,
+//   },
+// ]);
 
 const showComments = ref(false);
 const currentPost = ref(null);
@@ -368,7 +389,23 @@ const handleCommentSubmit = () => {
     router.push("/login");
     return;
   }
-  submitComment();
+
+  if(!replyTo || !replyTo.value){
+    submitComment();
+  }
+  request.post("/reply/add", {
+    fatherId: replyTo.value.comment.id,
+    commenterId: replyTo.value.comment.commenterId,
+    replierId: JSON.parse(localStorage.getItem("user") || "{}").id,
+    content: newComment.value,
+  }).then(res => {
+    getComments(currentPost.value.id);
+    console.log(res)
+  }).catch(error => {
+    console.log(error)
+  });
+  newComment.value = "";
+  replyTo.value = null;
 };
 
 // 获取用户信息的方法
@@ -403,7 +440,7 @@ const fetchPosts = async () => {
             title: post.title,
             images: post.images,
             likes: post.likes,
-            comments: 0,
+            comments: post.comments,
             isLiked: post.isLiked,
             isCollected: false,
             // 可以添加其他用户信息
@@ -501,6 +538,7 @@ const getComments = async (postId) => {
       // 转换评论数据格式
       commentsList.value = data.data.map(comment => ({
         id: comment.id,
+        commenterId: comment.commenterId,
         username: comment.commenterNickname,
         avatar: comment.commenterAvatar,
         content: comment.content,
@@ -510,12 +548,14 @@ const getComments = async (postId) => {
         showReplies: false,
         replies: comment.reply.map(reply => ({
           id: reply.id,
-          username: reply.commenterNickname,
-          avatar: reply.commenterAvatar,
+          commenterId: reply.commenterId,
+          replierId: reply.replierId,
+          username: reply.replierNickname,
+          avatar: reply.replierAvatar,
           content: reply.content,
           time: formatTime(reply.createTime),
-          replyTo: reply.replierNickname,
-          replyToAvatar: reply.replierAvatar,
+          replyTo: reply.commenterNickname,
+          replyToAvatar: reply.commenterAvatar,
           likes: 0,  // 回复暂时没有点赞数
           isLiked: false  // 回复暂时没有点赞状态
         }))
@@ -541,13 +581,16 @@ const toggleCommentLike = async (comment) => {
   }
 
   try {
-    const { data } = comment.isLiked
-      ? await postApi.unlikeComment(comment.id)
-      : await postApi.likeComment(comment.id)
+    // const { data } = comment.isLiked
+    //   ? await postApi.unlikeComment(comment.id)
+    //   : await postApi.likeComment(comment.id)
+
+    const { data } = await postApi.likeComment(comment.id,comment.likes,comment.isLiked)
+
 
     if (data.code === 1) {
       comment.isLiked = !comment.isLiked
-      comment.likes = data.data.likes
+      comment.likes = comment.isLiked ? comment.likes + 1 : comment.likes - 1
     }
   } catch (error) {
     console.error("评论点赞失败:", error)
@@ -559,12 +602,20 @@ const submitComment = async () => {
   if (!newComment.value.trim() || !currentPost.value) return;
 
   try {
-    const { data } = await postApi.addComment(currentPost.value.id, {
-      content: newComment.value,
-      replyTo: replyTo.value?.reply?.id || replyTo.value?.comment.id,
-    });
 
-    if (data.code === 0) {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+    // window.alert(JSON.stringify(currentPost.value.id))
+    // window.alert(JSON.stringify(user.id))
+    // window.alert(JSON.stringify(newComment.value))
+    
+    const { data } = await postApi.addComment(currentPost.value.id, 
+      // replyTo.value?.reply?.id || replyTo.value?.comment.id,
+      user.id,
+      newComment.value
+    );
+
+    if (data.code === 1) {
       // 重新加载评论列表
       await getComments(currentPost.value.id);
       newComment.value = "";
@@ -575,6 +626,8 @@ const submitComment = async () => {
   }
 };
 
+
+// 回复评论
 const replyToComment = (comment, reply) => {
   if (!isLoggedIn.value) {
     router.push("/login");
@@ -698,6 +751,40 @@ const submitPost = async () => {
   } catch (error) {
     console.error('发布失败:', error)
   }
+}
+
+// 添加搜索相关的状态
+const searchQuery = ref('')
+const searchTimeout = ref(null)
+
+// 添加过滤后的帖子计算属性
+const filteredPosts = computed(() => {
+  if (!searchQuery.value) return posts.value
+  
+  const query = searchQuery.value.toLowerCase()
+  return posts.value.filter(post => {
+    return (
+      post.content.toLowerCase().includes(query) ||
+      post.username.toLowerCase().includes(query) ||
+      (post.title && post.title.toLowerCase().includes(query))
+    )
+  })
+})
+
+// 添加搜索处理方法
+const handleSearch = () => {
+  // 防抖处理
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value)
+  }
+  searchTimeout.value = setTimeout(() => {
+    // 这里可以添加额外的搜索逻辑
+  }, 300)
+}
+
+// 添加清除搜索方法
+const clearSearch = () => {
+  searchQuery.value = ''
 }
 </script>
 
@@ -1349,5 +1436,49 @@ const submitPost = async () => {
 .publish-submit-btn:disabled {
   background: #bfbfbf;
   cursor: not-allowed;
+}
+
+/* 添加搜索框样式 */
+.search-box {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.search-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 24px;
+  padding: 8px 16px;
+}
+
+.search-input input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-icon {
+  color: #999;
+  font-size: 20px;
+}
+
+.clear-icon {
+  color: #999;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.clear-icon:hover {
+  color: #666;
 }
 </style> 

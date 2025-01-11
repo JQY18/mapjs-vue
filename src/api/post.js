@@ -3,7 +3,12 @@ import request from './request'
 export const postApi = {
   // 获取帖子列表
   getPosts() {
-    return request.get('/post/all')
+    const user = JSON.parse(localStorage.getItem('user')) || {}
+    return request.get('/post/all', {
+      params: {
+        currentUserId: user.id
+      }
+    })
     // 返回格式：
     // {
     //   code: 1,
@@ -57,6 +62,24 @@ export const postApi = {
     //   }
     // }
   },
+  // 获取评论
+  getComments(postId, userId) {
+    return request.get(`/comments/${postId}`, {
+      params: {
+        userId: userId
+      }
+    })
+  },
+
+  //data:{content:string,replyTo:number || null}
+  //添加评论
+  addComment(postId, userId,content) {
+    return request.post("/comments/add", {
+      postId: postId,
+      commenterId: userId,
+      content: content
+    })
+  },
 
   // 取消点赞帖子
   unlikePost(postId) {
@@ -85,8 +108,14 @@ export const postApi = {
   },
 
   // 点赞评论
-  likeComment(commentId) {
-    return request.post(`/api/comment/${commentId}/like`)
+  // 取消点赞评论
+  likeComment(commentId,to,isLiked) {
+    return request.post("/comments/like",{
+      commentId: commentId,
+      likerId: JSON.parse(localStorage.getItem('user')).id,
+      to: to,
+      isLiked: isLiked?1:0
+    })
     // 返回格式：
     // {
     //   code: 1,
@@ -97,9 +126,4 @@ export const postApi = {
     // }
   },
 
-  // 取消点赞评论
-  unlikeComment(commentId) {
-    return request.delete(`/api/comment/${commentId}/like`)
-    // 返回格式同 likeComment
-  }
-} 
+}

@@ -372,47 +372,67 @@ import { useRouter } from 'vue-router'
 import ImageDialog from '../components/ImageDialog.vue'
 import { userApi } from '../api/user'
 import { postApi } from '../api/post'
-
-interface Comment {
-  id: number
-  username: string
-  avatar: string
-  content: string
-  time: string
-  likes?: number
-  isLiked?: boolean
-  replies?: Reply[]
-  showReplies?: boolean
+import request from '../api/request'
+// 修改评论相关方法
+const getComments = async (postId) => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const { data } = await postApi.getComments(postId, user.id)
+    if (data.code === 1) {
+      commentsList.value = data.data.map(comment => ({
+        id: comment.id,
+        commenterId: comment.commenterId,
+        username: comment.commenterNickname,
+        avatar: comment.commenterAvatar,
+        content: comment.content,
+        time: formatTime(comment.createTime),
+        likes: comment.like,
+        isLiked: comment.isLiked,
+        showReplies: false,
+        replies: comment.reply.map(reply => ({
+          id: reply.id,
+          commenterId: reply.commenterId,
+          replierId: reply.replierId,
+          username: reply.replierNickname,
+          avatar: reply.replierAvatar,
+          content: reply.content,
+          time: formatTime(reply.createTime),
+          replyTo: reply.commenterNickname,
+          replyToAvatar: reply.commenterAvatar,
+          likes: 0,
+          isLiked: false
+        }))
+      }))
+    }
+  } catch (error) {
+    console.error('获取评论失败:', error)
+  }
 }
 
-interface Reply {
-  id: number
-  username: string
-  avatar: string
-  content: string
-  time: string
-  likes?: number
-  isLiked?: boolean
-  replyTo?: string
+// 修改回复评论的方法
+const replyToComment = (comment, reply) => {
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
+  replyTo.value = {
+    comment,
+    reply,
+    username: reply ? reply.username : comment.username
+  }
 }
 
-interface ReplyState {
-  comment: Comment
-  reply?: Reply
-  username: string
+// 修改获取输入框占位符的方法
+const getInputPlaceholder = () => {
+  if (!isLoggedIn.value) return '登录后发表评论'
+  if (replyTo.value) return `回复 ${replyTo.value.username}`
+  return '写下你的评论...'
 }
 
-interface Post {
-  id: number
-  username: string
-  avatar: string
-  time: string
-  content: string
-  images?: string[]
-  likes: number
-  comments: number
-  isLiked?: boolean
-  isCollected?: boolean
+// 修改取消回复的方法
+const cancelReply = () => {
+  replyTo.value = null
+  newComment.value = ''
 }
 
 const router = useRouter()
@@ -498,39 +518,42 @@ const toggleFollow = async (user: any) => {
 }
 
 // 添加交互方法
-const toggleLike = (post: any) => {
-  post.isLiked = !post.isLiked
-  post.likes += post.isLiked ? 1 : -1
+const toggleLike = async (post) => {
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
+
+  try {
+    const res = await postApi.likePost(post.id)
+    if (res.data.code === 1) {
+      post.isLiked = true
+      post.likes = post.likes + 1
+    } else if (res.data.code === 0) {
+      post.isLiked = false
+      post.likes = post.likes - 1
+    }
+  } catch (error) {
+    console.error('点赞操作失败:', error)
+  }
 }
 
-// 添加评论相关的状态和方法
+// 添加评论相关的状态
 const showComments = ref(false)
-const currentPost = ref<Post | null>(null)
-const commentsList = ref<Comment[]>([])
+const currentPost = ref(null)
+const commentsList = ref([])
 const newComment = ref('')
-const replyTo = ref<ReplyState | null>(null)
+const replyTo = ref(null)
 
-const isLoggedIn = computed(() => {
-  return !!localStorage.getItem('user')
-})
+// 添加图片查看器状态
+const showImageViewer = ref(false)
+const currentImages = ref([])
+const currentImageIndex = ref(0)
 
-const openComments = (post: Post) => {
+const openComments = async (post) => {
   currentPost.value = post
   showComments.value = true
-  // 这里可以加载评论数据
-  commentsList.value = [
-    {
-      id: 1,
-      username: '同学A',
-      avatar: '/public/icon/icon.jpeg',
-      content: '图书馆确实很安静！',
-      time: '5分钟前',
-      likes: 3,
-      isLiked: false,
-      showReplies: false,
-      replies: []
-    }
-  ]
+  await getComments(post.id)
 }
 
 const closeComments = () => {
@@ -538,6 +561,38 @@ const closeComments = () => {
   replyTo.value = null
   newComment.value = ''
 }
+
+const toggleCommentLike = async (comment) => {
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
+
+  try {
+    const { data } = await postApi.likeComment(comment.id, comment.likes, comment.isLiked)
+    if (data.code === 1) {
+      comment.isLiked = !comment.isLiked
+      comment.likes = comment.isLiked ? comment.likes + 1 : comment.likes - 1
+    }
+  } catch (error) {
+    console.error('评论点赞失败:', error)
+  }
+}
+
+// 图片查看器方法
+const openImageViewer = (images) => {
+  currentImages.value = images
+  currentImageIndex.value = 0
+  showImageViewer.value = true
+}
+
+const closeImageViewer = () => {
+  showImageViewer.value = false
+}
+
+const isLoggedIn = computed(() => {
+  return !!localStorage.getItem('user')
+})
 
 const toggleCollect = (post: any) => {
   post.isCollected = !post.isCollected
@@ -553,47 +608,47 @@ const toggleCollect = (post: any) => {
   }
 }
 
-// 添加图片查看器状态
-const showImageViewer = ref(false)
-const currentImages = ref<string[]>([])
-const currentImageIndex = ref(0)
-
-// 添加图片查看器方法
-const openImageViewer = (images: string[]) => {
-  currentImages.value = images
-  currentImageIndex.value = 0
-  showImageViewer.value = true
-}
-
-const closeImageViewer = () => {
-  showImageViewer.value = false
-}
-
-const toggleCommentLike = (comment: Comment | Reply) => {
-  if (!isLoggedIn.value) {
-    router.push('/login')
-    return
-  }
-  comment.isLiked = !comment.isLiked
-  comment.likes = (comment.likes || 0) + (comment.isLiked ? 1 : -1)
-}
-
-const replyToComment = (comment: Comment, reply?: Reply) => {
-  if (!isLoggedIn.value) {
-    router.push('/login')
-    return
-  }
-  replyTo.value = {
-    comment,
-    reply,
-    username: reply ? reply.username : comment.username
-  }
-}
-
-
 const handleInputClick = () => {
   if (!isLoggedIn.value) {
     router.push('/login')
+  }
+}
+
+// 添加提交评论方法
+const submitComment = async () => {
+  if (!newComment.value.trim() || !currentPost.value) return
+
+  try {
+    if (!replyTo.value) {
+      // 发表新评论
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      const { data } = await postApi.addComment(
+        currentPost.value.id,
+        user.id,
+        newComment.value
+      )
+
+      if (data.code === 1) {
+        await getComments(currentPost.value.id)
+        newComment.value = ''
+      }
+    } else {
+      // 发表回复
+      const response = await request.post("/reply/add", {
+        fatherId: replyTo.value.comment.id,
+        commenterId: replyTo.value.comment.commenterId,
+        replierId: JSON.parse(localStorage.getItem("user") || "{}").id,
+        content: newComment.value,
+      })
+
+      if (response.data.code === 1) {
+        await getComments(currentPost.value.id)
+        newComment.value = ''
+        replyTo.value = null
+      }
+    }
+  } catch (error) {
+    console.error('发表评论/回复失败:', error)
   }
 }
 
@@ -603,58 +658,6 @@ const handleCommentSubmit = () => {
     return
   }
   submitComment()
-}
-
-const submitComment = () => {
-  if (!newComment.value.trim()) return
-  
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
-  
-  if (replyTo.value) {
-    // 添加回复
-    const reply: Reply = {
-      id: Date.now(),
-      username: user.username || '访客用户',
-      avatar: user.avatar || '/public/icon/icon.jpeg',
-      content: newComment.value,
-      time: '刚刚',
-      likes: 0,
-      isLiked: false,
-      replyTo: reply ? reply.username : replyTo.value.comment.username
-    }
-
-    if (!replyTo.value.comment.replies) {
-      replyTo.value.comment.replies = []
-    }
-    replyTo.value.comment.replies.push(reply)
-  } else {
-    // 添加新评论
-    const comment: Comment = {
-      id: Date.now(),
-      username: user.username || '访客用户',
-      avatar: user.avatar || '/public/icon/icon.jpeg',
-      content: newComment.value,
-      time: '刚刚',
-      likes: 0,
-      isLiked: false,
-      replies: []
-    }
-    commentsList.value.unshift(comment)
-  }
-
-  newComment.value = ''
-  replyTo.value = null
-}
-
-const getInputPlaceholder = () => {
-  if (!isLoggedIn.value) return '登录后发表评论'
-  if (replyTo.value) return `回复 ${replyTo.value.username}`
-  return '写下你的评论...'
-}
-
-const cancelReply = () => {
-  replyTo.value = null
-  newComment.value = '' // 可选：是否清空输入框内容
 }
 
 const toggleReplies = (comment: Comment) => {
@@ -693,23 +696,58 @@ const fetchUserPosts = async () => {
       userInfo.value.posts = data.data.length
       
       // 转换数据格式以匹配前端展示需求
-      userPosts.value = data.data.map(post => ({
-        id: post.id,
-        username: userInfo.value.name,
-        avatar: userInfo.value.avatar,
-        content: post.content,
-        images: post.images || [],
-        time: post.createTime,
-        title: post.title,
-        likes: 0,
-        comments: 0,
-        isLiked: false,
-        isCollected: false
-      }))
+      userPosts.value = data.data.map(post => {
+        // 获取用户信息
+        const user = JSON.parse(localStorage.getItem('user') || '{}')
+        return {
+          id: post.id,
+          username: userInfo.value.nickname || userInfo.value.username,
+          avatar: userInfo.value.avatar,
+          content: post.content,
+          images: post.images || [],
+          time: formatTime(post.createTime),
+          title: post.title,
+          likes: post.likes || 0,        // 使用后端返回的点赞数
+          comments: post.comments || 0,   // 使用后端返回的评论数
+          isLiked: post.isLiked || false, // 使用后端返回的点赞状态
+          isCollected: false
+        }
+      })
+
+      // 按时间倒序排序
+      userPosts.value.sort((a, b) => new Date(b.createTime) - new Date(a.createTime))
     }
   } catch (error) {
     console.error('获取用户动态失败:', error)
   }
+}
+
+// 添加时间格式化函数
+const formatTime = (timestamp) => {
+  const date = new Date(timestamp)
+  const now = new Date()
+  const diff = now - date
+
+  // 小于1小时，显示xx分钟前
+  if (diff < 3600000) {
+    const minutes = Math.floor(diff / 60000)
+    return `${minutes}分钟前`
+  }
+
+  // 小于24小时，显示xx小时前
+  if (diff < 86400000) {
+    const hours = Math.floor(diff / 3600000)
+    return `${hours}小时前`
+  }
+
+  // 其他情况显示具体日期和时间
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
 // 获取收藏列表
