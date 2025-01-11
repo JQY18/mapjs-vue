@@ -1,5 +1,24 @@
 <template>
   <div class="circle-container">
+    <!-- 添加搜索框 -->
+    <div class="search-box">
+      <div class="search-input">
+        <Icon icon="mdi:magnify" class="search-icon"/>
+        <input 
+          v-model="searchQuery"
+          type="text"
+          placeholder="搜索帖子内容..."
+          @input="handleSearch"
+        />
+        <Icon 
+          v-if="searchQuery"
+          icon="mdi:close" 
+          class="clear-icon"
+          @click="clearSearch"
+        />
+      </div>
+    </div>
+
     <!-- 添加发布按钮 -->
     <div class="publish-btn" @click="openPublishDialog">
       <Icon icon="mdi:plus" />
@@ -71,7 +90,7 @@
     <!-- 添加一个滚动容器 -->
     <div class="scroll-container">
       <div class="content-list">
-        <div v-for="post in posts" :key="post.id" class="post-card">
+        <div v-for="post in filteredPosts" :key="post.id" class="post-card">
           <div class="post-header">
             <img :src="post.avatar" class="avatar" />
             <div class="user-info">
@@ -385,6 +404,8 @@ const handleCommentSubmit = () => {
   }).catch(error => {
     console.log(error)
   });
+  newComment.value = "";
+  replyTo.value = null;
 };
 
 // 获取用户信息的方法
@@ -529,12 +550,12 @@ const getComments = async (postId) => {
           id: reply.id,
           commenterId: reply.commenterId,
           replierId: reply.replierId,
-          username: reply.commenterNickname,
-          avatar: reply.commenterAvatar,
+          username: reply.replierNickname,
+          avatar: reply.replierAvatar,
           content: reply.content,
           time: formatTime(reply.createTime),
-          replyTo: reply.replierNickname,
-          replyToAvatar: reply.replierAvatar,
+          replyTo: reply.commenterNickname,
+          replyToAvatar: reply.commenterAvatar,
           likes: 0,  // 回复暂时没有点赞数
           isLiked: false  // 回复暂时没有点赞状态
         }))
@@ -730,6 +751,40 @@ const submitPost = async () => {
   } catch (error) {
     console.error('发布失败:', error)
   }
+}
+
+// 添加搜索相关的状态
+const searchQuery = ref('')
+const searchTimeout = ref(null)
+
+// 添加过滤后的帖子计算属性
+const filteredPosts = computed(() => {
+  if (!searchQuery.value) return posts.value
+  
+  const query = searchQuery.value.toLowerCase()
+  return posts.value.filter(post => {
+    return (
+      post.content.toLowerCase().includes(query) ||
+      post.username.toLowerCase().includes(query) ||
+      (post.title && post.title.toLowerCase().includes(query))
+    )
+  })
+})
+
+// 添加搜索处理方法
+const handleSearch = () => {
+  // 防抖处理
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value)
+  }
+  searchTimeout.value = setTimeout(() => {
+    // 这里可以添加额外的搜索逻辑
+  }, 300)
+}
+
+// 添加清除搜索方法
+const clearSearch = () => {
+  searchQuery.value = ''
 }
 </script>
 
@@ -1381,5 +1436,49 @@ const submitPost = async () => {
 .publish-submit-btn:disabled {
   background: #bfbfbf;
   cursor: not-allowed;
+}
+
+/* 添加搜索框样式 */
+.search-box {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.search-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 24px;
+  padding: 8px 16px;
+}
+
+.search-input input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-icon {
+  color: #999;
+  font-size: 20px;
+}
+
+.clear-icon {
+  color: #999;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.clear-icon:hover {
+  color: #666;
 }
 </style> 

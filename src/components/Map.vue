@@ -1,5 +1,12 @@
 <template>
   <div class="map-container">
+    <!-- 添加用户位置标记模板 -->
+    <div v-if="userLocationMarker" class="user-location-wrapper" :style="userLocationStyle">
+      <div class="user-location-dot">
+        <div class="user-location-pulse"></div>
+      </div>
+    </div>
+
     <!-- 搜索框 -->
     <div class="search-container">
       <div class="search-box">
@@ -70,10 +77,8 @@
       <div class="recommended-routes">
         <h4>推荐路线</h4>
         <div class="route-list">
-          <div v-for="route in recommendedRoutes" 
-               :key="route.id" 
-               class="route-item"
-               @click="selectRecommendedRoute(route)">
+          <div v-for="route in recommendedRoutes" :key="route.id" class="route-item"
+            @click="selectRecommendedRoute(route)">
             <div class="route-name">{{ route.name }}</div>
             <div class="route-desc">{{ route.description }}</div>
           </div>
@@ -94,6 +99,10 @@
       </button>
       <button class="control-btn" @click="showRoutePanel = true" title="路线规划">
         <Icon icon="mdi:routes" class="function-icon" />
+      </button>
+      <!-- 添加定位按钮 -->
+      <button class="control-btn" @click="locateUser" :class="{ 'locating': isLocating }" title="定位">
+        <Icon icon="mdi:crosshairs-gps" class="function-icon" />
       </button>
       <!-- 保留项目，总体图标显示/隐藏 -->
       <!-- <button class="control-btn" @click="toggleMarkers" title="显示/隐藏地点">
@@ -135,7 +144,7 @@ import LocationModal from './LocationModal.vue'
 import { useRoute } from 'vue-router'
 import request from '../api/request';
 import { useRouter } from 'vue-router'
-
+import { ElMessage, ElMessageBox } from 'element-plus'
 const route = useRoute()
 const router = useRouter()
 
@@ -296,10 +305,10 @@ const selectedLocation = ref(null)
 const navigateToLocation = (location) => {
   // 先关闭已经打开的 modal
   showLocationModal.value = false
-  
+
   // 设置选中的位置
   selectedLocation.value = location
-  
+
   // 添加一次性事件监听器，等待地图移动完成
   const onMoveEnd = () => {
     // 获取 marker 在屏幕上的像素坐标
@@ -308,27 +317,27 @@ const navigateToLocation = (location) => {
       x: point.x,
       y: point.y
     }
-    
+
     // 显示 modal
     showLocationModal.value = true
-    
+
     // 移除事件监听器
     map.value.off('moveend', onMoveEnd)
   }
-  
+
   // 添加事件监听器
   map.value.on('moveend', onMoveEnd)
-  
+
   // 移动地图到目标位置
   map.value?.setView(location.coords, 18)
-  
+
   // 更新其他状态
   markers.value.forEach(marker => {
     if (marker.getLatLng().equals(location.coords)) {
       marker.openPopup()
     }
   })
-  
+
   addToHistory(location)
   showSearchResults.value = false
   searchQuery.value = location.name
@@ -434,10 +443,10 @@ const planRoute = () => {
       }
     }),
     lineOptions: {
-      styles: [{ 
-        color: '#3388ff', 
-        weight: 6, 
-        opacity: 0.7 
+      styles: [{
+        color: '#3388ff',
+        weight: 6,
+        opacity: 0.7
       }],
       addWaypoints: false,
       missingRouteTolerance: 10 // 增加容差以更好地吸附到道路
@@ -460,13 +469,6 @@ const planRoute = () => {
   });
 };
 
-// 添加样式
-const customizeRoutingControl = () => {
-  const routingContainer = document.querySelector('.leaflet-routing-container')
-  if (routingContainer) {
-    routingContainer.classList.add('custom-routing')
-  }
-}
 
 // 在组件卸载时清理
 onUnmounted(() => {
@@ -628,7 +630,7 @@ const toggleCategory = (category) => {
     // 否则只显示选中的分类
     selectedCategories.value = [category]
   }
-  
+
   // 更新地图上的标记显示状态
   locations.forEach((location, idx) => {
     const marker = markers.value[idx]
@@ -670,13 +672,13 @@ const openLocationModal = (location, event) => {
   selectedLocation.value = location
   // 获取点击位置相对于视口的坐标
   const point = map.value.latLngToContainerPoint(location.coords);
-  
+
   // 计算header和tabs的总高度
   const headerHeight = 70;  // header高度 (50px + padding)
-  
+
   modalPosition.value = {
     x: point.x + 20, // 向右偏移20px，为箭头留出空间
-    y: point.y -headerHeight
+    y: point.y - headerHeight
   }
   showLocationModal.value = true
 }
@@ -692,12 +694,12 @@ markers.value.forEach(location => {
 
 const selectRecommendedRoute = (route) => {
   clearRoute()
-  
+
   const waypoints = route.points.map(pointName => {
     const location = locations.find(loc => loc.name === pointName)
     return location ? L.latLng(location.coords[0], location.coords[1]) : null
   }).filter(point => point !== null)
-  
+
   const control = L.Routing.control({
     waypoints,
     router: L.Routing.osrmv1({
@@ -707,14 +709,14 @@ const selectRecommendedRoute = (route) => {
     }),
     lineOptions: {
       styles: [
-        { 
-          color: getRouteColor(route.id), 
+        {
+          color: getRouteColor(route.id),
           weight: 4,
           opacity: 0.8,
           dashArray: '12, 12',  // 添加虚线样式
           className: 'animated-path' // 添加动画类名
         },
-        { 
+        {
           color: '#fff',  // 白色边框
           weight: 8,
           opacity: 0.3,
@@ -750,10 +752,10 @@ const selectRecommendedRoute = (route) => {
     showAlternatives: false,
     show: false
   })
-  
+
   routingControl.value = control
   control.addTo(map.value)
-  
+
   startPoint.value = route.points[0]
   endPoint.value = route.points[route.points.length - 1]
   selectedStart.value = locations.find(loc => loc.name === route.points[0])
@@ -772,6 +774,151 @@ const getRouteColor = (routeId) => {
 
 // 添加紧急设施标记变量
 const emergencyMarker = ref(null)
+
+// 在 script setup 中添加新的响应式变量
+const userLocationMarker = ref(null)
+const isLocating = ref(false)
+
+// 添加定位方法
+const locateUser = () => {
+  isLocating.value = true;
+
+  // 检查浏览器是否支持地理定位
+  if (!navigator.geolocation) {
+    ElMessage.error('您的浏览器不支持地理定位');
+    isLocating.value = false;
+    return;
+  }
+
+  // 获取用户位置
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      let { latitude, longitude } = position.coords;
+
+      // 给坐标添加偏移量（根据需求调整偏移值）
+      const offsetLatitude = 0.00185 // 纬度偏移量
+      const offsetLongitude = -0.0007; // 经度偏移量
+
+      latitude += offsetLatitude;
+      longitude += offsetLongitude;
+
+      // 更新用户位置标记
+      if (userLocationMarker.value) {
+        userLocationMarker.value = { lat: latitude, lng: longitude };
+      } else {
+        userLocationMarker.value = { lat: latitude, lng: longitude };
+      }
+
+      // 更新标记位置样式
+      userLocationStyle.value = {
+        display: 'block',
+        position: 'absolute',
+        left: '0px',
+        top: '0px',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 1000
+      };
+
+      // 移动地图到用户位置
+      map.value?.setView([latitude, longitude], 18);
+
+      // 添加地图移动事件监听器
+      map.value?.on('move', updateUserLocationPosition);
+
+      // 立即更新位置
+      updateUserLocationPosition();
+
+      // 查找最近的位置点
+      const nearestLocation = findNearestLocation(latitude, longitude);
+      
+      // 显示气泡提示
+      selectedLocation.value = nearestLocation;
+      const point = map.value.latLngToContainerPoint(nearestLocation.coords);
+      modalPosition.value = {
+        x: point.x + 20,
+        y: point.y - 40
+      };
+      showLocationModal.value = true;
+
+      isLocating.value = false;
+    },
+    (error) => {
+      let errorMessage = '获取位置失败';
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = '您拒绝了位置访问请求';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = '位置信息不可用';
+          break;
+        case error.TIMEOUT:
+          errorMessage = '获取位置超时';
+          break;
+      }
+      ElMessage.error(errorMessage);
+      isLocating.value = false;
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 0
+    }
+  );
+};
+
+// 添加查找最近位置点的方法
+const findNearestLocation = (latitude, longitude) => {
+  let nearestLocation = locations[0];
+  let minDistance = calculateDistance(latitude, longitude, locations[0].coords[0], locations[0].coords[1]);
+
+  locations.forEach(location => {
+    const distance = calculateDistance(latitude, longitude, location.coords[0], location.coords[1]);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestLocation = location;
+    }
+  });
+
+  return nearestLocation;
+};
+
+// 添加计算两点之间距离的方法（使用 Haversine 公式）
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // 地球半径（千米）
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+
+// 添加更新用户位置标记位置的方法
+const updateUserLocationPosition = () => {
+  if (userLocationMarker.value) {
+    const point = map.value.latLngToContainerPoint([
+      userLocationMarker.value.lat,
+      userLocationMarker.value.lng
+    ]);
+    userLocationStyle.value = {
+      display: 'block',
+      position: 'absolute',
+      left: `${point.x}px`,
+      top: `${point.y}px`,
+      transform: 'translate(-50%, -50%)',
+      zIndex: 1000
+    };
+  }
+};
+
+// 添加用户位置样式计算
+const userLocationStyle = ref({
+  display: 'none',
+  left: '0px',
+  top: '0px'
+})
 
 // 监听路由参数变化
 watch(
@@ -836,7 +983,7 @@ watch(
 
       // 设置地图视图到紧急标记位置
       map.value.setView(coords, 18)
-      
+
       // 自动打开弹窗
       emergencyMarker.value.openPopup()
     } else {
@@ -856,10 +1003,10 @@ watch(
 const handleEmergencyNavigate = () => {
   const query = route.query
   if (!query.coords || !query.name) return
-  
+
   // 关闭弹窗
   emergencyMarker.value?.closePopup()
-  
+
   // 打开路线规划面板并设置终点
   showRoutePanel.value = true
   selectedEnd.value = {
@@ -1432,6 +1579,7 @@ input:focus {
     transform: scale(0.5);
     opacity: 1;
   }
+
   100% {
     transform: scale(2);
     opacity: 0;
@@ -1453,5 +1601,117 @@ input:focus {
   margin: 0;
   color: #666;
   font-size: 14px;
+}
+
+/* 定位样式 */
+.user-location-marker {
+  background: none;
+  border: none;
+}
+
+.user-location-dot {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.user-location-dot::before {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #1890ff;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid white;
+  box-shadow: 0 0 10px rgba(24, 144, 255, 0.5);
+}
+
+.user-location-pulse {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: rgba(24, 144, 255, 0.4);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 修改用户位置标记样式 */
+.user-location-wrapper {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.user-location-dot {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.user-location-dot::before {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #1890ff;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid white;
+  box-shadow: 0 0 10px rgba(24, 144, 255, 0.5);
+}
+
+.user-location-pulse {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: rgba(24, 144, 255, 0.4);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
 }
 </style>
