@@ -268,49 +268,51 @@ import 'element-plus/es/components/message/style/css'
 
 const router = useRouter();
 
-const posts = ref([
-  {
-    id: 1,
-    username: "师大学子",
-    avatar: "/public/icon/icon.jpeg",
-    time: "10分钟前",
-    content: "今天在图书馆学习，感觉氛围真好！",
-    images: ["/public/icon/icon.jpeg"],
-    likes: 23,
-    comments: 5,
-    isLiked: false,
-  },
-  {
-    id: 2,
-    username: "校园达人",
-    avatar: "/avatars/default2.png",
-    time: "1小时前",
-    content: "木兰公寓的樱花开了，大家快来看啊！",
-    images: ["/images/cherry.jpg", "/images/cherry2.jpg"],
-    likes: 45,
-    comments: 12,
-  },
-  {
-    id: 3,
-    username: "校园达人",
-    avatar: "/avatars/default2.png",
-    time: "2小时前",
-    content: "今天的晚霞真美！",
-    images: ["/images/cherry.jpg"],
-    likes: 38,
-    comments: 8,
-  },
-  {
-    id: 4,
-    username: "师大新生",
-    avatar: "/avatars/default2.png",
-    time: "3小时前",
-    content: "第一次来到师大，校园真大啊！",
-    images: ["/images/cherry.jpg"],
-    likes: 56,
-    comments: 15,
-  },
-]);
+const posts = ref([]);
+
+// const posts = ref([
+//   {
+//     id: 1,
+//     username: "师大学子",
+//     avatar: "/public/icon/icon.jpeg",
+//     time: "10分钟前",
+//     content: "今天在图书馆学习，感觉氛围真好！",
+//     images: ["/public/icon/icon.jpeg"],
+//     likes: 23,
+//     comments: 5,
+//     isLiked: false,
+//   },
+//   {
+//     id: 2,
+//     username: "校园达人",
+//     avatar: "/avatars/default2.png",
+//     time: "1小时前",
+//     content: "木兰公寓的樱花开了，大家快来看啊！",
+//     images: ["/images/cherry.jpg", "/images/cherry2.jpg"],
+//     likes: 45,
+//     comments: 12,
+//   },
+//   {
+//     id: 3,
+//     username: "校园达人",
+//     avatar: "/avatars/default2.png",
+//     time: "2小时前",
+//     content: "今天的晚霞真美！",
+//     images: ["/images/cherry.jpg"],
+//     likes: 38,
+//     comments: 8,
+//   },
+//   {
+//     id: 4,
+//     username: "师大新生",
+//     avatar: "/avatars/default2.png",
+//     time: "3小时前",
+//     content: "第一次来到师大，校园真大啊！",
+//     images: ["/images/cherry.jpg"],
+//     likes: 56,
+//     comments: 15,
+//   },
+// ]);
 
 const showComments = ref(false);
 const currentPost = ref(null);
@@ -368,7 +370,21 @@ const handleCommentSubmit = () => {
     router.push("/login");
     return;
   }
-  submitComment();
+
+  if(!replyTo || !replyTo.value){
+    submitComment();
+  }
+  request.post("/reply/add", {
+    fatherId: replyTo.value.comment.id,
+    commenterId: replyTo.value.comment.commenterId,
+    replierId: JSON.parse(localStorage.getItem("user") || "{}").id,
+    content: newComment.value,
+  }).then(res => {
+    getComments(currentPost.value.id);
+    console.log(res)
+  }).catch(error => {
+    console.log(error)
+  });
 };
 
 // 获取用户信息的方法
@@ -403,7 +419,7 @@ const fetchPosts = async () => {
             title: post.title,
             images: post.images,
             likes: post.likes,
-            comments: 0,
+            comments: post.comments,
             isLiked: post.isLiked,
             isCollected: false,
             // 可以添加其他用户信息
@@ -501,6 +517,7 @@ const getComments = async (postId) => {
       // 转换评论数据格式
       commentsList.value = data.data.map(comment => ({
         id: comment.id,
+        commenterId: comment.commenterId,
         username: comment.commenterNickname,
         avatar: comment.commenterAvatar,
         content: comment.content,
@@ -510,6 +527,8 @@ const getComments = async (postId) => {
         showReplies: false,
         replies: comment.reply.map(reply => ({
           id: reply.id,
+          commenterId: reply.commenterId,
+          replierId: reply.replierId,
           username: reply.commenterNickname,
           avatar: reply.commenterAvatar,
           content: reply.content,
@@ -541,13 +560,16 @@ const toggleCommentLike = async (comment) => {
   }
 
   try {
-    const { data } = comment.isLiked
-      ? await postApi.unlikeComment(comment.id)
-      : await postApi.likeComment(comment.id)
+    // const { data } = comment.isLiked
+    //   ? await postApi.unlikeComment(comment.id)
+    //   : await postApi.likeComment(comment.id)
+
+    const { data } = await postApi.likeComment(comment.id,comment.likes,comment.isLiked)
+
 
     if (data.code === 1) {
       comment.isLiked = !comment.isLiked
-      comment.likes = data.data.likes
+      comment.likes = comment.isLiked ? comment.likes + 1 : comment.likes - 1
     }
   } catch (error) {
     console.error("评论点赞失败:", error)
@@ -559,12 +581,20 @@ const submitComment = async () => {
   if (!newComment.value.trim() || !currentPost.value) return;
 
   try {
-    const { data } = await postApi.addComment(currentPost.value.id, {
-      content: newComment.value,
-      replyTo: replyTo.value?.reply?.id || replyTo.value?.comment.id,
-    });
 
-    if (data.code === 0) {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+
+    // window.alert(JSON.stringify(currentPost.value.id))
+    // window.alert(JSON.stringify(user.id))
+    // window.alert(JSON.stringify(newComment.value))
+    
+    const { data } = await postApi.addComment(currentPost.value.id, 
+      // replyTo.value?.reply?.id || replyTo.value?.comment.id,
+      user.id,
+      newComment.value
+    );
+
+    if (data.code === 1) {
       // 重新加载评论列表
       await getComments(currentPost.value.id);
       newComment.value = "";
@@ -575,6 +605,8 @@ const submitComment = async () => {
   }
 };
 
+
+// 回复评论
 const replyToComment = (comment, reply) => {
   if (!isLoggedIn.value) {
     router.push("/login");

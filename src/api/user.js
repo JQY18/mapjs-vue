@@ -23,7 +23,12 @@ export const userApi = {
   // 获取当前登录用户的动态列表
   getCurrentUserPosts() {
     const user = JSON.parse(localStorage.getItem('user'))
-    return request.get('/post/all', { params: { userId: user.id } })
+    return request.get('/post/all', {
+      params: {
+        userId: user.id,
+        currentUserId: user.id
+      }
+    })
   },
 
   // 获取当前登录用户的收藏列表
@@ -111,4 +116,4 @@ export const userApi = {
     //   }
     // }
   }
-} 
+}
