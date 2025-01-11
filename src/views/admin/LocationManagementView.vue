@@ -1,323 +1,304 @@
 <template>
   <div class="location-management">
-    <!-- 搜索和操作栏 -->
-    <div class="action-bar">
-      <div class="search-section">
-        <el-input
-          v-model="searchQuery"
-          placeholder="搜索地点..."
-          prefix-icon="Search"
-          clearable
-          @clear="handleSearch"
-          @input="handleSearch"
-        >
-          <template #append>
-            <el-button :icon="Search" @click="handleSearch">
-              搜索
-            </el-button>
+    <!-- 页面标题和操作按钮 -->
+    <div class="page-header">
+      <h2>地点管理</h2>
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon>添加地点
+      </el-button>
+    </div>
+
+    <!-- 搜索和筛选区域 -->
+    <div class="search-bar">
+      <el-input
+        v-model="searchQuery"
+        placeholder="搜索地点名称"
+        class="search-input"
+        clearable
+      >
+        <template #prefix>
+          <el-icon><Search /></el-icon>
+        </template>
+      </el-input>
+      
+      <el-select v-model="categoryFilter" placeholder="地点类型" clearable>
+        <el-option
+          v-for="item in categoryOptions"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
+      </el-select>
+    </div>
+
+    <!-- 地点列表 -->
+    <div class="location-list">
+      <el-table :data="filteredLocations" stripe style="width: 100%">
+        <el-table-column prop="detailId" label="DETAIL_ID" width="120" />
+        <el-table-column prop="name" label="地点名称" />
+        <el-table-column label="地点图片" width="120">
+          <template #default="{ row }">
+            <img
+              :src="row.image"
+              class="location-image"
+              @click="handlePreview(row.image)"
+            />
           </template>
-        </el-input>
-      </div>
-      
-      <div class="action-buttons">
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>添加地点
-        </el-button>
-      </div>
+        </el-table-column>
+        <el-table-column prop="category" label="类型">
+          <template #default="{ row }">
+            <el-tag :type="getCategoryTagType(row.category)">
+              {{ row.category }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="description" label="描述" show-overflow-tooltip />
+        <el-table-column label="创建时间" width="180">
+          <template #default="{ row }">
+            {{ formatDate(row.createdTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="坐标" width="180">
+          <template #default="{ row }">
+            <div class="coords">
+              <span>{{ row.coords[0] }}</span>
+              <span>{{ row.coords[1] }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200">
+          <template #default="{ row }">
+            <el-button-group>
+              <el-button type="primary" @click="handleEdit(row)">
+                <el-icon><Edit /></el-icon>编辑
+              </el-button>
+              <el-button type="danger" @click="handleDelete(row)">
+                <el-icon><Delete /></el-icon>删除
+              </el-button>
+            </el-button-group>
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
 
-    <!-- 地点表格 -->
-    <el-table
-      v-loading="loading"
-      :data="locationList"
-      border
-      style="width: 100%"
-    >
-      <el-table-column label="预览图" width="120">
-        <template #default="{ row }">
-          <el-image
-            :src="row.image"
-            :preview-src-list="[row.image]"
-            fit="cover"
-            class="location-image"
-          >
-            <template #error>
-              <div class="image-error">
-                <el-icon><Picture /></el-icon>
-              </div>
-            </template>
-          </el-image>
-        </template>
-      </el-table-column>
-      
-      <el-table-column prop="name" label="地点名称" width="150" />
-      
-      <el-table-column prop="description" label="描述" show-overflow-tooltip />
-      
-      <el-table-column label="坐标" width="200">
-        <template #default="{ row }">
-          <div class="coordinates">
-            <span>{{ row.coords[0] }}, {{ row.coords[1] }}</span>
-            <el-button type="primary" link @click="showOnMap(row)">
-              <el-icon><Location /></el-icon>
-              在地图中查看
-            </el-button>
-          </div>
-        </template>
-      </el-table-column>
-      
-      <el-table-column prop="category" label="分类" width="120">
-        <template #default="{ row }">
-          <el-tag>{{ row.category }}</el-tag>
-        </template>
-      </el-table-column>
-      
-      <el-table-column label="操作" width="200" fixed="right">
-        <template #default="{ row }">
-          <el-button-group>
-            <el-button type="primary" link @click="handleEdit(row)">
-              <el-icon><Edit /></el-icon>编辑
-            </el-button>
-            <el-button type="danger" link @click="handleDelete(row)">
-              <el-icon><Delete /></el-icon>删除
-            </el-button>
-          </el-button-group>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 分页 -->
-    <div class="pagination-container">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :total="total"
-        :page-sizes="[10, 20, 50, 100]"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
-    </div>
-
-    <!-- 地点表单对话框 -->
-    <el-dialog
+    <!-- 添加/编辑地点对话框 -->
+    <base-dialog
       v-model="dialogVisible"
-      :title="dialogType === 'add' ? '添加地点' : '编辑地点'"
-      width="600px"
+      :title="editingLocation ? '编辑地点' : '添加地点'"
+      @confirm="handleSubmit"
     >
       <el-form
-        ref="locationFormRef"
         :model="locationForm"
         :rules="rules"
-        label-width="80px"
+        label-width="100px"
       >
-        <el-form-item label="预览图" prop="image">
-          <el-upload
-            class="location-uploader"
-            action="/api/upload"
-            :show-file-list="false"
-            :on-success="handleImageSuccess"
-            :before-upload="beforeImageUpload"
-          >
-            <img v-if="locationForm.image" :src="locationForm.image" class="preview-image" />
-            <el-icon v-else class="uploader-icon"><Plus /></el-icon>
-          </el-upload>
-        </el-form-item>
-        
-        <el-form-item label="名称" prop="name">
+        <el-form-item label="地点名称" prop="name">
           <el-input v-model="locationForm.name" />
         </el-form-item>
         
-        <el-form-item label="描述" prop="description">
-          <el-input
-            v-model="locationForm.description"
-            type="textarea"
-            :rows="3"
-          />
-        </el-form-item>
-        
-        <el-form-item label="坐标" required>
-          <el-row :gutter="10">
-            <el-col :span="12">
-              <el-form-item prop="latitude">
-                <el-input
-                  v-model.number="locationForm.latitude"
-                  placeholder="纬度"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item prop="longitude">
-                <el-input
-                  v-model.number="locationForm.longitude"
-                  placeholder="经度"
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </el-form-item>
-        
-        <el-form-item label="分类" prop="category">
-          <el-select v-model="locationForm.category" placeholder="请选择分类">
+        <el-form-item label="地点类型" prop="category">
+          <el-select v-model="locationForm.category" style="width: 100%">
             <el-option
-              v-for="category in categories"
-              :key="category"
-              :label="category"
-              :value="category"
+              v-for="item in categoryOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
             />
           </el-select>
         </el-form-item>
+        
+        <el-form-item label="地点描述" prop="description">
+          <el-input v-model="locationForm.description" type="textarea" :rows="4" />
+        </el-form-item>
+        
+        <el-form-item label="地点图片" prop="image">
+          <el-upload
+            class="location-upload"
+            :auto-upload="false"
+            :show-file-list="false"
+            @change="handleFileChange"
+          >
+            <img v-if="locationForm.image" :src="locationForm.image" class="preview-image">
+            <el-icon v-else class="upload-icon"><Plus /></el-icon>
+          </el-upload>
+        </el-form-item>
+        
+        <el-form-item label="地点坐标">
+          <div class="coordinate-inputs">
+            <el-input v-model="locationForm.coords[0]" placeholder="纬度">
+              <template #prefix>Lat:</template>
+            </el-input>
+            <el-input v-model="locationForm.coords[1]" placeholder="经度">
+              <template #prefix>Lng:</template>
+            </el-input>
+          </div>
+        </el-form-item>
       </el-form>
-      
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">
-            确定
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
+    </base-dialog>
+
+    <!-- 图片预览模态框 -->
+    <image-preview
+      v-model:show="previewVisible"
+      :image-url="previewImage"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Search,
   Plus,
+  Search,
   Edit,
-  Delete,
-  Picture,
-  Location
+  Delete
 } from '@element-plus/icons-vue'
+import { locationApi } from '../../api/location'
+import BaseDialog from '../../components/BaseDialog.vue'
+import ImagePreview from '../../components/ImagePreview.vue'
 
-// 分类选项
-const categories = [
-  '食堂',
-  '教学科研',
-  '宿舍',
-  '文化风景',
-  '行政',
-  '重要场馆'
+// 地点类型选项
+const categoryOptions = [
+  { label: '食堂', value: '食堂' },
+  { label: '教学科研', value: '教学科研' },
+  { label: '重要场馆', value: '重要场馆' },
+  { label: '宿舍', value: '宿舍' },
+  { label: '体育场所', value: '体育场所' },
+  { label: '办公楼', value: '办公楼' },
+  { label: '文化风景', value: '文化风景' },
+  { label: '行政', value: '行政' },
+  { label: '校门', value: '校门' },
+  { label: '其他', value: '其他' }
 ]
 
-// 表格数据
-const loading = ref(false)
-const locationList = ref([])
-const total = ref(0)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const searchQuery = ref('')
-
-// 对话框相关
-const dialogVisible = ref(false)
-const dialogType = ref('add')
-const locationFormRef = ref(null)
-const locationForm = reactive({
-  image: '',
+// 创建响应式表单数据
+const createEmptyForm = () => ({
+  id: null,
   name: '',
+  category: '',
   description: '',
-  latitude: '',
-  longitude: '',
-  category: ''
+  image: '',
+  imageFile: null,
+  coords: ['', ''],
+  detailId: ''
 })
 
-// 表单验证规则
+// 状态管理
+const searchQuery = ref('')
+const categoryFilter = ref('')
+const dialogVisible = ref(false)
+const editingLocation = ref(null)
+const locations = ref([])
+const locationForm = ref(createEmptyForm())
+
 const rules = {
   name: [
-    { required: true, message: '请输入地点名称', trigger: 'blur' }
-  ],
-  description: [
-    { required: true, message: '请输入地点描述', trigger: 'blur' }
-  ],
-  latitude: [
-    { required: true, message: '请输入纬度', trigger: 'blur' },
-    { type: 'number', message: '纬度必须为数字', trigger: 'blur' }
-  ],
-  longitude: [
-    { required: true, message: '请输入经度', trigger: 'blur' },
-    { type: 'number', message: '经度必须为数字', trigger: 'blur' }
+    { required: true, message: '请输入地点名称', trigger: ['blur', 'change'] }
   ],
   category: [
-    { required: true, message: '请选择分类', trigger: 'change' }
+    { required: true, message: '请选择地点类型', trigger: ['blur', 'change'] }
+  ],
+  description: [
+    { required: true, message: '请输入地点描述', trigger: ['blur', 'change'] }
   ]
 }
 
-// 获取地点列表
+// 获取所有地点
 const fetchLocations = async () => {
-  loading.value = true
   try {
-    // TODO: 调用获取地点列表 API
-    // const { data } = await locationApi.getLocations({
-    //   page: currentPage.value,
-    //   pageSize: pageSize.value,
-    //   query: searchQuery.value
-    // })
-    
-    // 模拟数据
-    setTimeout(() => {
-      locationList.value = [
-        {
-          id: 1,
-          image: '/images/library.png',
-          name: '图书馆',
-          description: '湖南师范大学图书馆',
-          coords: [28.1895, 112.9433],
-          category: '重要场馆'
-        }
-      ]
-      total.value = 1
-      loading.value = false
-    }, 500)
+    const { data } = await locationApi.getLocations()
+    if (data.code === 1) {
+      locations.value = data.data
+    }
   } catch (error) {
-    loading.value = false
+    console.error('获取地点列表失败:', error)
     ElMessage.error('获取地点列表失败')
   }
 }
 
-const handleSearch = () => {
-  currentPage.value = 1
-  fetchLocations()
+// 计算属性：过滤后的地点列表
+const filteredLocations = computed(() => {
+  let result = locations.value
+  
+  // 先按类型筛选
+  if (categoryFilter.value) {
+    result = result.filter(item => item.category === categoryFilter.value)
+  }
+
+  // 再按搜索关键词筛选
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(item => 
+      item.name.toLowerCase().includes(query) ||
+      item.description.toLowerCase().includes(query)
+    )
+  }
+
+  return result
+})
+
+// 获取类型标签样式
+const getCategoryTagType = (category) => {
+  const typeMap = {
+    '食堂': 'warning',
+    '教学科研': 'primary',
+    '重要场馆': 'success',
+    '宿舍': 'info',
+    '体育场所': 'danger',
+    '办公楼': '',
+    '校门': '',
+    '其他': 'info'
+  }
+  return typeMap[category] || ''
 }
 
-const handleSizeChange = (val) => {
-  pageSize.value = val
-  fetchLocations()
+const handleFileChange = (file) => {
+  const isImage = file.raw.type.startsWith('image/')
+  const isLt2M = file.raw.size / 1024 / 1024 < 2
+
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件!')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB!')
+    return false
+  }
+
+  // 保存文件对象
+  locationForm.value.imageFile = file.raw
+  
+  // 创建本地预览URL
+  locationForm.value.image = URL.createObjectURL(file.raw)
 }
 
-const handleCurrentChange = (val) => {
-  currentPage.value = val
-  fetchLocations()
-}
-
+// 处理添加地点
 const handleAdd = () => {
-  dialogType.value = 'add'
+  editingLocation.value = null
+  locationForm.value = createEmptyForm()
   dialogVisible.value = true
-  locationForm.image = ''
-  locationForm.name = ''
-  locationForm.description = ''
-  locationForm.latitude = ''
-  locationForm.longitude = ''
-  locationForm.category = ''
 }
 
+// 处理编辑地点
 const handleEdit = (row) => {
-  dialogType.value = 'edit'
+  editingLocation.value = row
+  locationForm.value = {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    description: row.description,
+    image: row.image,
+    coords: [...row.coords],
+    detailId: row.detailId
+  }
   dialogVisible.value = true
-  locationForm.image = row.image
-  locationForm.name = row.name
-  locationForm.description = row.description
-  locationForm.latitude = row.coords[0]
-  locationForm.longitude = row.coords[1]
-  locationForm.category = row.category
 }
 
+// 处理删除地点
 const handleDelete = async (row) => {
   try {
     await ElMessageBox.confirm(
-      '确定要删除该地点吗？',
+      '确认删除该地点？此操作不可恢复！',
       '警告',
       {
         confirmButtonText: '确定',
@@ -325,12 +306,12 @@ const handleDelete = async (row) => {
         type: 'warning'
       }
     )
-    
-    // TODO: 调用删除地点 API
-    // await locationApi.deleteLocation(row.id)
-    
-    ElMessage.success('删除成功')
-    fetchLocations()
+
+    const { data } = await locationApi.deleteLocation(row.id)
+    if (data.code === 1) {
+      ElMessage.success('删除成功')
+      fetchLocations()
+    }
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('删除失败')
@@ -338,142 +319,163 @@ const handleDelete = async (row) => {
   }
 }
 
-const handleImageSuccess = (response) => {
-  locationForm.image = response.url
-}
 
-const beforeImageUpload = (file) => {
-  const isJPG = file.type === 'image/jpeg'
-  const isPNG = file.type === 'image/png'
-  const isLt2M = file.size / 1024 / 1024 < 2
-
-  if (!isJPG && !isPNG) {
-    ElMessage.error('图片只能是 JPG 或 PNG 格式!')
-    return false
-  }
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过 2MB!')
-    return false
-  }
-  return true
-}
-
-const showOnMap = (row) => {
-  // TODO: 在地图中显示该地点
-  ElMessage.info('功能开发中...')
-}
-
+// 处理表单提交
 const handleSubmit = async () => {
-  if (!locationFormRef.value) return
-  
   try {
-    await locationFormRef.value.validate()
+    await ElMessageBox.confirm(
+      editingLocation.value ? '确认修改该地点？' : '确认添加该地点？',
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    // 创建 FormData
+    const formData = new FormData()
     
-    const locationData = {
-      ...locationForm,
-      coords: [locationForm.latitude, locationForm.longitude]
+    // 添加ID（如果是编辑模式）
+    if (editingLocation.value) {
+      formData.append('id', locationForm.value.id)
     }
     
-    // TODO: 调用添加/编辑地点 API
-    // if (dialogType.value === 'add') {
-    //   await locationApi.createLocation(locationData)
-    // } else {
-    //   await locationApi.updateLocation(locationData)
-    // }
+    // 添加基本信息
+    formData.append('name', locationForm.value.name)
+    formData.append('category', locationForm.value.category)
+    formData.append('description', locationForm.value.description)
     
-    ElMessage.success(dialogType.value === 'add' ? '添加成功' : '编辑成功')
-    dialogVisible.value = false
-    fetchLocations()
+    // 添加坐标
+    formData.append('coords', locationForm.value.coords)
+    
+    // 只在有新图片时添加图片文件
+    if (locationForm.value.imageFile && (!editingLocation.value || locationForm.value.image !== editingLocation.value.image)) {
+      formData.append('imageFile', locationForm.value.imageFile)
+    }
+
+    const api = editingLocation.value
+      ? locationApi.updateLocation
+      : locationApi.addLocation
+    
+    const { data } = await api(formData)
+    
+    if (data.code === 1) {
+      ElMessage.success(editingLocation.value ? '更新成功' : '添加成功')
+      dialogVisible.value = false
+      fetchLocations()
+    }
   } catch (error) {
-    ElMessage.error(dialogType.value === 'add' ? '添加失败' : '编辑失败')
+    if (error !== 'cancel') {
+      ElMessage.error(editingLocation.value ? '更新失败' : '添加失败')
+    }
   }
 }
 
-// 初始化
-fetchLocations()
+// 重置表单
+const resetForm = () => {
+  locationForm.value = createEmptyForm()
+  editingLocation.value = null
+}
+
+// 图片预览状态
+const previewVisible = ref(false)
+const previewImage = ref('')
+
+// 处理图片预览
+const handlePreview = (imageUrl) => {
+  previewImage.value = imageUrl
+  previewVisible.value = true
+}
+
+// 添加日期格式化函数
+const formatDate = (timestamp) => {
+  if (!timestamp) return ''
+  const date = new Date(timestamp)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).replace(/\//g, '-')
+}
+
+onMounted(() => {
+  fetchLocations()
+})
 </script>
 
 <style scoped lang="scss">
 .location-management {
-  .action-bar {
+  .page-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
-    
-    .search-section {
+  }
+
+  .search-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+
+    .search-input {
       width: 300px;
     }
-    
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-    }
   }
-  
-  .location-image {
-    width: 80px;
-    height: 80px;
+
+  .location-list {
+    background: white;
+    padding: 20px;
     border-radius: 4px;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
   }
-  
-  .image-error {
-    width: 80px;
-    height: 80px;
+
+  .coordinate-inputs {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f5f5f5;
-    border-radius: 4px;
-    color: #999;
-    font-size: 24px;
-  }
-  
-  .coordinates {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    
-    span {
-      color: #666;
-      font-size: 13px;
-    }
-  }
-  
-  .pagination-container {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
+    gap: 16px;
   }
 }
 
-.location-uploader {
-  :deep(.el-upload) {
-    border: 1px dashed #d9d9d9;
-    border-radius: 6px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: var(--el-transition-duration-fast);
-    
-    &:hover {
-      border-color: var(--el-color-primary);
-    }
+.location-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.location-image:hover {
+  transform: scale(1.05);
+}
+
+.coords {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+.location-upload {
+  .preview-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 4px;
   }
   
-  .uploader-icon {
+  .upload-icon {
     font-size: 28px;
     color: #8c939d;
     width: 120px;
     height: 120px;
-    text-align: center;
     line-height: 120px;
-  }
-  
-  .preview-image {
-    width: 120px;
-    height: 120px;
-    display: block;
-    object-fit: cover;
+    text-align: center;
+    border: 1px dashed #d9d9d9;
+    border-radius: 4px;
   }
 }
 </style> 

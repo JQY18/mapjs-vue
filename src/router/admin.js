@@ -5,17 +5,21 @@ const adminRoutes = [
     path: '/admin/login',
     name: 'AdminLogin',
     component: () => import('../views/admin/LoginView.vue'),
-    meta: { requiresAuth: false }
   },
   {
     path: '/admin',
+    name: 'AdminLayout',
     component: () => import('../views/admin/AdminLayout.vue'),
-    meta: { requiresAuth: true },
     children: [
       {
-        path: '',
-        name: 'Dashboard',
+        path: 'dashboard',
+        name: 'AdminDashboard',
         component: () => import('../views/admin/DashboardView.vue')
+      },
+      {
+        path: 'locations',
+        name: 'LocationManagement',
+        component: () => import('../views/admin/LocationManagementView.vue')
       },
       {
         path: 'users',
@@ -26,16 +30,6 @@ const adminRoutes = [
         path: 'comments',
         name: 'CommentManagement',
         component: () => import('../views/admin/CommentManagementView.vue')
-      },
-      {
-        path: 'locations',
-        name: 'LocationManagement',
-        component: () => import('../views/admin/LocationManagementView.vue')
-      },
-      {
-        path: 'media',
-        name: 'MediaManagement',
-        component: () => import('../views/admin/MediaManagementView.vue')
       }
     ]
   }

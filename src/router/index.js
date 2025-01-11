@@ -54,38 +54,38 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
-  const isLoggedIn = !!localStorage.getItem('user')
-  const isAdmin = !!localStorage.getItem('adminToken')
+// router.beforeEach((to, from, next) => {
+//   const isLoggedIn = !!localStorage.getItem('user')
+//   const isAdmin = !!localStorage.getItem('adminToken')
   
-  // 检查是否需要管理员权限
-  if (to.path.startsWith('/admin') && to.path !== '/admin/login') {
-    if (!isAdmin) {
-      next('/admin/login')
-      return
-    }
-  }
+//   // 检查是否需要管理员权限
+//   if (to.path.startsWith('/admin') && to.path !== '/admin/login') {
+//     if (!isAdmin) {
+//       next('/admin/login')
+//       return
+//     }
+//   }
   
-  // 检查普通用户权限
-  if (to.meta.requiresAuth && !isLoggedIn && !to.path.startsWith('/admin')) {
-    localStorage.setItem('redirectPath', to.fullPath)
-    next('/login')
-    return
-  }
+//   // 检查普通用户权限
+//   if (to.meta.requiresAuth && !isLoggedIn && !to.path.startsWith('/admin')) {
+//     localStorage.setItem('redirectPath', to.fullPath)
+//     next('/login')
+//     return
+//   }
   
-  // 如果已登录，访问登录页则重定向到首页
-  if (isLoggedIn && to.path === '/login') {
-    next('/')
-    return
-  }
+//   // 如果已登录，访问登录页则重定向到首页
+//   if (isLoggedIn && to.path === '/login') {
+//     next('/')
+//     return
+//   }
   
-  // 如果已登录管理员，访问管理员登录页则重定向到管理后台
-  if (isAdmin && to.path === '/admin/login') {
-    next('/admin')
-    return
-  }
+//   // 如果已登录管理员，访问管理员登录页则重定向到管理后台
+//   if (isAdmin && to.path === '/admin/login') {
+//     next('/admin')
+//     return
+//   }
   
-  next()
-})
+//   next()
+// })
 
 export default router 

@@ -1,234 +1,215 @@
 <template>
   <div class="dashboard">
-    <div class="stats-cards">
-      <el-row :gutter="20">
-        <el-col :span="6" v-for="stat in stats" :key="stat.title">
-          <el-card class="stat-card" :body-style="{ padding: '20px' }">
-            <div class="stat-icon">
-              <el-icon><component :is="stat.icon" /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-title">{{ stat.title }}</div>
-              <div class="stat-value">{{ stat.value }}</div>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
-    </div>
-
-    <div class="charts-section">
-      <el-row :gutter="20">
-        <el-col :span="12">
-          <el-card class="chart-card">
-            <template #header>
-              <div class="chart-header">
-                <span>访问统计</span>
-                <el-radio-group v-model="visitTimeRange" size="small">
-                  <el-radio-button label="week">周</el-radio-button>
-                  <el-radio-button label="month">月</el-radio-button>
-                </el-radio-group>
-              </div>
-            </template>
-            <div class="chart" ref="visitChartRef"></div>
-          </el-card>
-        </el-col>
-        <el-col :span="12">
-          <el-card class="chart-card">
-            <template #header>
-              <div class="chart-header">
-                <span>用户活跃度</span>
-                <el-radio-group v-model="userTimeRange" size="small">
-                  <el-radio-button label="week">周</el-radio-button>
-                  <el-radio-button label="month">月</el-radio-button>
-                </el-radio-group>
-              </div>
-            </template>
-            <div class="chart" ref="userChartRef"></div>
-          </el-card>
-        </el-col>
-      </el-row>
-    </div>
-
-    <div class="recent-activities">
-      <el-card>
+    <!-- 数据概览卡片 -->
+    <div class="stat-cards">
+      <el-card v-for="stat in statistics" :key="stat.title" class="stat-card">
         <template #header>
           <div class="card-header">
-            <span>最近活动</span>
-            <el-button type="text">查看全部</el-button>
+            <el-icon class="icon" :class="stat.type">
+              <component :is="stat.icon" />
+            </el-icon>
+            <span>{{ stat.title }}</span>
           </div>
         </template>
-        <el-timeline>
-          <el-timeline-item
-            v-for="activity in recentActivities"
-            :key="activity.id"
-            :timestamp="activity.time"
-            :type="activity.type"
-          >
-            {{ activity.content }}
-          </el-timeline-item>
-        </el-timeline>
+        <div class="card-content">
+          <div class="number">{{ stat.value }}</div>
+          <div class="trend" :class="stat.trend > 0 ? 'up' : 'down'">
+            {{ Math.abs(stat.trend) }}% 较上周
+            <el-icon><component :is="stat.trend > 0 ? 'ArrowUp' : 'ArrowDown'" /></el-icon>
+          </div>
+        </div>
+      </el-card>
+    </div>
+
+    <!-- 图表区域 -->
+    <div class="charts">
+      <el-card class="chart-card">
+        <template #header>
+          <div class="card-header">
+            <span>访问趋势</span>
+            <el-radio-group v-model="timeRange" size="small">
+              <el-radio-button label="week">周</el-radio-button>
+              <el-radio-button label="month">月</el-radio-button>
+            </el-radio-group>
+          </div>
+        </template>
+        <div class="chart" ref="visitChart"></div>
+      </el-card>
+
+      <el-card class="chart-card">
+        <template #header>
+          <div class="card-header">
+            <span>地点分布</span>
+          </div>
+        </template>
+        <div class="chart" ref="locationChart"></div>
       </el-card>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { User, Comment, Location, Picture } from '@element-plus/icons-vue'
+import { ref, onMounted } from 'vue'
 import * as echarts from 'echarts'
+import {
+  User,
+  Location,
+  View,
+  ChatDotRound,
+  ArrowUp,
+  ArrowDown
+} from '@element-plus/icons-vue'
 
-// 统计数据
-const stats = [
-  { title: '用户总数', value: '1,234', icon: 'User' },
-  { title: '评论数', value: '5,678', icon: 'Comment' },
-  { title: '地点数', value: '42', icon: 'Location' },
-  { title: '媒体文件', value: '892', icon: 'Picture' }
-]
+const timeRange = ref('week')
 
-// 图表相关
-const visitChartRef = ref(null)
-const userChartRef = ref(null)
-const visitChart = ref(null)
-const userChart = ref(null)
-const visitTimeRange = ref('week')
-const userTimeRange = ref('week')
-
-// 最近活动
-const recentActivities = [
+const statistics = ref([
   {
-    id: 1,
-    content: '新用户注册: 张三',
-    time: '2024-01-20 10:00:00',
+    title: '总用户数',
+    value: '1,234',
+    trend: 12.5,
+    icon: 'User',
+    type: 'primary'
+  },
+  {
+    title: '地点总数',
+    value: '56',
+    trend: 8.2,
+    icon: 'Location',
     type: 'success'
   },
   {
-    id: 2,
-    content: '新增评论: "图书馆环境真好"',
-    time: '2024-01-20 09:30:00',
-    type: 'info'
+    title: '今日访问',
+    value: '3,456',
+    trend: -2.1,
+    icon: 'View',
+    type: 'warning'
   },
   {
-    id: 3,
-    content: '更新地点信息: 图书馆',
-    time: '2024-01-20 09:00:00',
-    type: 'warning'
+    title: '评论数',
+    value: '789',
+    trend: 15.4,
+    icon: 'ChatDotRound',
+    type: 'danger'
   }
-]
-
-// 初始化图表
-const initCharts = () => {
-  if (visitChartRef.value && userChartRef.value) {
-    visitChart.value = echarts.init(visitChartRef.value)
-    userChart.value = echarts.init(userChartRef.value)
-    
-    const visitOption = {
-      tooltip: {
-        trigger: 'axis'
-      },
-      xAxis: {
-        type: 'category',
-        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-      },
-      yAxis: {
-        type: 'value'
-      },
-      series: [{
-        data: [820, 932, 901, 934, 1290, 1330, 1320],
-        type: 'line',
-        smooth: true
-      }]
-    }
-    
-    const userOption = {
-      tooltip: {
-        trigger: 'axis'
-      },
-      xAxis: {
-        type: 'category',
-        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-      },
-      yAxis: {
-        type: 'value'
-      },
-      series: [{
-        data: [150, 230, 224, 218, 135, 147, 260],
-        type: 'bar'
-      }]
-    }
-    
-    visitChart.value.setOption(visitOption)
-    userChart.value.setOption(userOption)
-  }
-}
-
-// 监听窗口大小变化
-const handleResize = () => {
-  visitChart.value?.resize()
-  userChart.value?.resize()
-}
+])
 
 onMounted(() => {
-  initCharts()
-  window.addEventListener('resize', handleResize)
-})
+  // 初始化访问趋势图表
+  const visitChart = echarts.init(document.querySelector('.chart'))
+  visitChart.setOption({
+    tooltip: {
+      trigger: 'axis'
+    },
+    xAxis: {
+      type: 'category',
+      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    },
+    yAxis: {
+      type: 'value'
+    },
+    series: [{
+      data: [820, 932, 901, 934, 1290, 1330, 1320],
+      type: 'line',
+      smooth: true
+    }]
+  })
 
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
+  // 初始化地点分布图表
+  const locationChart = echarts.init(document.querySelectorAll('.chart')[1])
+  locationChart.setOption({
+    tooltip: {
+      trigger: 'item'
+    },
+    legend: {
+      orient: 'vertical',
+      left: 'left'
+    },
+    series: [
+      {
+        type: 'pie',
+        radius: '50%',
+        data: [
+          { value: 20, name: '教学楼' },
+          { value: 5, name: '图书馆' },
+          { value: 10, name: '食堂' },
+          { value: 15, name: '宿舍' },
+          { value: 6, name: '体育场所' }
+        ],
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  })
 })
 </script>
 
 <style scoped lang="scss">
 .dashboard {
-  .stats-cards {
-    margin-bottom: 24px;
+  .stat-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
   }
 
   .stat-card {
-    display: flex;
-    align-items: center;
-    
-    .stat-icon {
-      font-size: 48px;
-      color: #1890ff;
-      margin-right: 16px;
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    
-    .stat-info {
-      .stat-title {
-        font-size: 14px;
-        color: #666;
-      }
+
+    .icon {
+      font-size: 20px;
       
-      .stat-value {
-        font-size: 24px;
-        font-weight: 500;
-        color: #333;
-        margin-top: 4px;
-      }
+      &.primary { color: #409eff; }
+      &.success { color: #67c23a; }
+      &.warning { color: #e6a23c; }
+      &.danger { color: #f56c6c; }
+    }
+
+    .card-content {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .number {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .trend {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      
+      &.up { color: #67c23a; }
+      &.down { color: #f56c6c; }
     }
   }
 
-  .charts-section {
-    margin-bottom: 24px;
-    
-    .chart-card {
-      .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      
-      .chart {
-        height: 300px;
-      }
-    }
+  .charts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 20px;
   }
 
-  .recent-activities {
+  .chart-card {
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+
+    .chart {
+      height: 300px;
     }
   }
 }
