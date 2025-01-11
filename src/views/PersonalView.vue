@@ -372,8 +372,44 @@ import { useRouter } from 'vue-router'
 import ImageDialog from '../components/ImageDialog.vue'
 import { userApi } from '../api/user'
 import { postApi } from '../api/post'
+import request from '../api/request'
+// 修改评论相关方法
+const getComments = async (postId) => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const { data } = await postApi.getComments(postId, user.id)
+    if (data.code === 1) {
+      commentsList.value = data.data.map(comment => ({
+        id: comment.id,
+        commenterId: comment.commenterId,
+        username: comment.commenterNickname,
+        avatar: comment.commenterAvatar,
+        content: comment.content,
+        time: formatTime(comment.createTime),
+        likes: comment.like,
+        isLiked: comment.isLiked,
+        showReplies: false,
+        replies: comment.reply.map(reply => ({
+          id: reply.id,
+          commenterId: reply.commenterId,
+          replierId: reply.replierId,
+          username: reply.replierNickname,
+          avatar: reply.replierAvatar,
+          content: reply.content,
+          time: formatTime(reply.createTime),
+          replyTo: reply.commenterNickname,
+          replyToAvatar: reply.commenterAvatar,
+          likes: 0,
+          isLiked: false
+        }))
+      }))
+    }
+  } catch (error) {
+    console.error('获取评论失败:', error)
+  }
+}
 
-// 添加回复评论的方法
+// 修改回复评论的方法
 const replyToComment = (comment, reply) => {
   if (!isLoggedIn.value) {
     router.push('/login')
@@ -386,14 +422,14 @@ const replyToComment = (comment, reply) => {
   }
 }
 
-// 添加获取输入框占位符的方法
+// 修改获取输入框占位符的方法
 const getInputPlaceholder = () => {
   if (!isLoggedIn.value) return '登录后发表评论'
   if (replyTo.value) return `回复 ${replyTo.value.username}`
   return '写下你的评论...'
 }
 
-// 添加取消回复的方法
+// 修改取消回复的方法
 const cancelReply = () => {
   replyTo.value = null
   newComment.value = ''
@@ -514,42 +550,6 @@ const showImageViewer = ref(false)
 const currentImages = ref([])
 const currentImageIndex = ref(0)
 
-// 添加评论相关方法
-const getComments = async (postId) => {
-  try {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    const { data } = await postApi.getComments(postId, user.id)
-    if (data.code === 1) {
-      commentsList.value = data.data.map(comment => ({
-        id: comment.id,
-        commenterId: comment.commenterId,
-        username: comment.commenterNickname,
-        avatar: comment.commenterAvatar,
-        content: comment.content,
-        time: formatTime(comment.createTime),
-        likes: comment.like,
-        isLiked: comment.isLiked,
-        showReplies: false,
-        replies: comment.reply.map(reply => ({
-          id: reply.id,
-          commenterId: reply.commenterId,
-          replierId: reply.replierId,
-          username: reply.commenterNickname,
-          avatar: reply.commenterAvatar,
-          content: reply.content,
-          time: formatTime(reply.createTime),
-          replyTo: reply.replierNickname,
-          replyToAvatar: reply.replierAvatar,
-          likes: 0,
-          isLiked: false
-        }))
-      }))
-    }
-  } catch (error) {
-    console.error('获取评论失败:', error)
-  }
-}
-
 const openComments = async (post) => {
   currentPost.value = post
   showComments.value = true
@@ -560,27 +560,6 @@ const closeComments = () => {
   showComments.value = false
   replyTo.value = null
   newComment.value = ''
-}
-
-const submitComment = async () => {
-  if (!newComment.value.trim() || !currentPost.value) return
-
-  try {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    const { data } = await postApi.addComment(
-      currentPost.value.id,
-      user.id,
-      newComment.value
-    )
-
-    if (data.code === 1) {
-      await getComments(currentPost.value.id)
-      newComment.value = ''
-      replyTo.value = null
-    }
-  } catch (error) {
-    console.error('发表评论失败:', error)
-  }
 }
 
 const toggleCommentLike = async (comment) => {
@@ -632,6 +611,44 @@ const toggleCollect = (post: any) => {
 const handleInputClick = () => {
   if (!isLoggedIn.value) {
     router.push('/login')
+  }
+}
+
+// 添加提交评论方法
+const submitComment = async () => {
+  if (!newComment.value.trim() || !currentPost.value) return
+
+  try {
+    if (!replyTo.value) {
+      // 发表新评论
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      const { data } = await postApi.addComment(
+        currentPost.value.id,
+        user.id,
+        newComment.value
+      )
+
+      if (data.code === 1) {
+        await getComments(currentPost.value.id)
+        newComment.value = ''
+      }
+    } else {
+      // 发表回复
+      const response = await request.post("/reply/add", {
+        fatherId: replyTo.value.comment.id,
+        commenterId: replyTo.value.comment.commenterId,
+        replierId: JSON.parse(localStorage.getItem("user") || "{}").id,
+        content: newComment.value,
+      })
+
+      if (response.data.code === 1) {
+        await getComments(currentPost.value.id)
+        newComment.value = ''
+        replyTo.value = null
+      }
+    }
+  } catch (error) {
+    console.error('发表评论/回复失败:', error)
   }
 }
 
