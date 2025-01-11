@@ -818,27 +818,42 @@ const locateUser = () => {
         transform: 'translate(-50%, -50%)',
         zIndex: 1000
       };
+      const closeLocationModal = () => {
+        showLocationModal.value = false;
+        isLocateMode.value = false;
+        // 移除所有 moveend 事件监听器，确保不会再次触发显示气泡
+        map.value?.off('moveend');
+      }
+      // 查找最近的位置点
+      const nearestLocation = findNearestLocation(latitude, longitude);
 
-      // 移动地图到用户位置
+      // 添加一次性事件监听器，等待地图移动完成
+      const onMoveEnd = () => {
+        // 获取 marker 在屏幕上的像素坐标
+        const point = map.value.latLngToContainerPoint(nearestLocation.coords);
+        modalPosition.value = {
+          x: point.x + 20,
+          y: point.y - 70
+        };
+
+        // 显示气泡提示
+        selectedLocation.value = nearestLocation;
+        showLocationModal.value = true;
+        isLocateMode.value = true;
+
+        // 移除事件监听器
+        map.value.off('moveend', onMoveEnd);
+      };
+
+      // 移动地图到用户位置，并添加一次性事件监听器
+      map.value?.once('moveend', onMoveEnd);
       map.value?.setView([latitude, longitude], 18);
 
-      // 添加地图移动事件监听器
+      // 添加用户位置更新的事件监听器
       map.value?.on('move', updateUserLocationPosition);
 
       // 立即更新位置
       updateUserLocationPosition();
-
-      // 查找最近的位置点
-      const nearestLocation = findNearestLocation(latitude, longitude);
-      
-      // 显示气泡提示
-      selectedLocation.value = nearestLocation;
-      const point = map.value.latLngToContainerPoint(nearestLocation.coords);
-      modalPosition.value = {
-        x: point.x + 20,
-        y: point.y - 40
-      };
-      showLocationModal.value = true;
 
       isLocating.value = false;
     },
@@ -866,6 +881,14 @@ const locateUser = () => {
   );
 };
 
+// 修改关闭 modal 的方法
+const closeLocationModal = () => {
+  showLocationModal.value = false;
+  isLocateMode.value = false;
+  // 移除所有 moveend 事件监听器，确保不会再次触发显示气泡
+  map.value?.off('moveend');
+}
+
 // 添加查找最近位置点的方法
 const findNearestLocation = (latitude, longitude) => {
   let nearestLocation = locations[0];
@@ -887,11 +910,11 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // 地球半径（千米）
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
 
