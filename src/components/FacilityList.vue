@@ -131,6 +131,118 @@ const canteenLocations = [
     coords: [28.19045, 112.9487]
   }
 ]
+// 添加购物超市设施数据
+const supermarketLocations = [
+  {
+    id: 'supermarket-1',
+    name: '佳旺超市',
+    description: '湖南师范大学兰桂苑食堂一楼',
+    coords: [28.1887, 112.94155]
+  },
+  {
+    id: 'supermarket-2',
+    name: '**超市',
+    description: '湖南师范大学校工会一楼',
+    coords: [28.19165, 112.94243]
+  }
+]
+
+// 添加校内医疗设施数据
+const medicalLocations = [
+  {
+    id: 'medical-1',
+    name: '校医院',
+    description: '湖南师范大学校医院',
+    coords: [28.19005, 112.94010]
+  }
+]
+
+//添加校内场馆设施数据
+const stadiumLocations = [
+  {
+    id: 'stadium-1',
+    name: '江湾体育馆',
+    description: '湖南师范大学江湾体育馆',
+    coords: [28.18805, 112.9435]
+  },
+  {
+    id: 'stadium-2',
+    name: '田径场',
+    description: '湖南师范大学田径场',
+    coords: [28.18723, 112.94695]
+  },
+  {
+    id: 'stadium-3',
+    name: '天文馆',
+    description: '湖南师范大学中和楼顶楼',
+    coords: [28.19107, 112.94120]
+  }
+]
+
+//添加停车场设施数据
+const parkingLocations = [
+  {
+    id: 'parking-1',
+    name: '停车场',
+    description: '湖南师范大学停车场',
+    coords: [28.19077, 112.94220]
+    
+  }
+]
+
+//添加银行设施数据
+const bankLocations = [
+  {
+    id: 'bank-1',
+    name: '中国银行',
+    description: '湖南师范大学中国银行',
+    coords: [28.19047, 112.94320]
+  },
+  {
+    id: 'bank-2',
+    name: '中国建设银行（长沙师大支行）',
+    description: '湖南师范大学中国建设银行',
+    coords: [28.19165, 112.94243]
+  }
+]
+
+//添加打印店设施数据
+const printLocations = [
+  {
+    id: 'print-1',
+    name: '红梅图文',
+    description: '红梅图文',
+    coords: [28.19067, 112.94200]
+  },
+  {
+    id: 'print-2',
+    name: '师大打印室',
+    description: '师大打印室',
+    coords: [28.1890, 112.94140]
+  },
+  {
+    id: 'print-3',
+    name: '社区便民服务站（启航图文）',
+    description: '社区便民服务站（启航图文）',
+    coords: [28.1886, 112.94190]
+  }
+]
+
+//添加通信营业厅设施数据
+const communicationLocations = [
+  {
+    id: 'communication-1',
+    name: '中国联通',
+    description: '湖南师范大学中国联通',
+    coords: [28.18970, 112.94228]
+  },
+  {
+    id: 'communication-2',
+    name: '中国电信',
+    description: '湖南师范大学中国电信',
+    coords: [28.18950, 112.94228]
+  }
+]
 
 onMounted(() => {
   // 根据设施类型加载对应数据
@@ -138,6 +250,20 @@ onMounted(() => {
     facilities.value = aedLocations
   } else if (props.type.id === 'canteen') {
     facilities.value = canteenLocations
+  } else if (props.type.id === 'shop') {
+    facilities.value = supermarketLocations
+  } else if (props.type.id === 'medical') {
+    facilities.value = medicalLocations
+  } else if (props.type.id === 'stadium') {
+    facilities.value = stadiumLocations
+  } else if (props.type.id === 'parking') {
+    facilities.value = parkingLocations
+  } else if (props.type.id === 'bank') {
+    facilities.value = bankLocations
+  } else if (props.type.id === 'print') {
+    facilities.value = printLocations
+  } else if (props.type.id === 'telecom') {
+    facilities.value = communicationLocations
   } else {
     facilities.value = [] // 其他类型暂时显示为空
   }
