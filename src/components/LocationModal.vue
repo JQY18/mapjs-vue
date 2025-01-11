@@ -1,39 +1,57 @@
 <template>
-  <div v-if="show" class="popup-modal" :style="popupStyle">
-    <div class="popup-content" @click.stop>
+  <div v-if="show" class="popup-modal" :style="popupStyle" @click.self="$emit('close')">
+    <div class="popup-content" :class="{ 'location-mode': !isLocateMode }" @click.stop>
       <button class="close-button" @click="$emit('close')">
         <Icon icon="mdi:close" />
       </button>
       
-      <div class="location-image" @click="goToDetail">
-        <img :src="location?.image" :alt="location?.name" />
-        <div class="image-overlay">点击查看详情</div>
-      </div>
-      
-      <div class="location-info">
-        <h2>{{ location?.name }}</h2>
-        <p>{{ location?.description }}</p>
-      </div>
-      
-      <div class="action-buttons">
-        <button class="detail-button" @click="goToDetail">
-          查看详细信息
-        </button>
-        <button class="route-button" @click="planRoute">
-          规划路线
-        </button>
-      </div>
+      <template v-if="!isLocateMode">
+        <div class="location-image" @click="goToDetail">
+          <img :src="location?.image" :alt="location?.name" />
+          <div class="image-overlay">点击查看详情</div>
+        </div>
+        
+        <div class="location-info">
+          <h2>{{ location?.name }}</h2>
+          <p>{{ location?.description }}</p>
+        </div>
+        
+        <div class="action-buttons">
+          <button class="detail-button" @click="goToDetail">
+            查看详细信息
+          </button>
+          <button class="route-button" @click="planRoute">
+            规划路线
+          </button>
+        </div>
 
-      <div class="route-action-buttons">
-        <button class="start-button" @click="setAsStart">
-          <Icon icon="mdi:flag-outline" class="button-icon" />
-          从这出发
-        </button>
-        <button class="end-button" @click="setAsEnd">
-          <Icon icon="mdi:flag-checkered" class="button-icon" />
-          到这去
-        </button>
-      </div>
+        <div class="route-action-buttons">
+          <button class="start-button" @click="setAsStart">
+            <Icon icon="mdi:flag-outline" class="button-icon" />
+            从这出发
+          </button>
+          <button class="end-button" @click="setAsEnd">
+            <Icon icon="mdi:flag-checkered" class="button-icon" />
+            到这去
+          </button>
+        </div>
+      </template>
+
+      <template v-else>
+        <div class="locate-mode-content">
+          <h3>找到最近的位置点</h3>
+          <p>是否从{{ location?.name }}出发规划路线？</p>
+          <div class="locate-buttons">
+            <button class="confirm-button" @click="setAsStart">
+              <Icon icon="mdi:flag-outline" class="button-icon" />
+              确定
+            </button>
+            <button class="cancel-button" @click="$emit('close')">
+              取消
+            </button>
+          </div>
+        </div>
+      </template>
       
       <div class="popup-arrow"></div>
     </div>
@@ -51,6 +69,10 @@ const props = defineProps({
   clickPosition: {
     type: Object,
     default: () => ({ x: 0, y: 0 })
+  },
+  isLocateMode: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -112,6 +134,11 @@ export default {
 .popup-modal {
   position: fixed;
   z-index: 2000;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: transparent;
 }
 
 .popup-content {
@@ -123,7 +150,66 @@ export default {
   position: relative;
 }
 
-/* 修改箭头位置和方向 */
+.popup-content.location-mode {
+  width: 300px;
+}
+
+/* 定位模式的样式 */
+.locate-mode-content {
+  padding: 10px 5px;
+}
+
+.locate-mode-content h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.locate-mode-content p {
+  margin: 10px 0;
+  color: #666;
+}
+
+.locate-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.confirm-button,
+.cancel-button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.confirm-button {
+  background: #1890ff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.confirm-button:hover {
+  background: #40a9ff;
+}
+
+.cancel-button {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.cancel-button:hover {
+  background: #e8e8e8;
+}
+
+/* 其他样式保持不变 */
 .popup-arrow {
   position: absolute;
   left: -10px;
