@@ -102,6 +102,7 @@ onMounted(() => {
 
 const allTabs = [
   { id: 'map', name: '地图', path: '/' },
+  { id: '3dmap', name: '3D地图', path: '/3dmap' },
   { id: 'circle', name: '师大圈', path: '/circle' },
   { id: 'facilities', name: '生活设施', path: '#' },
   { id: 'personal', name: '我的', path: '/personal' }
@@ -125,6 +126,9 @@ const handleLogout = () => {
 const isActive = (tabId) => {
   const path = route.path
   if (tabId === 'map' && (path === '/' || path.startsWith('/location'))) {
+    return true
+  }
+  if (tabId === '3dmap' && path === '/3dmap') {
     return true
   }
   return path === `/${tabId}`
