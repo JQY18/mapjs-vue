@@ -49,6 +49,16 @@ const router = createRouter({
         }
       ]
     },
+    {
+      path: '/3dmap',
+      name: 'ThreeDMap',
+      component: () => import('../components/3dmap.vue')
+    },
+    {
+      path: '/3dmap-home',
+      name: 'ThreeDMapHome',
+      component: () => import('../components/3dmap-home.vue')
+    },
     ...adminRoutes
   ]
 })
