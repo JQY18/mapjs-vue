@@ -1,11 +1,6 @@
 <template>
   <div class="vr-map">
-    <div class="header">
-      <button class="back-button" @click="router.back()">
-        <Icon icon="mdi:arrow-left" /> 返回
-      </button>
-      <h1>{{ currentLocation?.name || 'VR全景' }}</h1>
-    </div>
+    
 
     <div class="vr-container">
       <div id="vr-view" class="vr-view"></div>

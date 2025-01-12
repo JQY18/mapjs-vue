@@ -4,7 +4,7 @@
     <aside class="sidebar" :class="{ collapsed: isCollapsed }">
       <div class="logo-container">
         <img src="/public/icon/icon.jpeg" alt="Logo" class="logo" />
-        <span v-if="!isCollapsed" class="logo-text">校园地图管理系统</span>
+        <span v-if="!isCollapsed" class="logo-text">管理系统</span>
       </div>
       
       <el-menu
@@ -23,7 +23,7 @@
         
         <el-menu-item index="/admin/users">
           <el-icon><User /></el-icon>
-          <span>用户管理</span>
+          <span>管理员管理</span>
         </el-menu-item>
         
         <el-menu-item index="/admin/locations">
@@ -58,12 +58,18 @@
         <div class="header-right">
           <el-dropdown @command="handleCommand">
             <span class="user-dropdown">
-              <el-avatar :size="32" :src="adminAvatar" />
+              <el-avatar 
+                :size="32" 
+                :icon="User"
+                class="admin-avatar"
+              />
+              <span class="level">{{ adminLevel }}:</span>
               <span class="username">{{ adminName }}</span>
+              <el-icon class="dropdown-icon"><CaretBottom /></el-icon>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="profile">个人信息</el-dropdown-item>
+                <el-dropdown-item command="profile">修改密码</el-dropdown-item>
                 <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -80,11 +86,63 @@
         </router-view>
       </main>
     </div>
+
+    <!-- 修改密码对话框 -->
+    <el-dialog
+      v-model="passwordDialogVisible"
+      title="修改密码"
+      width="400px"
+    >
+      <el-form
+        ref="passwordFormRef"
+        :model="passwordForm"
+        :rules="passwordRules"
+        label-width="100px"
+      >
+        <el-form-item label="原密码" prop="oldPassword">
+          <el-input
+            v-model="passwordForm.oldPassword"
+            type="password"
+            show-password
+            placeholder="请输入原密码"
+          />
+        </el-form-item>
+        
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input
+            v-model="passwordForm.newPassword"
+            type="password"
+            show-password
+            placeholder="请输入新密码"
+          />
+        </el-form-item>
+        
+        <el-form-item label="确认新密码" prop="confirmPassword">
+          <el-input
+            v-model="passwordForm.confirmPassword"
+            type="password"
+            show-password
+            placeholder="请再次输入新密码"
+          />
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="passwordDialogVisible = false">取消</el-button>
+        <el-button 
+          type="primary" 
+          :loading="updating"
+          @click="handleUpdatePassword"
+        >
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   DataBoard,
@@ -92,15 +150,25 @@ import {
   Location,
   ChatDotRound,
   Expand,
-  Fold
+  Fold,
+  CaretBottom
 } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { adminApi } from '../../api/admin'
 
 const router = useRouter()
 const route = useRoute()
 
 const isCollapsed = ref(false)
 const adminAvatar = ref('/public/icon/icon.jpeg')
+
+// 管理员等级
+const adminLevel = ref("普通管理员")
+
 const adminName = ref('Admin')
+// 管理员权限
+const adminLocationId = ref(null)
+
 
 const activeMenu = computed(() => route.path)
 const currentRoute = computed(() => {
@@ -117,9 +185,96 @@ const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
 }
 
+
+onMounted(() => {
+  adminApi.getInfo().then(({ data }) => {
+    if (data.code === 1) {
+      adminName.value = data.data.username
+      adminLocationId.value = data.data.locationId
+      if (data.data.locationId === 0) {
+        adminLevel.value = "超级管理员"
+      } else{
+        adminLevel.value = "普通管理员"
+      }
+    }
+  })
+})
+
+// 修改密码相关
+const passwordDialogVisible = ref(false)
+const passwordFormRef = ref(null)
+const updating = ref(false)
+
+const passwordForm = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+const passwordRules = {
+  oldPassword: [
+    { required: true, message: '请输入原密码', trigger: 'blur' }
+  ],
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, message: '密码长度不能小于6位', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== passwordForm.value.newPassword) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ]
+}
+
 const handleCommand = (command) => {
-  if (command === 'logout') {
+  if (command === 'profile') {
+    // 重置表单
+    passwordForm.value = {
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    }
+    passwordDialogVisible.value = true
+  } else if (command === 'logout') {
+    localStorage.removeItem('adminId')
+    localStorage.removeItem('adminToken')
     router.push('/admin/login')
+  }
+}
+
+const handleUpdatePassword = async () => {
+  if (!passwordFormRef.value) return
+  
+  try {
+    await passwordFormRef.value.validate()
+    updating.value = true
+    
+    const { data } = await adminApi.updatePassword({
+      id: localStorage.getItem('adminId'),
+      oldPassword: passwordForm.value.oldPassword,
+      newPassword: passwordForm.value.newPassword
+    })
+    
+    if (data.code === 1) {
+      ElMessage.success('密码修改成功')
+      passwordDialogVisible.value = false
+    } else {
+      ElMessage.error(data.msg || '密码修改失败')
+    }
+  } catch (error) {
+    if (error.message) {
+      ElMessage.error(error.message)
+    }
+  } finally {
+    updating.value = false
   }
 }
 </script>
@@ -201,7 +356,37 @@ const handleCommand = (command) => {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
   cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  .admin-avatar {
+    background-color: #1890ff;
+    color: #fff;
+  }
+
+  .level {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+  }
+
+  .username {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+  }
+
+  .dropdown-icon {
+    font-size: 12px;
+    color: #999;
+    margin-left: 4px;
+  }
 }
 
 .content {
