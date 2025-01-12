@@ -9,19 +9,27 @@ export const adminApi = {
       data
     })
   },
+  // 获取管理员信息
+  getInfo() {
+    return request.get('/admin/info', {
+      params: {
+        id: localStorage.getItem('adminId')
+      }
+    })
+  },
+  
+  updatePassword(data) {
+    return request({
+      url: '/admin/updatePassword',
+      method: 'post',
+      data
+    })
+  },
   
   logout() {
     return request({
       url: '/admin/logout',
       method: 'post'
-    })
-  },
-  
-  // 获取管理员信息
-  getInfo() {
-    return request({
-      url: '/admin/info',
-      method: 'get'
     })
   },
   
@@ -35,7 +43,7 @@ export const adminApi = {
   
   createAdmin(data) {
     return request({
-      url: '/admin/create',
+      url: '/admin/add',
       method: 'post',
       data
     })
@@ -43,8 +51,8 @@ export const adminApi = {
   
   updateAdmin(data) {
     return request({
-      url: `/admin/update/${data.id}`,
-      method: 'put',
+      url: `/admin/update`,
+      method: 'post',
       data
     })
   },

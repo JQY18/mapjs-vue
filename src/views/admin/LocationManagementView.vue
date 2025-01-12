@@ -69,33 +69,47 @@
         <el-table-column label="操作" width="280">
           <template #default="{ row }">
             <div class="action-buttons">
-              <el-button 
-                type="primary" 
-                size="small"
-                @click="handleEdit(row)"
-              >
-                <el-icon><Edit /></el-icon>
-                <span>编辑</span>
-              </el-button>
+              <div class="button-row">
+                <el-button 
+                  type="primary" 
+                  size="small"
+                  @click="handleEdit(row)"
+                >
+                  <el-icon><Edit /></el-icon>
+                  <span>编辑</span>
+                </el-button>
+                
+                <el-button 
+                  type="danger" 
+                  size="small" 
+                  @click="handleDelete(row)"
+                >
+                  <el-icon><Delete /></el-icon>
+                  <span>删除</span>
+                </el-button>
+              </div>
               
-              <el-button 
-                type="danger"
-                size="small" 
-                @click="handleDelete(row)"
-              >
-                <el-icon><Delete /></el-icon>
-                <span>删除</span>
-              </el-button>
-              
-              <el-button 
-                type="success"
-                size="small"
-                @click="handleEditDetail(row)"
-                class="detail-button"
-              >
-                <el-icon><Document /></el-icon>
-                <span>详细信息</span>
-              </el-button>
+              <div class="button-row">
+                <el-button
+                  type="success"
+                  size="small"
+                  @click="handleEditDetail(row)"
+                  class="detail-button"
+                >
+                  <el-icon><Document /></el-icon>
+                  <span>详细信息</span>
+                </el-button>
+                
+                <el-button
+                  type="warning"
+                  size="small"
+                  @click="handleAddAdmin(row)"
+                  v-if="isSuper"
+                >
+                  <el-icon><User /></el-icon>
+                  <span>添加管理员</span>
+                </el-button>
+              </div>
             </div>
           </template>
         </el-table-column>
@@ -162,6 +176,43 @@
       v-model:show="previewVisible"
       :image-url="previewImage"
     />
+
+    <!-- 添加管理员对话框 -->
+    <el-dialog
+      v-model="adminDialogVisible"
+      title="添加管理员"
+      width="400px"
+    >
+      <el-form
+        ref="adminFormRef"
+        :model="adminForm"
+        :rules="adminRules"
+        label-width="80px"
+      >
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="adminForm.username" />
+        </el-form-item>
+        
+        <el-form-item label="密码" prop="password">
+          <el-input 
+            v-model="adminForm.password" 
+            type="password"
+            show-password
+          />
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="adminDialogVisible = false">取消</el-button>
+        <el-button 
+          type="primary" 
+          @click="handleSubmitAdmin"
+          :loading="submittingAdmin"
+        >
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -173,9 +224,12 @@ import {
   Search,
   Edit,
   Delete,
-Document
+  Document,
+  Upload,
+  User
 } from '@element-plus/icons-vue'
 import { locationApi } from '../../api/location'
+import { adminApi } from '../../api/admin'
 import BaseDialog from '../../components/BaseDialog.vue'
 import ImagePreview from '../../components/ImagePreview.vue'
 import { useRouter } from 'vue-router'
@@ -440,9 +494,93 @@ const formatDate = (timestamp) => {
   }).replace(/\//g, '-')
 }
 
-onMounted(() => {
+// 添加管理员相关
+const adminDialogVisible = ref(false)
+const adminFormRef = ref(null)
+const submittingAdmin = ref(false)
+const isSuper = ref(false)
+
+const adminForm = ref({
+  username: '',
+  password: '',
+  locationId: null
+})
+
+const adminRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码长度不能小于6位', trigger: 'blur' }
+  ]
+}
+
+onMounted(async () => {
+  // 获取当前管理员权限
+  try {
+    const { data } = await adminApi.getInfo()
+    if (data.code === 1) {
+      isSuper.value = data.data.locationId === 0
+    }
+  } catch (error) {
+    console.error('获取管理员信息失败:', error)
+  }
+  
   fetchLocations()
 })
+
+// 添加管理员相关方法
+const handleAddAdmin = (row) => {
+  adminForm.value = {
+    username: '',
+    password: '',
+    locationId: row.id
+  }
+  adminDialogVisible.value = true
+}
+
+const handleSubmitAdmin = async () => {
+  if (!adminFormRef.value) return
+  
+  try {
+    // 表单验证
+    await adminFormRef.value.validate()
+    
+    // 额外验证
+    if (!adminForm.value.username.trim()) {
+      ElMessage.warning('用户名不能为空')
+      return
+    }
+    
+    if (!adminForm.value.password || adminForm.value.password.length < 6) {
+      ElMessage.warning('密码不能为空且长度不能小于6位')
+      return
+    }
+    
+    submittingAdmin.value = true
+    
+    const { data } = await adminApi.createAdmin(adminForm.value)
+    
+    if (data.code === 1) {
+      ElMessage.success('添加管理员成功')
+      adminDialogVisible.value = false
+      adminForm.value = {
+        username: '',
+        password: '',
+        locationId: null
+      }
+    } else {
+      ElMessage.error(data.msg || '添加管理员失败')
+    }
+  } catch (error) {
+    if (error.message) {
+      ElMessage.error(error.message)
+    }
+  } finally {
+    submittingAdmin.value = false
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -478,32 +616,16 @@ onMounted(() => {
 
   .action-buttons {
     display: flex;
+    flex-direction: column;
     gap: 8px;
-    flex-wrap: nowrap;
     
-    .el-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 8px 12px;
+    .button-row {
+      display: flex;
+      gap: 8px;
       
-      .el-icon {
-        margin-right: 2px;
-      }
-    }
-    
-    .detail-button {
-      background-color: #67c23a;
-      border-color: #67c23a;
-      
-      &:hover {
-        background-color: #85ce61;
-        border-color: #85ce61;
-      }
-      
-      &:active {
-        background-color: #529b2e;
-        border-color: #529b2e;
+      .el-button {
+        margin-left: 0;
+        flex: 1;
       }
     }
   }
