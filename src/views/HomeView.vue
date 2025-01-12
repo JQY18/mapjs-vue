@@ -224,7 +224,7 @@ const handleSelectFacility = (facility) => {
   max-width: 1500px;
   margin: 0;
   position: relative;
-  height: 30px;
+  height: 50px;
 }
 
 .logo {
@@ -263,11 +263,11 @@ const handleSelectFacility = (facility) => {
   background-color: rgb(107, 1, 1);
   border-bottom: 1px solid #e8e8e8;
   flex-shrink: 0;
-  height: 30px;
+  height: 50px;
 }
 
 .tab-item {
-  padding: 5px 24px;
+  padding: 15px 24px;
   cursor: pointer;
   transition: all 0.3s;
   color: white;
