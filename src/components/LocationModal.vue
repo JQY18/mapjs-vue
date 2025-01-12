@@ -128,10 +128,38 @@ const setAsEnd = () => {
 }
 
 const goToVR = () => {
+  // 获取当前地点的 ID
+  const locationId = props.location?.id || props.location?.detailId
+  
+  if (!locationId) {
+    console.warn('未找到地点ID，无法跳转到VR图')
+    return
+  }
+
+  // 根据地点 ID 映射到 VR 文件夹名称
+  const vrLocationMap = {
+    'library': 'library',
+    'erliban': 'erliban',
+    'xiaomen': 'gate',
+    'byPlayground': 'playground',
+    'zhonghelou': 'zhonghe',
+    'zhonglieci': 'zhonglieci',
+    'yuewangting': 'yuewangting',
+    'zhishanlou': 'zhishan'
+    // 添加更多地点映射...
+  }
+
+  const vrLocation = vrLocationMap[locationId]
+  
+  if (!vrLocation) {
+    console.warn('该地点暂无VR全景图')
+    return
+  }
+
   router.push({
     path: '/vr',
     query: { 
-      location: props.location.id  // 传递地点 ID
+      location: vrLocation
     }
   })
   emit('close')

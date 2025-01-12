@@ -116,7 +116,8 @@ const handleSubmit = async () => {
 
 <style scoped>
 .register-container {
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -131,6 +132,8 @@ const handleSubmit = async () => {
   width: 90%;
   max-width: 420px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
   transform: translateY(0);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -167,7 +170,7 @@ label {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 3px;
   color: #1a1a1a;
   font-size: 14px;
   font-weight: 500;
@@ -179,8 +182,8 @@ label {
 }
 
 .input-with-icon {
-  width: 100%;
-  padding: 12px 16px;
+  width: 95%;
+  padding: 12px 0px 12px 16px;
   border: 2px solid #e8e8e8;
   border-radius: 8px;
   font-size: 14px;
