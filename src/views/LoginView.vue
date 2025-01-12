@@ -134,7 +134,7 @@ const goToAdminLogin = () => {
 .login-box {
   background: white;
   padding: 40px;
-  border-radius: 16px;
+  border-radius: 16px;s
   width: 90%;
   max-width: 420px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
@@ -174,7 +174,7 @@ label {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 3px;
   color: #1a1a1a;
   font-size: 14px;
   font-weight: 500;
@@ -186,8 +186,10 @@ label {
 }
 
 .input-with-icon {
-  width: 100%;
-  padding: 12px 16px;
+  width: 95%;
+  padding: 12px 0px 12px 16px;
+  /* margin-top: 10px; */
+  margin-right:50px; 
   border: 2px solid #e8e8e8;
   border-radius: 8px;
   font-size: 14px;
