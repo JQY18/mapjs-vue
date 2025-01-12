@@ -8,7 +8,7 @@
     </div>
 
     <div class="vr-container">
-      <div id="panorama" class="vr-view"></div>
+      <div id="vr-view" class="vr-view"></div>
       <div v-if="!currentLocation" class="no-vr">
         请选择要查看的地点
       </div>
@@ -29,10 +29,11 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { Icon } from '@iconify/vue'
 
 const router = useRouter()
+const route = useRoute()
 const selectedLocationId = ref('')
 const isDragging = ref(false)
 
@@ -41,20 +42,55 @@ const locations = [
   {
     id: 'library',
     name: '逸夫图书馆',
-    front: '/vr/front.jpg',
-    right: '/vr/right.jpg',
-    back: '/vr/back.jpg',
-    left: '/vr/left.jpg',
-    up: '/vr/up.jpg',
-    down: '/vr/down.jpg'
+    vrFolder: 'library',  // 对应 public/vr1/library 文件夹
   },
   {
-    id: 'zhishanlou',
-    name: '至善楼',
-    vrView: '/vr/zhishanlou.jpg'
+    id: 'erliban',
+    name: '二里半',
+    vrFolder: 'erliban',  // 对应 public/vr1/erliban 文件夹
   },
-  // 添加更多位置...
+  {
+    id: 'gate',
+    name: '大门',
+    vrFolder: 'gate',  // 对应 public/vr1/gate 文件夹
+  },
+  {
+    id: 'playground',
+    name: '操场',
+    vrFolder: 'playground',  // 对应 public/vr1/playground 文件夹
+  },
+  {
+    id: 'zhonghe',
+    name: '中和楼',
+    vrFolder: 'zhonghe',  // 对应 public/vr1/zhonghe 文件夹
+  },
+  {
+    id: 'zhonglieci',
+    name: '忠烈祠',
+    vrFolder: 'zhonglieci',  // 对应 public/vr1/zhonglieci 文件夹
+  },
+  {
+    id: 'yuewangting',
+    name: '岳王亭',
+    vrFolder: 'yuewangting',  // 对应 public/vr1/yuewangting 文件夹
+  },
+  {
+    id: 'zhishan',
+    name: '至善楼',
+    vrFolder: 'zhishan',  // 对应 public/vr1/zhishan 文件夹
+  },
+  // ... 添加更多地点
 ]
+
+// 添加文件名映射
+const fileNameMap = {
+  'mobile_b': 'back',
+  'mobile_d': 'down',
+  'mobile_f': 'front',
+  'mobile_l': 'left',
+  'mobile_r': 'right',
+  'mobile_u': 'up'
+}
 
 const currentLocation = computed(() => 
   locations.find(loc => loc.id === selectedLocationId.value)
@@ -65,30 +101,42 @@ let viewer = null
 const handleLocationChange = () => {
   if (!window.pannellum) return
   
-  // 如果已存在viewer，先销毁
   if (viewer) {
     viewer.destroy()
   }
   
-  // 创建新的viewer
   if (currentLocation.value) {
-    viewer = pannellum.viewer('panorama', {
-      type: 'cubemap',
-      cubeMap: [
-        currentLocation.value.front,
-        currentLocation.value.right,
-        currentLocation.value.back,
-        currentLocation.value.left,
-        currentLocation.value.up,
-        currentLocation.value.down
-      ],
-      autoLoad: true,
-      showZoomCtrl: true,
-      mouseZoom: true,
-      hfov: 110,
-      pitch: 10,
-      yaw: 180
-    })
+    const folder = currentLocation.value.vrFolder
+    try {
+      viewer = pannellum.viewer('vr-view', {
+        type: 'cubemap',
+        cubeMap: [
+          `/vr1/${folder}/mobile_f.jpg`,
+          `/vr1/${folder}/mobile_r.jpg`,
+          `/vr1/${folder}/mobile_b.jpg`,
+          `/vr1/${folder}/mobile_l.jpg`,
+          `/vr1/${folder}/mobile_u.jpg`,
+          `/vr1/${folder}/mobile_d.jpg`
+        ],
+        autoLoad: true,
+        showZoomCtrl: true,
+        mouseZoom: true,
+        hfov: 110,
+        pitch: 10,
+        yaw: 180,
+        horizonPitch: 0,
+        horizonRoll: 0,
+        autoRotate: -2,
+        compass: true
+      })
+      
+      // 添加加载错误处理
+      viewer.on('error', function(e) {
+        console.error('VR 加载错误:', e)
+      })
+    } catch (error) {
+      console.error('VR 初始化错误:', error)
+    }
   }
 }
 
@@ -110,15 +158,24 @@ const addPannellumScripts = () => {
 
     const script = document.createElement('script')
     script.src = 'https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js'
-    script.onload = resolve
+    script.onload = () => {
+      // 确保 DOM 已经准备好
+      setTimeout(resolve, 100)
+    }
     document.body.appendChild(script)
   })
 }
 
 onMounted(async () => {
   await addPannellumScripts()
-  // 设置默认选中第一个位置
-  selectedLocationId.value = locations[0].id
+  // 从 URL 参数获取地点 ID
+  const locationId = route.query.location
+  if (locationId) {
+    selectedLocationId.value = locationId
+  } else {
+    // 如果没有指定地点，默认选择第一个
+    selectedLocationId.value = locations[0].id
+  }
   handleLocationChange()
 })
 
@@ -174,12 +231,12 @@ onUnmounted(() => {
   flex: 1;
   position: relative;
   width: 100%;
-  height: 100%;
+  height: calc(100vh - 60px);
 }
 
 .vr-view {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .no-vr {
@@ -214,5 +271,11 @@ onUnmounted(() => {
 .location-selector select option {
   background: #000;
   color: white;
+}
+
+:deep(.pnlm-container) {
+  background: #000;
+  width: 100% !important;
+  height: 100% !important;
 }
 </style>
