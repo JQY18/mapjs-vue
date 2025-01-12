@@ -244,6 +244,90 @@ const communicationLocations = [
   }
 ]
 
+//添加学生宿舍设施数据
+const dormitoryLocations = [
+  {
+    id: 'dormitory-1',
+    name: '江边一舍',
+    description: '湖南师范大学江边一舍',
+    coords: [28.18880, 112.9484]
+  },
+  {
+    id: 'dormitory-2',
+    name: '江边二舍',
+    description: '湖南师范大学江边二舍',
+    coords: [28.18933, 112.9484]
+  },
+  {
+    id: 'dormitory-3',
+    name: '江边三舍',
+    description: '湖南师范大学江边三舍',
+    coords: [28.18990, 112.9485]
+  },
+  {
+    id: 'dormitory-4',
+    name: '研一舍',
+    description: '湖南师范大学研一舍',
+    coords: [28.18765, 112.94138]
+  },
+  {
+    id: 'dormitory-5',
+    name: '研二舍',
+    description: '湖南师范大学研二舍',
+    coords: [28.18815, 112.94135]
+  },
+  {
+    id: 'dormitory-6',
+    name: '研三舍',
+    description: '湖南师范大学研三舍',
+    coords: [28.18865, 112.94208]
+  },
+  {
+    id: 'dormitory-7',
+    name: '研五舍',
+    description: '湖南师范大学研五舍',
+    coords: [28.18950, 112.94208]
+  },
+  {
+    id: 'dormitory-8',
+    name: '研六舍',
+    description: '湖南师范大学研六舍',
+    coords: [28.18935, 112.94075]
+  }
+]
+
+// 添加邮寄快递设施数据
+const deliveryLocations = [
+  {
+    id: 'delivery-1',
+    name: '顺丰速运',
+    description: '湖南师范大学顺丰速运',
+    coords: [28.18915, 112.94055]
+  },
+  {
+    id: 'delivery-2',
+    name: '申通快递',
+    description: '湖南师范大学圆通速递',
+    coords: [28.18915, 112.94085]
+  },
+  {
+    id: 'delivery-3',
+    name: '学堂坡快递驿站',
+    description: '湖南师范大学学堂坡快递驿站',
+    coords: [28.1895, 112.94470]
+  }
+]
+
+// 添加出入口设施数据
+const entranceLocations = [
+  {
+    id: 'entrance-1',
+    name: '校门',
+    description: '湖南师范大学校门',
+    coords: [28.19230, 112.94302]
+  }
+]
+
 onMounted(() => {
   // 根据设施类型加载对应数据
   if (props.type.id === 'aed') {
@@ -264,6 +348,12 @@ onMounted(() => {
     facilities.value = printLocations
   } else if (props.type.id === 'telecom') {
     facilities.value = communicationLocations
+  } else if (props.type.id === 'dormitory') {
+    facilities.value = dormitoryLocations
+  } else if (props.type.id === 'delivery') {
+    facilities.value = deliveryLocations
+  } else if (props.type.id === 'entrance') {
+    facilities.value = entranceLocations
   } else {
     facilities.value = [] // 其他类型暂时显示为空
   }

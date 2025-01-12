@@ -141,8 +141,8 @@ const facilityOptions = [
   { id: 'canteen', name: '食堂餐厅', icon: 'mdi:food-fork-drink' },
   { id: 'shop', name: '购物超市', icon: 'mdi:cart' },
   { id: 'medical', name: '校内医疗', icon: 'mdi:hospital' },
-  { id: 'express', name: '邮寄快递', icon: 'mdi:truck-delivery' },
-  { id: 'dorm', name: '学生浴室', icon: 'mdi:shower' },
+  { id: 'delivery', name: '邮寄快递', icon: 'mdi:truck-delivery' },
+  { id: 'dormitory', name: '学生宿舍', icon: 'mdi:shower' },
   { id: 'stadium', name: '校内场馆', icon: 'mdi:stadium' },
   { id: 'print', name: '打字复印', icon: 'mdi:printer' },
   { id: 'bank', name: '银行网点', icon: 'mdi:currency-cny' },
@@ -288,8 +288,7 @@ const handleSelectFacility = (facility) => {
   flex: 1;
   position: relative;
   overflow: hidden;
-  /* display: flex;
-  flex-direction: column; */
+
 }
 
 .logout-confirm-overlay {
