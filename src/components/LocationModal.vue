@@ -23,6 +23,10 @@
           <button class="route-button" @click="planRoute">
             规划路线
           </button>
+          <button class="vr-button" @click="goToVR">
+            <Icon icon="mdi:panorama" class="button-icon" />
+            VR全景
+          </button>
         </div>
 
         <div class="route-action-buttons">
@@ -121,6 +125,16 @@ const setAsEnd = () => {
       endPoint: props.location.name
     }
   })
+}
+
+const goToVR = () => {
+  router.push({
+    path: '/vr',
+    query: { 
+      location: props.location.id  // 传递地点 ID
+    }
+  })
+  emit('close')
 }
 </script>
 
@@ -297,6 +311,10 @@ export default {
   cursor: pointer;
   font-weight: 500;
   font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .detail-button {
@@ -353,5 +371,15 @@ export default {
 
 .button-icon {
   font-size: 16px;
+}
+
+.vr-button {
+  background: #722ed1;
+  color: white;
+  transition: all 0.3s;
+}
+
+.vr-button:hover {
+  background: #8c51e0;
 }
 </style> 
