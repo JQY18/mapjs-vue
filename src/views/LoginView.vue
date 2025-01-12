@@ -123,7 +123,8 @@ const goToAdminLogin = () => {
 
 <style scoped>
 .login-container {
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -134,12 +135,12 @@ const goToAdminLogin = () => {
 .login-box {
   background: white;
   padding: 40px;
-  border-radius: 16px;s
+  border-radius: 16px;
   width: 90%;
   max-width: 420px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-  transform: translateY(0);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .login-box:hover {
@@ -294,9 +295,10 @@ label {
 }
 
 .admin-entry {
-  position: absolute;
+  position: fixed;
   bottom: 20px;
   right: 20px;
+  z-index: 2;
   
   .admin-link {
     color: rgba(255, 255, 255, 0.7);
