@@ -86,6 +86,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { userApi } from '../api/user'
 import { Icon } from '@iconify/vue'
 import FacilityList from '../components/FacilityList.vue'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const route = useRoute()
@@ -287,8 +288,8 @@ const handleSelectFacility = (facility) => {
   flex: 1;
   position: relative;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  /* display: flex;
+  flex-direction: column; */
 }
 
 .logout-confirm-overlay {

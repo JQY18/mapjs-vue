@@ -1,135 +1,137 @@
 <template>
-  <div class="location-detail">
-    <div class="header">
-      <button class="back-button" @click="router.back()">
-        <Icon icon="mdi:arrow-left" /> 返回
-      </button>
-      <h1>{{ detail?.name }}</h1>
-    </div>
+  <div class="location-detail" ref="detailContainer">
+    <div class="detail-content">
+      <div class="header">
+        <button class="back-button" @click="router.back()">
+          <Icon icon="mdi:arrow-left" /> 返回
+        </button>
+        <h1>{{ detail?.name }}</h1>
+      </div>
 
-    <div class="main-container">
-      <div class="content">
-        <div class="content-wrapper">
-          <div class="tabs">
-            <button 
-              v-for="tab in tabs" 
-              :key="tab.value"
-              :class="['tab-button', { active: currentTab === tab.value }]"
-              @click="currentTab = tab.value"
-            >
-              {{ tab.label }}
-            </button>
-          </div>
-
-          <div class="tab-content">
-            <div v-if="currentTab === 'description'" class="description-tab">
-              <div class="description-content">
-                <p>{{ detail?.description }}</p>
-              </div>
+      <div class="main-container">
+        <div class="content">
+          <div class="content-wrapper">
+            <div class="tabs">
+              <button 
+                v-for="tab in tabs" 
+                :key="tab.value"
+                :class="['tab-button', { active: currentTab === tab.value }]"
+                @click="currentTab = tab.value"
+              >
+                {{ tab.label }}
+              </button>
             </div>
 
-            <div v-if="currentTab === 'images'" class="carousel-container">
-              <div class="carousel">
-                <div class="carousel-inner" :style="{ transform: `translateX(-${currentImageIndex * 100}%)` }">
-                  <img 
-                    v-for="(image, index) in detail?.images" 
-                    :key="index"
-                    :src="image"
-                    :alt="`${detail?.name} - 图片 ${index + 1}`"
-                  >
-                </div>
-                <button class="carousel-btn prev" @click="prevImage" v-if="detail?.images?.length > 1">
-                  <Icon icon="mdi:chevron-left" />
-                </button>
-                <button class="carousel-btn next" @click="nextImage" v-if="detail?.images?.length > 1">
-                  <Icon icon="mdi:chevron-right" />
-                </button>
-                <div class="carousel-counter" v-if="detail?.images?.length > 1">
-                  {{ currentImageIndex + 1 }}/{{ detail?.images?.length }}
-                </div>
-                <div class="carousel-indicators" v-if="detail?.images?.length > 1">
-                  <button 
-                    v-for="(_, index) in detail?.images" 
-                    :key="index"
-                    :class="['indicator', { active: currentImageIndex === index }]"
-                    @click="currentImageIndex = index"
-                  ></button>
+            <div class="tab-content">
+              <div v-if="currentTab === 'description'" class="description-tab">
+                <div class="description-content">
+                  <p>{{ detail?.description }}</p>
                 </div>
               </div>
-            </div>
 
-            <div v-if="currentTab === 'videos'" class="carousel-container">
-              <div class="carousel">
-                <div class="carousel-inner" :style="{ transform: `translateX(-${currentVideoIndex * 100}%)` }">
-                  <video 
-                    v-for="(video, index) in detail?.videos"
-                    :key="index"
-                    controls
-                    :src="video"
-                  ></video>
+              <div v-if="currentTab === 'images'" class="carousel-container">
+                <div class="carousel">
+                  <div class="carousel-inner" :style="{ transform: `translateX(-${currentImageIndex * 100}%)` }">
+                    <img 
+                      v-for="(image, index) in detail?.images" 
+                      :key="index"
+                      :src="image"
+                      :alt="`${detail?.name} - 图片 ${index + 1}`"
+                    >
+                  </div>
+                  <button class="carousel-btn prev" @click="prevImage" v-if="detail?.images?.length > 1">
+                    <Icon icon="mdi:chevron-left" />
+                  </button>
+                  <button class="carousel-btn next" @click="nextImage" v-if="detail?.images?.length > 1">
+                    <Icon icon="mdi:chevron-right" />
+                  </button>
+                  <div class="carousel-counter" v-if="detail?.images?.length > 1">
+                    {{ currentImageIndex + 1 }}/{{ detail?.images?.length }}
+                  </div>
+                  <div class="carousel-indicators" v-if="detail?.images?.length > 1">
+                    <button 
+                      v-for="(_, index) in detail?.images" 
+                      :key="index"
+                      :class="['indicator', { active: currentImageIndex === index }]"
+                      @click="currentImageIndex = index"
+                    ></button>
+                  </div>
                 </div>
-                <button class="carousel-btn prev" @click="prevVideo" v-if="detail?.videos?.length > 1">
-                  <Icon icon="mdi:chevron-left" />
-                </button>
-                <button class="carousel-btn next" @click="nextVideo" v-if="detail?.videos?.length > 1">
-                  <Icon icon="mdi:chevron-right" />
-                </button>
-                <div class="carousel-indicators" v-if="detail?.videos?.length > 1">
-                  <button 
-                    v-for="(_, index) in detail?.videos" 
-                    :key="index"
-                    :class="['indicator', { active: currentVideoIndex === index }]"
-                    @click="currentVideoIndex = index"
-                  ></button>
+              </div>
+
+              <div v-if="currentTab === 'videos'" class="carousel-container">
+                <div class="carousel">
+                  <div class="carousel-inner" :style="{ transform: `translateX(-${currentVideoIndex * 100}%)` }">
+                    <video 
+                      v-for="(video, index) in detail?.videos"
+                      :key="index"
+                      controls
+                      :src="video"
+                    ></video>
+                  </div>
+                  <button class="carousel-btn prev" @click="prevVideo" v-if="detail?.videos?.length > 1">
+                    <Icon icon="mdi:chevron-left" />
+                  </button>
+                  <button class="carousel-btn next" @click="nextVideo" v-if="detail?.videos?.length > 1">
+                    <Icon icon="mdi:chevron-right" />
+                  </button>
+                  <div class="carousel-indicators" v-if="detail?.videos?.length > 1">
+                    <button 
+                      v-for="(_, index) in detail?.videos" 
+                      :key="index"
+                      :class="['indicator', { active: currentVideoIndex === index }]"
+                      @click="currentVideoIndex = index"
+                    ></button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="comments-wrapper" :class="{ 'comments-open': showComments }">
-        <button class="toggle-comments" @click="showComments = !showComments">
-          <Icon :icon="showComments ? 'mdi:close' : 'ic:baseline-comment'" class="comment-icon"/>
-        </button>
-        
-        <div class="comments-section" v-show="showComments">
-          <h2>访客评论</h2>
-          <div class="comment-form">
-            <textarea 
-              v-model="newComment" 
-              :placeholder="isLoggedIn ? '写下你的评论...' : '登录后发表评论'"
-              @click="handleCommentClick"
-              :disabled="!isLoggedIn"
-            ></textarea>
-            <button 
-              class="submit-btn"
-              @click="handleAddComment"
-              :disabled="!isLoggedIn || !newComment.trim()"
-            >
-              {{ isLoggedIn ? '发表评论' : '请先登录' }}
-            </button>
-          </div>
-
-          <div class="comments-list">
-            <div v-for="comment in comments" :key="comment.id" class="comment">
-              <div class="comment-header">
-                <span class="username">{{ comment.username }}</span>
-                <span class="time">{{ comment.time }}</span>
-              </div>
-              <p class="comment-content">{{ comment.content }}</p>
+        <div class="comments-wrapper" :class="{ 'comments-open': showComments }">
+          <button class="toggle-comments" @click="showComments = !showComments">
+            <Icon :icon="showComments ? 'mdi:close' : 'ic:baseline-comment'" class="comment-icon"/>
+          </button>
+          
+          <div class="comments-section" v-show="showComments">
+            <h2>访客评论</h2>
+            <div class="comment-form">
+              <textarea 
+                v-model="newComment" 
+                :placeholder="isLoggedIn ? '写下你的评论...' : '登录后发表评论'"
+                @click="handleCommentClick"
+                :disabled="!isLoggedIn"
+              ></textarea>
+              <button 
+                class="submit-btn"
+                @click="handleAddComment"
+                :disabled="!isLoggedIn || !newComment.trim()"
+              >
+                {{ isLoggedIn ? '发表评论' : '请先登录' }}
+              </button>
             </div>
-          </div>
 
-          <div class="ai-comment-section">
-            <button 
-              class="ai-comment-btn" 
-              @click="generateAIComment"
-              :disabled="isGeneratingAI"
-            >
-              <Icon icon="mdi:robot" class="robot-icon" />
-              {{ isGeneratingAI ? 'AI生成中...' : 'AI评论' }}
-            </button>
+            <div class="comments-list">
+              <div v-for="comment in comments" :key="comment.id" class="comment">
+                <div class="comment-header">
+                  <span class="username">{{ comment.username }}</span>
+                  <span class="time">{{ comment.time }}</span>
+                </div>
+                <p class="comment-content">{{ comment.content }}</p>
+              </div>
+            </div>
+
+            <div class="ai-comment-section">
+              <button 
+                class="ai-comment-btn" 
+                @click="generateAIComment"
+                :disabled="isGeneratingAI"
+              >
+                <Icon icon="mdi:robot" class="robot-icon" />
+                {{ isGeneratingAI ? 'AI生成中...' : 'AI评论' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1340,414 +1342,462 @@ const generateAIComment = async () => {
 .location-detail {
   max-width: 1400px;
   margin: 0 auto;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-.header {
-  padding: 16px 20px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #eee;
-  background: white;
-}
-
-.main-container {
-  display: flex;
-  position: relative;
-  gap: 20px;
-  flex: 1;
-  overflow: visible;
-  background: #f5f5f5;
-}
-
-.content {
-  flex: 1;
-  padding: 0 20px;
-}
-
-.content-wrapper {
-  max-width: 1000px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.tabs {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-  justify-content: center;
-}
-
-.tab-button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  background: #f5f5f5;
-  color: #333333;
-  cursor: pointer;
-  font-size: 15px;
-  transition: all 0.3s ease;
-}
-
-.tab-button:hover {
-  background: #e0e0e0;
-}
-
-.tab-button.active {
-  background: #1a73e8;
-  color: white;
-  font-weight: 500;
-}
-
-.tab-content {
-  flex: 1;
-  overflow: visible;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 40px;
-}
-
-.description-tab {
-  padding: 20px;
-  height: 100%;
-  background: white;
-  border-radius: 12px;
-}
-
-.description-content {
-  max-width: 700px;
-  margin: 0 auto;
-  line-height: 1.8;
-  white-space: pre-line;
-  font-size: 15px;
-}
-
-.image-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
-}
-
-.image-grid img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.video-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.video-list video {
-  width: 100%;
-  border-radius: 8px;
-}
-
-.comments-wrapper {
-  position: fixed;
-  right: -400px;
-  top: 0;
-  height: 100%;
-  width: 400px;
-  background: white;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
-  transition: right 0.3s ease;
-  z-index: 1000;
-}
-
-.comments-wrapper.comments-open {
-  right: 0;
-}
-
-.toggle-comments {
-  position: absolute;
-  left: -40px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 8px 0 0 8px;
-  background: #1a73e8;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.comment-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #ffffff;
-  font-size: 20px;
-}
-
-.comments-section {
-  max-height: 100vh;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
+  height: 100vh;
   overflow-y: auto;
-}
-
-.comments-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.comment {
-  border-bottom: 1px solid #eee;
-  padding: 15px 0;
-}
-
-.comment-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.username {
-  font-weight: bold;
-}
-
-.time {
-  color: #666;
-  font-size: 0.9em;
-}
-
-.comments-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.comments-list::-webkit-scrollbar-thumb {
-  background-color: #ddd;
-  border-radius: 3px;
-}
-
-.carousel-container {
-  width: 100%;
-  min-height: 400px;
-  padding: 20px;
-  background: white;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-}
-
-.carousel {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16/9;
-  max-height: 500px;
-  overflow: hidden;
-  border-radius: 8px;
-  background: #f5f5f5;
-}
-
-.carousel-inner {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.3s ease;
-}
-
-.carousel-inner img,
-.carousel-inner video {
-  width: 100%;
-  height: 100%;
-  flex-shrink: 0;
-  object-fit: contain;
-  background: #f5f5f5;
-}
-
-.carousel-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  transition: background 0.3s;
-}
-
-.carousel-btn:hover {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-.carousel-btn.prev {
-  left: 10px;
-}
-
-.carousel-btn.next {
-  right: 10px;
-}
-
-.carousel-indicators {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  padding: 8px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 20px;
-}
-
-.indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.3s ease;
-}
-
-.indicator:hover {
-  background: rgba(255, 255, 255, 0.8);
-}
-
-.indicator.active {
-  background: white;
-  transform: scale(1.2);
-}
-
-.carousel-counter {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.back-button {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  background: #f5f5f5;
-  color: #333333;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
-}
-
-.back-button:hover {
-  background: #e0e0e0;
-}
-
-h1 {
-  font-size: 20px;
-  margin: 0;
-}
-
-.comment-form textarea {
-  width: 100%;
-  min-height: 80px;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: vertical;
-  margin-bottom: 10px;
-}
-
-.comment-form textarea:disabled {
-  background-color: #f5f5f5;
-  cursor: not-allowed;
-  color: #999;
-}
-
-.submit-btn {
-  padding: 8px 16px;
-  background: #1890ff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.submit-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.description-content p {
-
-  color: #333333;
-  margin: 1rem 0;
-  line-height: 1.5;
-
-}
-
-.ai-comment-section {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-}
-
-.ai-comment-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background-color: #f0f0f0;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: #333;
-  font-size: 14px;
-}
-
-.ai-comment-btn:hover {
-  background-color: #e0e0e0;
-  transform: translateY(-2px);
-}
-
-.robot-icon {
-  font-size: 18px;
-  color: #666;
-}
-
-/* 添加动画效果 */
-.ai-comment-btn {
-  animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+  padding: 20px 20px 60px 20px;
+  box-sizing: border-box;
+  
+  /* 自定义滚动条样式 */
+  &::-webkit-scrollbar {
+    width: 8px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(144, 147, 153, 0.3);
+    border-radius: 3px;
+    
+    &:hover {
+      background: rgba(144, 147, 153, 0.5);
+    }
+  }
+
+  .detail-content {
+    flex: 1;
+    overflow: auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+
+    /* 内容区域滚动条样式 */
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: rgba(144, 147, 153, 0.3);
+      border-radius: 3px;
+      
+      &:hover {
+        background: rgba(144, 147, 153, 0.5);
+      }
+    }
+
+    .header {
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #eee;
+      background: white;
+
+      h1 {
+        font-size: 20px;
+        margin: 0;
+      }
+    }
+
+    .main-container {
+      display: flex;
+      position: relative;
+      gap: 20px;
+      flex: 1;
+      overflow: visible;
+      background: #f5f5f5;
+      padding-bottom: 20px;
+    }
+
+    .content {
+      flex: 1;
+      padding: 0 20px;
+    }
+
+    .content-wrapper {
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      justify-content: center;
+    }
+
+    .tab-button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #f5f5f5;
+      color: #333333;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .tab-button:hover {
+      background: #e0e0e0;
+    }
+
+    .tab-button.active {
+      background: #1a73e8;
+      color: white;
+      font-weight: 500;
+    }
+
+    .tab-content {
+      flex: 1;
+      overflow: visible;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 40px;
+    }
+
+    .description-tab {
+      padding: 20px;
+      height: 100%;
+      background: white;
+      border-radius: 12px;
+    }
+
+    .description-content {
+      max-width: 700px;
+      margin: 0 auto;
+      line-height: 1.8;
+      white-space: pre-line;
+      font-size: 15px;
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .image-grid img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .video-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .video-list video {
+      width: 100%;
+      border-radius: 8px;
+    }
+
+    .comments-wrapper {
+      position: fixed;
+      right: -400px;
+      top: 0;
+      height: 100%;
+      width: 400px;
+      background: white;
+      box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+      transition: right 0.3s ease;
+      z-index: 1000;
+    }
+
+    .comments-wrapper.comments-open {
+      right: 0;
+    }
+
+    .toggle-comments {
+      position: absolute;
+      left: -40px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 8px 0 0 8px;
+      background: #1a73e8;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .comment-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #ffffff;
+      font-size: 20px;
+    }
+
+    .comments-section {
+      max-height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .comments-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .comment {
+      border-bottom: 1px solid #eee;
+      padding: 15px 0;
+    }
+
+    .comment-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .username {
+      font-weight: bold;
+    }
+
+    .time {
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .comments-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .comments-list::-webkit-scrollbar-thumb {
+      background-color: #ddd;
+      border-radius: 3px;
+    }
+
+    .carousel-container {
+      width: 100%;
+      min-height: 400px;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+
+    .carousel {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      max-height: 500px;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #f5f5f5;
+    }
+
+    .carousel-inner {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.3s ease;
+    }
+
+    .carousel-inner img,
+    .carousel-inner video {
+      width: 100%;
+      height: 100%;
+      flex-shrink: 0;
+      object-fit: contain;
+      background: #f5f5f5;
+    }
+
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      transition: background 0.3s;
+    }
+
+    .carousel-btn:hover {
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .carousel-btn.prev {
+      left: 10px;
+    }
+
+    .carousel-btn.next {
+      right: 10px;
+    }
+
+    .carousel-indicators {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 20px;
+    }
+
+    .indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.3s ease;
+    }
+
+    .indicator:hover {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .indicator.active {
+      background: white;
+      transform: scale(1.2);
+    }
+
+    .carousel-counter {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #f5f5f5;
+      color: #333333;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+
+    .back-button:hover {
+      background: #e0e0e0;
+    }
+
+    .comment-form textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: vertical;
+      margin-bottom: 10px;
+    }
+
+    .comment-form textarea:disabled {
+      background-color: #f5f5f5;
+      cursor: not-allowed;
+      color: #999;
+    }
+
+    .submit-btn {
+      padding: 8px 16px;
+      background: #1890ff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .description-content p {
+      color: #333333;
+      margin: 1rem 0;
+      line-height: 1.5;
+    }
+
+    .ai-comment-section {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .ai-comment-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background-color: #f0f0f0;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .ai-comment-btn:hover {
+      background-color: #e0e0e0;
+      transform: translateY(-2px);
+    }
+
+    .robot-icon {
+      font-size: 18px;
+      color: #666;
+    }
+
+    /* 添加动画效果 */
+    .ai-comment-btn {
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   }
 }
 </style> 

@@ -100,12 +100,7 @@ const handleSubmit = async () => {
         id: data.data  // 存储返回的用户ID
       }))
       
-      // 获取重定向路径
-      const redirectPath = localStorage.getItem('redirectPath') || '/'
-      localStorage.removeItem('redirectPath')
-      
-      // 跳转到目标页面
-      router.push(redirectPath)
+      router.push("/")
     } else {
       errorMessage.value = data.msg || '登录失败，请检查用户名和密码'
     }
