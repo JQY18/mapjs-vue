@@ -46,19 +46,25 @@ const router = createRouter({
           path: '/register',
           name: 'register',
           component: RegisterView
-        }
+        },
+        {
+          path: '/3dmap',
+          name: 'ThreeDMap',
+          component: () => import('../components/3dmap.vue')
+        },
+        {
+          path: '/3dmap-home',
+          name: 'ThreeDMapHome',
+          component: () => import('../components/3dmap-home.vue')
+        },
+        {
+          path: '/vr',
+          name: 'VRMap',
+          component: () => import('../views/vrmap.vue')
+        },
       ]
     },
-    {
-      path: '/3dmap',
-      name: 'ThreeDMap',
-      component: () => import('../components/3dmap.vue')
-    },
-    {
-      path: '/3dmap-home',
-      name: 'ThreeDMapHome',
-      component: () => import('../components/3dmap-home.vue')
-    },
+    
     ...adminRoutes
   ]
 })

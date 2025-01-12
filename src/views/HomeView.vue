@@ -102,7 +102,7 @@ onMounted(() => {
 
 const allTabs = [
   { id: 'map', name: '地图', path: '/' },
-  { id: '3dmap', name: '3D地图', path: '/3dmap' },
+  { id: '3dmap-home', name: '3D地图', path: '/3dmap-home' },
   { id: 'circle', name: '师大圈', path: '/circle' },
   { id: 'facilities', name: '生活设施', path: '#' },
   { id: 'personal', name: '我的', path: '/personal' }

@@ -19,6 +19,7 @@
     "leaflet": "^1.9.4",
     "leaflet-routing-machine": "^3.2.12",
     "nprogress": "^0.2.0",
+    "pannellum-react": "^1.2.4",
     "sass": "^1.83.1",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"

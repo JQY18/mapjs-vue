@@ -15,7 +15,7 @@ const mapContainer = ref(null)
 const mapWrapper = ref(null)
 const activeBuilding = ref(null)
 const isDragging = ref(false)
-const startPos = ref({ x: 0, y: 0 })
+const dragStart = ref({ x: 0, y: 0 })
 const currentPos = ref({ x: 0, y: 0 })
 const scale = ref(1)
 const svgPosition = ref({ x: 0, y: 0 })
@@ -28,6 +28,33 @@ const selectedBuilding = ref(null)
 const showPopup = ref(false)
 const popupPosition = ref({ x: 0, y: 0 })
 
+// 添加边界限制函数
+const getBoundaries = () => {
+  const container = mapContainer.value.getBoundingClientRect()
+  const wrapper = mapWrapper.value.getBoundingClientRect()
+  
+  // 当缩放比例为1时，不允许拖动
+  if (scale.value <= 1) {
+    return {
+      minX: 0,
+      maxX: 0,
+      minY: 0,
+      maxY: 0
+    }
+  }
+  
+  // 计算可拖动的范围，这里的0.2表示可以拖出20%的边界
+  const maxX = (wrapper.width * scale.value - container.width) * 0.2
+  const maxY = (wrapper.height * scale.value - container.height) * 0.2
+  
+  return {
+    minX: -maxX,
+    maxX: maxX,
+    minY: -maxY,
+    maxY: maxY
+  }
+}
+
 // 缩放控制
 const handleWheel = (e) => {
   e.preventDefault()
@@ -35,25 +62,36 @@ const handleWheel = (e) => {
   const newScale = scale.value * delta
   
   // 限制缩放范围
-  if (newScale >= 0.5 && newScale <= 3) {
+  if (newScale >= 1 && newScale <= 3) {
     const rect = mapContainer.value.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
     
-    // 计算新的位置，使缩放以鼠标位置为中心
-    currentPos.value = {
+    // 计算新的位置
+    const newPos = {
       x: currentPos.value.x - (x - currentPos.value.x) * (delta - 1),
       y: currentPos.value.y - (y - currentPos.value.y) * (delta - 1)
     }
     
+    // 更新缩放
     scale.value = newScale
+    
+    // 应用边界限制
+    const boundaries = getBoundaries()
+    currentPos.value = {
+      x: Math.max(boundaries.minX, Math.min(boundaries.maxX, newPos.x)),
+      y: Math.max(boundaries.minY, Math.min(boundaries.maxY, newPos.y))
+    }
   }
 }
 
 // 拖动控制
 const startDrag = (e) => {
+  // 只响应鼠标左键，且只在放大状态下可拖动
+  if (e.button !== 0 || scale.value <= 1) return
+  
   isDragging.value = true
-  startPos.value = {
+  dragStart.value = {
     x: e.clientX - currentPos.value.x,
     y: e.clientY - currentPos.value.y
   }
@@ -62,9 +100,14 @@ const startDrag = (e) => {
 const doDrag = (e) => {
   if (!isDragging.value) return
   
+  const boundaries = getBoundaries()
+  const newX = e.clientX - dragStart.value.x
+  const newY = e.clientY - dragStart.value.y
+  
+  // 应用边界限制
   currentPos.value = {
-    x: e.clientX - startPos.value.x,
-    y: e.clientY - startPos.value.y
+    x: Math.max(boundaries.minX, Math.min(boundaries.maxX, newX)),
+    y: Math.max(boundaries.minY, Math.min(boundaries.maxY, newY))
   }
 }
 
@@ -116,66 +159,128 @@ const adjustStep = ref({
 const adjustSvgPosition = (dx = 0, dy = 0, ds = 0) => {
   if (!selectedBuilding.value) return
   
-  selectedBuilding.value.position = {
-    x: selectedBuilding.value.position.x + dx * adjustStep.value.position,
-    y: selectedBuilding.value.position.y + dy * adjustStep.value.position
+  // 更新建筑物在buildings数组中的位置
+  const buildingIndex = buildings.value.findIndex(b => b.id === selectedBuilding.value.id)
+  if (buildingIndex !== -1) {
+    const building = buildings.value[buildingIndex]
+    building.position = {
+      x: building.position.x + dx * adjustStep.value.position,
+      y: building.position.y + dy * adjustStep.value.position
+    }
+    building.scale = Math.max(0.1, building.scale + ds * adjustStep.value.scale)
+    
+    // 同步更新selectedBuilding的值
+    selectedBuilding.value = building
+    
+    // 输出当前位置和缩放信息
+    console.log(`当前建筑: ${building.name}`)
+    console.log(`位置: X:${building.position.x}, Y:${building.position.y}`)
+    console.log(`缩放: ${building.scale}`)
   }
-  selectedBuilding.value.scale = Math.max(0.1, selectedBuilding.value.scale + ds * adjustStep.value.scale)
-  
-  // 输出当前位置和缩放信息
-  console.log(`当前建筑: ${selectedBuilding.value.name}`)
-  console.log(`位置: X:${selectedBuilding.value.position.x}, Y:${selectedBuilding.value.position.y}`)
-  console.log(`缩放: ${selectedBuilding.value.scale}`)
 }
 
-// 重置当前选中建筑物的位置
+// 修改重置位置函数
 const resetSvgPosition = () => {
   if (!selectedBuilding.value) return
-  selectedBuilding.value.position = { x: 0, y: 0 }
-  selectedBuilding.value.scale = 1
+  
+  const buildingIndex = buildings.value.findIndex(b => b.id === selectedBuilding.value.id)
+  if (buildingIndex !== -1) {
+    buildings.value[buildingIndex].position = { x: 0, y: 0 }
+    buildings.value[buildingIndex].scale = 1
+    selectedBuilding.value = buildings.value[buildingIndex]
+  }
 }
 
-// 选择建筑物
+// 修改建筑物选择函数
 const selectBuilding = (building) => {
-  selectedBuilding.value = building
+  const buildingIndex = buildings.value.findIndex(b => b.id === building.id)
+  if (buildingIndex !== -1) {
+    selectedBuilding.value = buildings.value[buildingIndex]
+  }
 }
 
 // 处理建筑物点击
 const handleBuildingClick = (building, event) => {
-  // 阻止事件冒泡
   event.stopPropagation()
   
-  // 如果点击的是当前选中的建筑物，则关闭气泡
+  // 如果点击的是当前选中的建筑物，只关闭气泡，不清除选中状态
   if (selectedBuilding.value === building) {
-    closePopup()
+    showPopup.value = false
     return
   }
   
-  selectedBuilding.value = building
+  // 更新选中的建筑物（使用 selectBuilding 函数来确保正确的引用）
+  selectBuilding(building)
   showPopup.value = true
   
   // 计算气泡位置（相对于视口）
   const rect = event.target.getBoundingClientRect()
-  popupPosition.value = {
-    x: rect.left + rect.width / 2,
-    y: rect.top - 10  // 在建筑物上方显示
+  const viewportHeight = window.innerHeight
+  
+  // 如果是文渊楼或者建筑物在视口上半部分，气泡向下展示
+  if (building.name === '文渊楼' || rect.top < viewportHeight / 2) {
+    popupPosition.value = {
+      x: rect.left + rect.width / 2,
+      y: rect.bottom + 10  // 在建筑物下方显示
+    }
+  } else {
+    popupPosition.value = {
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10  // 在建筑物上方显示
+    }
   }
 }
 
 // 关闭气泡
 const closePopup = () => {
   showPopup.value = false
-  selectedBuilding.value = null
 }
 
 // 点击地图空白处关闭气泡
 const handleMapClick = () => {
-  closePopup()
+  // 只关闭气泡，不清除选中状态
+  showPopup.value = false
+}
+
+// 添加控制面板拖动相关的状态
+const debugPanelPos = ref({ x: 20, y: 20 }) // 初始位置
+const isDraggingPanel = ref(false)
+const panelDragStart = ref({ x: 0, y: 0 })
+
+// 添加控制面板拖动相关的方法
+const startPanelDrag = (e) => {
+  isDraggingPanel.value = true
+  panelDragStart.value = {
+    x: e.clientX - debugPanelPos.value.x,
+    y: e.clientY - debugPanelPos.value.y
+  }
+}
+
+const doPanelDrag = (e) => {
+  if (!isDraggingPanel.value) return
+  debugPanelPos.value = {
+    x: e.clientX - panelDragStart.value.x,
+    y: e.clientY - panelDragStart.value.y
+  }
+}
+
+const stopPanelDrag = () => {
+  isDraggingPanel.value = false
 }
 
 onMounted(() => {
-  window.addEventListener('mouseup', stopDrag)
-  window.addEventListener('mousemove', doDrag)
+  // 移除原有的监听
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging.value) {
+      doDrag(e)
+    }
+  })
+  
+  document.addEventListener('mouseup', stopDrag)
+  
+  // 添加控制面板拖动事件监听
+  document.addEventListener('mousemove', doPanelDrag)
+  document.addEventListener('mouseup', stopPanelDrag)
   
   // 设置所有建筑物的初始位置和缩放
   const buildingPositions = {
@@ -194,7 +299,11 @@ onMounted(() => {
     '兰桂苑': { x: -670, y: 1060, scale: 0.88 },
     '世承书院': { x: 0, y: 600, scale: 0.88 },
     '木兰路食堂': { x: -350, y: 810, scale: 0.88 },
-    '外国语学院': { x: 515, y: 240, scale: 0.88 }
+    '外国语学院': { x: 515, y: 240, scale: 0.88 },
+    '中和楼-世承书院': { x: 310, y: 340, scale: 0.88 },
+    '中和楼-图书馆': { x: 620, y: -70, scale: 0.46 },
+    '中和楼-至善楼': { x: -200, y: -70, scale: 0.46 },
+    '中和楼-木兰食堂': { x: -390, y: -60, scale: 0.46 }
   }
 
   // 为每个建筑物设置位置和缩放
@@ -294,8 +403,15 @@ const showDebugControls = ref(true)
     </div>
 
     <!-- 更新调试控制面板 -->
-    <div v-if="showDebugControls" class="debug-controls">
-      <div class="debug-header">
+    <div v-if="showDebugControls" 
+         class="debug-controls"
+         :style="{
+           left: debugPanelPos.x + 'px',
+           top: debugPanelPos.y + 'px'
+         }">
+      <div class="debug-header" 
+           @mousedown.prevent="startPanelDrag"
+           style="cursor: move;">
         <h3>SVG 控制面板</h3>
         <button @click="resetSvgPosition" class="reset-button">重置</button>
       </div>
@@ -531,8 +647,6 @@ const showDebugControls = ref(true)
 
 .debug-controls {
   position: fixed;
-  top: 20px;
-  left: 20px;
   background: rgba(0, 0, 0, 0.8);
   border-radius: 8px;
   padding: 16px;
@@ -541,6 +655,7 @@ const showDebugControls = ref(true)
   width: 240px;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  user-select: none; /* 防止拖动时选中文本 */
 }
 
 .debug-header {
@@ -548,6 +663,8 @@ const showDebugControls = ref(true)
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .debug-header h3 {
@@ -760,7 +877,7 @@ input:focus {
   border-radius: 8px;
   padding: 16px;
   min-width: 280px;
-  transform: translate(-50%, -100%);
+  transform: translate(-50%, 0);
   color: white;
   z-index: 1000;
   backdrop-filter: blur(8px);
@@ -771,12 +888,20 @@ input:focus {
 .building-popup::after {
   content: '';
   position: absolute;
-  bottom: -8px;
   left: 50%;
   transform: translateX(-50%);
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
+}
+
+.building-popup.popup-top::after {
+  bottom: -8px;
   border-top: 8px solid rgba(0, 0, 0, 0.85);
+}
+
+.building-popup.popup-bottom::after {
+  top: -8px;
+  border-bottom: 8px solid rgba(0, 0, 0, 0.85);
 }
 
 .popup-header {
