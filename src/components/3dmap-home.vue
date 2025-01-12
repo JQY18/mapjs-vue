@@ -3,6 +3,11 @@ import { ref, onMounted } from 'vue'
 import { useMouseInElement } from '@vueuse/core'
 import gsap from 'gsap'
 import { buildingsData } from '../data/buildings'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const emit = defineEmits(['plan-route', 'set-start', 'set-end'])
 
 // 使用导入的建筑物数据
 const buildings = ref(buildingsData.map(building => ({
@@ -32,7 +37,7 @@ const popupPosition = ref({ x: 0, y: 0 })
 const getBoundaries = () => {
   const container = mapContainer.value.getBoundingClientRect()
   const wrapper = mapWrapper.value.getBoundingClientRect()
-  
+
   // 当缩放比例为1时，不允许拖动
   if (scale.value <= 1) {
     return {
@@ -42,11 +47,11 @@ const getBoundaries = () => {
       maxY: 0
     }
   }
-  
+
   // 计算可拖动的范围，这里的0.2表示可以拖出20%的边界
   const maxX = (wrapper.width * scale.value - container.width) * 0.2
   const maxY = (wrapper.height * scale.value - container.height) * 0.2
-  
+
   return {
     minX: -maxX,
     maxX: maxX,
@@ -60,22 +65,22 @@ const handleWheel = (e) => {
   e.preventDefault()
   const delta = e.deltaY > 0 ? 0.9 : 1.1
   const newScale = scale.value * delta
-  
+
   // 限制缩放范围
   if (newScale >= 1 && newScale <= 3) {
     const rect = mapContainer.value.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
-    
+
     // 计算新的位置
     const newPos = {
       x: currentPos.value.x - (x - currentPos.value.x) * (delta - 1),
       y: currentPos.value.y - (y - currentPos.value.y) * (delta - 1)
     }
-    
+
     // 更新缩放
     scale.value = newScale
-    
+
     // 应用边界限制
     const boundaries = getBoundaries()
     currentPos.value = {
@@ -89,7 +94,7 @@ const handleWheel = (e) => {
 const startDrag = (e) => {
   // 只响应鼠标左键，且只在放大状态下可拖动
   if (e.button !== 0 || scale.value <= 1) return
-  
+
   isDragging.value = true
   dragStart.value = {
     x: e.clientX - currentPos.value.x,
@@ -99,11 +104,11 @@ const startDrag = (e) => {
 
 const doDrag = (e) => {
   if (!isDragging.value) return
-  
+
   const boundaries = getBoundaries()
   const newX = e.clientX - dragStart.value.x
   const newY = e.clientY - dragStart.value.y
-  
+
   // 应用边界限制
   currentPos.value = {
     x: Math.max(boundaries.minX, Math.min(boundaries.maxX, newX)),
@@ -158,7 +163,7 @@ const adjustStep = ref({
 // 修改位置调整函数
 const adjustSvgPosition = (dx = 0, dy = 0, ds = 0) => {
   if (!selectedBuilding.value) return
-  
+
   // 更新建筑物在buildings数组中的位置
   const buildingIndex = buildings.value.findIndex(b => b.id === selectedBuilding.value.id)
   if (buildingIndex !== -1) {
@@ -168,10 +173,10 @@ const adjustSvgPosition = (dx = 0, dy = 0, ds = 0) => {
       y: building.position.y + dy * adjustStep.value.position
     }
     building.scale = Math.max(0.1, building.scale + ds * adjustStep.value.scale)
-    
+
     // 同步更新selectedBuilding的值
     selectedBuilding.value = building
-    
+
     // 输出当前位置和缩放信息
     console.log(`当前建筑: ${building.name}`)
     console.log(`位置: X:${building.position.x}, Y:${building.position.y}`)
@@ -182,7 +187,7 @@ const adjustSvgPosition = (dx = 0, dy = 0, ds = 0) => {
 // 修改重置位置函数
 const resetSvgPosition = () => {
   if (!selectedBuilding.value) return
-  
+
   const buildingIndex = buildings.value.findIndex(b => b.id === selectedBuilding.value.id)
   if (buildingIndex !== -1) {
     buildings.value[buildingIndex].position = { x: 0, y: 0 }
@@ -202,23 +207,28 @@ const selectBuilding = (building) => {
 // 处理建筑物点击
 const handleBuildingClick = (building, event) => {
   event.stopPropagation()
-  
+
   // 如果点击的是当前选中的建筑物，只关闭气泡，不清除选中状态
   if (selectedBuilding.value === building) {
     showPopup.value = false
     return
   }
-  
+
   // 更新选中的建筑物（使用 selectBuilding 函数来确保正确的引用）
   selectBuilding(building)
   showPopup.value = true
-  
+
   // 计算气泡位置（相对于视口）
   const rect = event.target.getBoundingClientRect()
   const viewportHeight = window.innerHeight
-  
-  // 如果是文渊楼或者建筑物在视口上半部分，气泡向下展示
-  if (building.name === '文渊楼' || rect.top < viewportHeight / 2) {
+
+  // 如果是文渊楼或者建筑物在视口上半部分，气泡向下展示，如果是江湾体育馆，气泡向上展示
+  if (building.name === '江湾体育馆') {
+    popupPosition.value = {
+      x: rect.left + rect.width / 2,
+      y: rect.top - 120  // 在建筑物上方显示
+    }
+  } else if (building.name === '文渊楼' || rect.top < viewportHeight / 2) {
     popupPosition.value = {
       x: rect.left + rect.width / 2,
       y: rect.bottom + 10  // 在建筑物下方显示
@@ -268,6 +278,59 @@ const stopPanelDrag = () => {
   isDraggingPanel.value = false
 }
 
+// 添加处理按钮点击的方法
+const goToDetail = (building) => {
+  if (building?.detailId) {
+    router.push(`/location/${building.detailId}`)
+  }
+}
+
+const planRoute = () => {
+  // 触发规划路线事件
+  emit('plan-route')
+}
+
+const setAsStart = (building) => {
+  emit('set-start', building)
+  closePopup()
+  router.push({
+    path: '/',
+    query: {
+      openRoute: 'true',
+      startPoint: building.name
+    }
+  })
+}
+
+const setAsEnd = (building) => {
+  emit('set-end', building)
+  closePopup()
+  router.push({
+    path: '/',
+    query: {
+      openRoute: 'true',
+      endPoint: building.name
+    }
+  })
+}
+
+const goToVR = (building) => {
+  if (!building.detailId) {
+    console.warn('未找到地点ID，无法跳转到VR图')
+    return
+  }
+  else {
+    router.push({
+      path: '/vr',
+      query: {
+        location: building.detailId
+      }
+    })
+    closePopup()
+  }
+
+}
+
 onMounted(() => {
   // 移除原有的监听
   document.addEventListener('mousemove', (e) => {
@@ -275,13 +338,13 @@ onMounted(() => {
       doDrag(e)
     }
   })
-  
+
   document.addEventListener('mouseup', stopDrag)
-  
+
   // 添加控制面板拖动事件监听
   document.addEventListener('mousemove', doPanelDrag)
   document.addEventListener('mouseup', stopPanelDrag)
-  
+
   // 设置所有建筑物的初始位置和缩放
   const buildingPositions = {
     '文渊楼': { x: 1382, y: -117, scale: 0.88 },
@@ -317,7 +380,7 @@ onMounted(() => {
 
   // 添加快捷键控制（可选）
   window.addEventListener('keydown', (e) => {
-    switch(e.key) {
+    switch (e.key) {
       case 'ArrowLeft':
         adjustSvgPosition(-10, 0)
         break
@@ -345,12 +408,8 @@ const showDebugControls = ref(true)
 </script>
 
 <template>
-  <div class="map-container" 
-       ref="mapContainer"
-       @wheel="handleWheel"
-       @mousedown="startDrag"
-       @mouseleave="stopDrag"
-       @click="handleMapClick">
+  <div class="map-container" ref="mapContainer" @wheel="handleWheel" @mousedown="startDrag" @mouseleave="stopDrag"
+    @click="handleMapClick">
     <div class="map-controls">
       <button @click="resetView" class="control-button">
         <span>重置视图</span>
@@ -359,59 +418,38 @@ const showDebugControls = ref(true)
         缩放: {{ Math.round(scale * 100) }}%
       </div>
     </div>
-    
-    <div class="map-wrapper" 
-         ref="mapWrapper"
-         :style="{
-           transform: `translate(${currentPos.x}px, ${currentPos.y}px) scale(${scale})`
-         }">
+
+    <div class="map-wrapper" ref="mapWrapper" :style="{
+      transform: `translate(${currentPos.x}px, ${currentPos.y}px) scale(${scale})`
+    }">
       <img src="/1-1.png" alt="Campus Map" class="map-image" />
-      
+
       <!-- 调整 SVG 容器 -->
-      <svg class="buildings-layer" 
-           viewBox="0 0 2000 2000"
-           preserveAspectRatio="xMidYMid meet">
+      <svg class="buildings-layer" viewBox="0 0 2000 2000" preserveAspectRatio="xMidYMid meet">
         <defs>
           <filter id="building-glow">
-            <feDropShadow 
-              dx="0" 
-              dy="0" 
-              stdDeviation="10"
-              flood-color="#ffffff"
-              flood-opacity="1"
-            />
+            <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#ffffff" flood-opacity="1" />
           </filter>
         </defs>
-        
-        <g v-for="building in buildings" 
-           :key="building.id"
-           :style="{
-             transform: `translate(${building.position.x}px, ${building.position.y}px) scale(${building.scale})`,
-             transformOrigin: 'center'
-           }">
-          <path :id="`building-${building.id}`"
-                :d="building.path"
-                :fill="building.color"
-                :class="['building-path', { 'active': activeBuilding === building }]"
-                stroke="rgba(255, 255, 255, 0.8)"
-                stroke-width="2"
-                @mouseenter="handleBuildingHover(building)"
-                @mouseleave="handleBuildingLeave(building)"
-                @click="handleBuildingClick(building, $event)" />
+
+        <g v-for="building in buildings" :key="building.id" :style="{
+          transform: `translate(${building.position.x}px, ${building.position.y}px) scale(${building.scale})`,
+          transformOrigin: 'center'
+        }">
+          <path :id="`building-${building.id}`" :d="building.path" :fill="building.color"
+            :class="['building-path', { 'active': activeBuilding === building }]" stroke="rgba(255, 255, 255, 0.8)"
+            stroke-width="2" @mouseenter="handleBuildingHover(building)" @mouseleave="handleBuildingLeave(building)"
+            @click="handleBuildingClick(building, $event)" />
         </g>
       </svg>
     </div>
 
     <!-- 更新调试控制面板 -->
-    <div v-if="showDebugControls" 
-         class="debug-controls"
-         :style="{
-           left: debugPanelPos.x + 'px',
-           top: debugPanelPos.y + 'px'
-         }">
-      <div class="debug-header" 
-           @mousedown.prevent="startPanelDrag"
-           style="cursor: move;">
+    <div v-if="showDebugControls" class="debug-controls" :style="{
+      left: debugPanelPos.x + 'px',
+      top: debugPanelPos.y + 'px'
+    }">
+      <div class="debug-header" @mousedown.prevent="startPanelDrag" style="cursor: move;">
         <h3>SVG 控制面板</h3>
         <button @click="resetSvgPosition" class="reset-button">重置</button>
       </div>
@@ -422,15 +460,13 @@ const showDebugControls = ref(true)
         <div class="building-selector">
           <select v-model="selectedBuilding" class="building-select">
             <option :value="null">请选择建筑物</option>
-            <option v-for="building in buildings" 
-                    :key="building.id"
-                    :value="building">
+            <option v-for="building in buildings" :key="building.id" :value="building">
               {{ building.name }}
             </option>
           </select>
         </div>
       </div>
-      
+
       <!-- 当有建筑物被选中时显示控制面板 -->
       <template v-if="selectedBuilding">
         <div class="control-section">
@@ -439,43 +475,29 @@ const showDebugControls = ref(true)
             <div class="input-group">
               <label>X 坐标:</label>
               <div class="input-with-controls">
-                <input 
-                  type="number" 
-                  v-model.number="selectedBuilding.position.x"
-                  step="1"
-                />
+                <input type="number" v-model.number="selectedBuilding.position.x" step="1" />
                 <div class="input-controls">
                   <button @click="adjustSvgPosition(-1, 0)">-</button>
                   <button @click="adjustSvgPosition(1, 0)">+</button>
                 </div>
               </div>
             </div>
-            
+
             <div class="input-group">
               <label>Y 坐标:</label>
               <div class="input-with-controls">
-                <input 
-                  type="number" 
-                  v-model.number="selectedBuilding.position.y"
-                  step="1"
-                />
+                <input type="number" v-model.number="selectedBuilding.position.y" step="1" />
                 <div class="input-controls">
                   <button @click="adjustSvgPosition(0, -1)">-</button>
                   <button @click="adjustSvgPosition(0, 1)">+</button>
                 </div>
               </div>
             </div>
-            
+
             <div class="input-group">
               <label>缩放比例:</label>
               <div class="input-with-controls">
-                <input 
-                  type="number" 
-                  v-model.number="selectedBuilding.scale"
-                  step="0.01"
-                  min="0.1"
-                  max="3"
-                />
+                <input type="number" v-model.number="selectedBuilding.scale" step="0.01" min="0.1" max="3" />
                 <div class="input-controls">
                   <button @click="adjustSvgPosition(0, 0, -1)">-</button>
                   <button @click="adjustSvgPosition(0, 0, 1)">+</button>
@@ -503,12 +525,10 @@ const showDebugControls = ref(true)
 
     <!-- 建筑物信息气泡 -->
     <Transition name="fade">
-      <div v-if="showPopup && selectedBuilding" 
-           class="building-popup"
-           :style="{
-             left: `${popupPosition.x}px`,
-             top: `${popupPosition.y}px`
-           }">
+      <div v-if="showPopup && selectedBuilding" class="building-popup" :style="{
+        left: `${popupPosition.x}px`,
+        top: `${popupPosition.y}px`
+      }">
         <div class="popup-header">
           <h3>{{ selectedBuilding.name }}</h3>
           <button class="close-button" @click.stop="closePopup">×</button>
@@ -516,7 +536,7 @@ const showDebugControls = ref(true)
         <div class="popup-content">
           <div class="info-row">
             <span class="info-label">位置：</span>
-            <span class="info-value">江湾校区</span>
+            <span class="info-value">二里半校区</span>
           </div>
           <div class="info-row">
             <span class="info-label">功能：</span>
@@ -525,6 +545,27 @@ const showDebugControls = ref(true)
           <div class="info-row">
             <span class="info-label">开放时间：</span>
             <span class="info-value">周一至周日 7:00-22:00</span>
+          </div>
+
+          <div class="action-buttons">
+            <button class="detail-button" @click="goToDetail(selectedBuilding)">
+              查看详情
+            </button>
+            <button class="route-button" @click="planRoute">
+              规划路线
+            </button>
+            <button class="vr-button" @click="goToVR(selectedBuilding)">
+              VR全景
+            </button>
+          </div>
+
+          <div class="route-action-buttons">
+            <button class="start-button" @click="setAsStart(selectedBuilding)">
+              从这出发
+            </button>
+            <button class="end-button" @click="setAsEnd(selectedBuilding)">
+              到这去
+            </button>
           </div>
         </div>
       </div>
@@ -655,7 +696,8 @@ const showDebugControls = ref(true)
   width: 240px;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  user-select: none; /* 防止拖动时选中文本 */
+  user-select: none;
+  /* 防止拖动时选中文本 */
 }
 
 .debug-header {
@@ -954,6 +996,94 @@ input:focus {
   flex: 1;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.action-buttons button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: white;
+  transition: all 0.3s;
+}
+
+.detail-button {
+  background: #3388ff;
+}
+
+.detail-button:hover {
+  background: #4499ff;
+}
+
+.route-button {
+  background: #4CAF50;
+}
+
+.route-button:hover {
+  background: #5DBF61;
+}
+
+.vr-button {
+  background: #722ed1;
+}
+
+.vr-button:hover {
+  background: #8c51e0;
+}
+
+.route-action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.start-button,
+.end-button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.3s;
+  font-size: 0.9em;
+}
+
+.start-button {
+  background: rgba(24, 144, 255, 0.1);
+  color: #1890ff;
+}
+
+.start-button:hover {
+  background: rgba(24, 144, 255, 0.2);
+}
+
+.end-button {
+  background: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
+}
+
+.end-button:hover {
+  background: rgba(82, 196, 26, 0.2);
+}
+
 /* 淡入淡出动画 */
 .fade-enter-active,
 .fade-leave-active {
@@ -981,4 +1111,4 @@ input:focus {
   opacity: 0.9;
   filter: url(#building-glow);
 }
-</style> 
+</style>

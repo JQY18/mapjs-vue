@@ -221,8 +221,8 @@ const handleSelectFacility = (facility) => {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 1500px;
+  margin: 0;
   position: relative;
   height: 50px;
 }
@@ -230,7 +230,7 @@ const handleSelectFacility = (facility) => {
 .logo {
   height: 50px;
   width: auto;
-  margin-left: 20px;
+  margin-left: 0;
 }
 
 .gate-bg {
@@ -263,10 +263,11 @@ const handleSelectFacility = (facility) => {
   background-color: rgb(107, 1, 1);
   border-bottom: 1px solid #e8e8e8;
   flex-shrink: 0;
+  height: 50px;
 }
 
 .tab-item {
-  padding: 12px 24px;
+  padding: 15px 24px;
   cursor: pointer;
   transition: all 0.3s;
   color: white;
@@ -286,6 +287,8 @@ const handleSelectFacility = (facility) => {
   flex: 1;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .logout-confirm-overlay {

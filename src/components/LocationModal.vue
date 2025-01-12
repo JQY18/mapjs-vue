@@ -18,10 +18,14 @@
         
         <div class="action-buttons">
           <button class="detail-button" @click="goToDetail">
-            查看详细信息
+            查看详情
           </button>
           <button class="route-button" @click="planRoute">
             规划路线
+          </button>
+          <button class="vr-button" @click="goToVR">
+            <Icon icon="mdi:panorama" class="button-icon" />
+            VR全景
           </button>
         </div>
 
@@ -121,6 +125,44 @@ const setAsEnd = () => {
       endPoint: props.location.name
     }
   })
+}
+
+const goToVR = () => {
+  // 获取当前地点的 ID
+  const locationId = props.location?.id || props.location?.detailId
+  
+  if (!locationId) {
+    console.warn('未找到地点ID，无法跳转到VR图')
+    return
+  }
+
+  // 根据地点 ID 映射到 VR 文件夹名称
+  const vrLocationMap = {
+    'library': 'library',
+    'erliban': 'erliban',
+    'xiaomen': 'gate',
+    'byPlayground': 'playground',
+    'zhonghelou': 'zhonghe',
+    'zhonglieci': 'zhonglieci',
+    'yuewangting': 'yuewangting',
+    'zhishanlou': 'zhishan'
+    // 添加更多地点映射...
+  }
+
+  const vrLocation = vrLocationMap[locationId]
+  
+  if (!vrLocation) {
+    console.warn('该地点暂无VR全景图')
+    return
+  }
+
+  router.push({
+    path: '/vr',
+    query: { 
+      location: vrLocation
+    }
+  })
+  emit('close')
 }
 </script>
 
@@ -297,6 +339,10 @@ export default {
   cursor: pointer;
   font-weight: 500;
   font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .detail-button {
@@ -353,5 +399,15 @@ export default {
 
 .button-icon {
   font-size: 16px;
+}
+
+.vr-button {
+  background: #722ed1;
+  color: white;
+  transition: all 0.3s;
+}
+
+.vr-button:hover {
+  background: #8c51e0;
 }
 </style> 
