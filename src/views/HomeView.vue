@@ -287,8 +287,7 @@ const handleSelectFacility = (facility) => {
   flex: 1;
   position: relative;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+
 }
 
 .logout-confirm-overlay {
