@@ -3,6 +3,11 @@ import { ref, onMounted } from 'vue'
 import { useMouseInElement } from '@vueuse/core'
 import gsap from 'gsap'
 import { buildingsData } from '../data/buildings'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const emit = defineEmits(['plan-route', 'set-start', 'set-end'])
 
 // 使用导入的建筑物数据
 const buildings = ref(buildingsData.map(building => ({
@@ -217,8 +222,13 @@ const handleBuildingClick = (building, event) => {
   const rect = event.target.getBoundingClientRect()
   const viewportHeight = window.innerHeight
   
-  // 如果是文渊楼或者建筑物在视口上半部分，气泡向下展示
-  if (building.name === '文渊楼' || rect.top < viewportHeight / 2) {
+  // 如果是文渊楼或者建筑物在视口上半部分，气泡向下展示，如果是江湾体育馆，气泡向上展示
+  if (building.name === '江湾体育馆') {
+    popupPosition.value = {
+      x: rect.left + rect.width / 2,
+      y: rect.top - 120  // 在建筑物上方显示
+    }
+  } else if (building.name === '文渊楼' || rect.top < viewportHeight / 2) {
     popupPosition.value = {
       x: rect.left + rect.width / 2,
       y: rect.bottom + 10  // 在建筑物下方显示
@@ -266,6 +276,52 @@ const doPanelDrag = (e) => {
 
 const stopPanelDrag = () => {
   isDraggingPanel.value = false
+}
+
+// 添加处理按钮点击的方法
+const goToDetail = (building) => {
+  if (building?.detailId) {
+    router.push(`/location/${building.detailId}`)
+  }
+}
+
+const planRoute = () => {
+  // 触发规划路线事件
+  emit('plan-route')
+}
+
+const setAsStart = (building) => {
+  emit('set-start', building)
+  closePopup()
+  router.push({
+    path: '/',
+    query: {
+      openRoute: 'true',
+      startPoint: building.name
+    }
+  })
+}
+
+const setAsEnd = (building) => {
+  emit('set-end', building)
+  closePopup()
+  router.push({
+    path: '/',
+    query: {
+      openRoute: 'true',
+      endPoint: building.name
+    }
+  })
+}
+
+const goToVR = (building) => {
+  router.push({
+    path: '/vr',
+    query: { 
+      location: building.detailId
+    }
+  })
+  closePopup()
 }
 
 onMounted(() => {
@@ -516,7 +572,7 @@ const showDebugControls = ref(true)
         <div class="popup-content">
           <div class="info-row">
             <span class="info-label">位置：</span>
-            <span class="info-value">江湾校区</span>
+            <span class="info-value">二里半校区</span>
           </div>
           <div class="info-row">
             <span class="info-label">功能：</span>
@@ -525,6 +581,27 @@ const showDebugControls = ref(true)
           <div class="info-row">
             <span class="info-label">开放时间：</span>
             <span class="info-value">周一至周日 7:00-22:00</span>
+          </div>
+
+          <div class="action-buttons">
+            <button class="detail-button" @click="goToDetail(selectedBuilding)">
+              查看详情
+            </button>
+            <button class="route-button" @click="planRoute">
+              规划路线
+            </button>
+            <button class="vr-button" @click="goToVR(selectedBuilding)">
+              VR全景
+            </button>
+          </div>
+
+          <div class="route-action-buttons">
+            <button class="start-button" @click="setAsStart(selectedBuilding)">
+              从这出发
+            </button>
+            <button class="end-button" @click="setAsEnd(selectedBuilding)">
+              到这去
+            </button>
           </div>
         </div>
       </div>
@@ -952,6 +1029,94 @@ input:focus {
 
 .info-value {
   flex: 1;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.action-buttons button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: white;
+  transition: all 0.3s;
+}
+
+.detail-button {
+  background: #3388ff;
+}
+
+.detail-button:hover {
+  background: #4499ff;
+}
+
+.route-button {
+  background: #4CAF50;
+}
+
+.route-button:hover {
+  background: #5DBF61;
+}
+
+.vr-button {
+  background: #722ed1;
+}
+
+.vr-button:hover {
+  background: #8c51e0;
+}
+
+.route-action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.start-button,
+.end-button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.3s;
+  font-size: 0.9em;
+}
+
+.start-button {
+  background: rgba(24, 144, 255, 0.1);
+  color: #1890ff;
+}
+
+.start-button:hover {
+  background: rgba(24, 144, 255, 0.2);
+}
+
+.end-button {
+  background: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
+}
+
+.end-button:hover {
+  background: rgba(82, 196, 26, 0.2);
 }
 
 /* 淡入淡出动画 */

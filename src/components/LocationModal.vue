@@ -18,7 +18,7 @@
         
         <div class="action-buttons">
           <button class="detail-button" @click="goToDetail">
-            查看详细信息
+            查看详情
           </button>
           <button class="route-button" @click="planRoute">
             规划路线
