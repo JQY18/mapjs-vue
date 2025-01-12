@@ -66,16 +66,37 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="280">
           <template #default="{ row }">
-            <el-button-group>
-              <el-button type="primary" @click="handleEdit(row)">
-                <el-icon><Edit /></el-icon>编辑
+            <div class="action-buttons">
+              <el-button 
+                type="primary" 
+                size="small"
+                @click="handleEdit(row)"
+              >
+                <el-icon><Edit /></el-icon>
+                <span>编辑</span>
               </el-button>
-              <el-button type="danger" @click="handleDelete(row)">
-                <el-icon><Delete /></el-icon>删除
+              
+              <el-button 
+                type="danger"
+                size="small" 
+                @click="handleDelete(row)"
+              >
+                <el-icon><Delete /></el-icon>
+                <span>删除</span>
               </el-button>
-            </el-button-group>
+              
+              <el-button 
+                type="success"
+                size="small"
+                @click="handleEditDetail(row)"
+                class="detail-button"
+              >
+                <el-icon><Document /></el-icon>
+                <span>详细信息</span>
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -151,11 +172,13 @@ import {
   Plus,
   Search,
   Edit,
-  Delete
+  Delete,
+Document
 } from '@element-plus/icons-vue'
 import { locationApi } from '../../api/location'
 import BaseDialog from '../../components/BaseDialog.vue'
 import ImagePreview from '../../components/ImagePreview.vue'
+import { useRouter } from 'vue-router'
 
 // 地点类型选项
 const categoryOptions = [
@@ -251,6 +274,22 @@ const getCategoryTagType = (category) => {
   }
   return typeMap[category] || ''
 }
+
+
+const router = useRouter()
+
+const handleEditDetail = (row) => {
+  router.push({
+    name: 'LocationDetailEdit',
+    params: {
+      detailId: row.detailId
+    },
+    query: {
+      name: row.name
+    }
+  })
+}
+
 
 const handleFileChange = (file) => {
   const isImage = file.raw.type.startsWith('image/')
@@ -435,6 +474,38 @@ onMounted(() => {
   .coordinate-inputs {
     display: flex;
     gap: 16px;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    
+    .el-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      
+      .el-icon {
+        margin-right: 2px;
+      }
+    }
+    
+    .detail-button {
+      background-color: #67c23a;
+      border-color: #67c23a;
+      
+      &:hover {
+        background-color: #85ce61;
+        border-color: #85ce61;
+      }
+      
+      &:active {
+        background-color: #529b2e;
+        border-color: #529b2e;
+      }
+    }
   }
 }
 
