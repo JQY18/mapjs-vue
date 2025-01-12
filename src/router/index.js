@@ -57,6 +57,11 @@ const router = createRouter({
           name: 'ThreeDMapHome',
           component: () => import('../components/3dmap-home.vue')
         },
+        {
+          path: '/vr',
+          name: 'VRMap',
+          component: () => import('../views/vrmap.vue')
+        },
       ]
     },
     
