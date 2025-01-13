@@ -1,75 +1,77 @@
 <template>
   <div class="register-container">
-    <div class="register-box">
-      <div class="header">
-        <h2>注册账号</h2>
-        <p class="subtitle">欢迎加入我们的社区</p>
-      </div>
-      
-      <form @submit.prevent="handleSubmit" class="register-form">
-        <div class="form-group">
-          <label for="nickname">
-            <Icon icon="mdi:account" class="input-icon"/>
-            昵称
-          </label>
-          <input
-            id="nickname"
-            v-model="nickname"
-            type="text"
-            required
-            placeholder="请输入昵称"
-            class="input-with-icon"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="username">
-            <Icon icon="mdi:account-key" class="input-icon"/>
-            用户名
-          </label>
-          <input
-            id="username"
-            v-model="username"
-            type="text"
-            required
-            placeholder="请输入用户名"
-            class="input-with-icon"
-          />
+    <div class="register-content">
+      <div class="register-box">
+        <div class="header">
+          <h2>注册账号</h2>
+          <p class="subtitle">欢迎加入我们的社区</p>
         </div>
         
-        <div class="form-group">
-          <label for="password">
-            <Icon icon="mdi:lock" class="input-icon"/>
-            密码
-          </label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            required
-            placeholder="请输入密码"
-            class="input-with-icon"
-          />
-        </div>
+        <form @submit.prevent="handleSubmit" class="register-form">
+          <div class="form-group">
+            <label for="nickname">
+              <Icon icon="mdi:account" class="input-icon"/>
+              昵称
+            </label>
+            <input
+              id="nickname"
+              v-model="nickname"
+              type="text"
+              required
+              placeholder="请输入昵称"
+              class="input-with-icon"
+            />
+          </div>
 
-        <div class="error-message" v-if="errorMessage">
-          <Icon icon="mdi:alert-circle" class="error-icon"/>
-          {{ errorMessage }}
-        </div>
+          <div class="form-group">
+            <label for="username">
+              <Icon icon="mdi:account-key" class="input-icon"/>
+              用户名
+            </label>
+            <input
+              id="username"
+              v-model="username"
+              type="text"
+              required
+              placeholder="请输入用户名"
+              class="input-with-icon"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="password">
+              <Icon icon="mdi:lock" class="input-icon"/>
+              密码
+            </label>
+            <input
+              id="password"
+              v-model="password"
+              type="password"
+              required
+              placeholder="请输入密码"
+              class="input-with-icon"
+            />
+          </div>
 
-        <button type="submit" :disabled="isLoading" class="submit-button">
-          <span class="button-content">
-            <Icon :icon="isLoading ? 'mdi:loading' : 'mdi:account-plus'" 
-                  class="button-icon" 
-                  :class="{ 'spin': isLoading }"/>
-            {{ isLoading ? '注册中...' : '立即注册' }}
-          </span>
-        </button>
+          <div class="error-message" v-if="errorMessage">
+            <Icon icon="mdi:alert-circle" class="error-icon"/>
+            {{ errorMessage }}
+          </div>
 
-        <div class="login-link">
-          已有账号？<router-link to="/login" class="link">去登录</router-link>
-        </div>
-      </form>
+          <button type="submit" :disabled="isLoading" class="submit-button">
+            <span class="button-content">
+              <Icon :icon="isLoading ? 'mdi:loading' : 'mdi:account-plus'" 
+                    class="button-icon" 
+                    :class="{ 'spin': isLoading }"/>
+              {{ isLoading ? '注册中...' : '立即注册' }}
+            </span>
+          </button>
+
+          <div class="login-link">
+            已有账号？<router-link to="/login" class="link">去登录</router-link>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -116,13 +118,19 @@ const handleSubmit = async () => {
 
 <style scoped>
 .register-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.register-content {
   flex: 1;
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 30px;
 }
 
 .register-box {

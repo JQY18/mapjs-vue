@@ -1,71 +1,55 @@
 <template>
-  <div class="login-container">
-    <div class="login-box">
-      <div class="header">
-        <h2>欢迎回来</h2>
-        <p class="subtitle">登录您的账号</p>
+  <div class="login-view">
+    <div class="login-content">
+      <div class="login-box">
+        <div class="header">
+          <h2>欢迎回来</h2>
+          <p class="subtitle">登录您的账号</p>
+        </div>
+
+        <form @submit.prevent="handleSubmit" class="login-form">
+          <div class="form-group">
+            <label for="username">
+              <Icon icon="mdi:account" class="input-icon" />
+              用户名
+            </label>
+            <input id="username" v-model="username" type="text" required placeholder="请输入用户名" class="input-with-icon" />
+          </div>
+
+          <div class="form-group">
+            <label for="password">
+              <Icon icon="mdi:lock" class="input-icon" />
+              密码
+            </label>
+            <input id="password" v-model="password" type="password" required placeholder="请输入密码"
+              class="input-with-icon" />
+          </div>
+
+          <div class="error-message" v-if="errorMessage">
+            <Icon icon="mdi:alert-circle" class="error-icon" />
+            {{ errorMessage }}
+          </div>
+
+          <button type="submit" :disabled="isLoading" class="submit-button">
+            <span class="button-content">
+              <Icon :icon="isLoading ? 'mdi:loading' : 'mdi:login'" class="button-icon"
+                :class="{ 'spin': isLoading }" />
+              {{ isLoading ? '登录中...' : '立即登录' }}
+            </span>
+          </button>
+
+          <div class="register-link">
+            还没有账号？<router-link to="/register" class="link">去注册</router-link>
+          </div>
+        </form>
       </div>
-      
-      <form @submit.prevent="handleSubmit" class="login-form">
-        <div class="form-group">
-          <label for="username">
-            <Icon icon="mdi:account" class="input-icon"/>
-            用户名
-          </label>
-          <input
-            id="username"
-            v-model="username"
-            type="text"
-            required
-            placeholder="请输入用户名"
-            class="input-with-icon"
-          />
-        </div>
-        
-        <div class="form-group">
-          <label for="password">
-            <Icon icon="mdi:lock" class="input-icon"/>
-            密码
-          </label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            required
-            placeholder="请输入密码"
-            class="input-with-icon"
-          />
-        </div>
 
-        <div class="error-message" v-if="errorMessage">
-          <Icon icon="mdi:alert-circle" class="error-icon"/>
-          {{ errorMessage }}
-        </div>
-
-        <button type="submit" :disabled="isLoading" class="submit-button">
-          <span class="button-content">
-            <Icon :icon="isLoading ? 'mdi:loading' : 'mdi:login'" 
-                  class="button-icon" 
-                  :class="{ 'spin': isLoading }"/>
-            {{ isLoading ? '登录中...' : '立即登录' }}
-          </span>
-        </button>
-
-        <div class="register-link">
-          还没有账号？<router-link to="/register" class="link">去注册</router-link>
-        </div>
-      </form>
-    </div>
-    
-    <!-- 添加管理员入口 -->
-    <div class="admin-entry">
-      <el-button 
-        type="text" 
-        class="admin-link"
-        @click="goToAdminLogin"
-      >
-        管理员登录
-      </el-button>
+      <!-- 添加管理员入口 -->
+      <div class="admin-entry">
+        <el-button type="text" class="admin-link" @click="goToAdminLogin">
+          管理员登录
+        </el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -84,22 +68,22 @@ const isLoading = ref(false)
 
 const handleSubmit = async () => {
   if (isLoading.value) return
-  
+
   errorMessage.value = ''
   isLoading.value = true
-  
+
   try {
     const { data } = await userApi.login({
       username: username.value,
       password: password.value
     })
-    
+
     if (data.code === 1) {
       // 登录成功，保存用户ID
       localStorage.setItem('user', JSON.stringify({
         id: data.data  // 存储返回的用户ID
       }))
-      
+
       // 跳转到主页并刷新
       router.push("/").then(() => {
         window.location.reload()
@@ -120,15 +104,20 @@ const goToAdminLogin = () => {
 </script>
 
 <style scoped>
-.login-container {
+.login-view {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.login-content {
   flex: 1;
   min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 70px;
-
 }
 
 .login-box {
@@ -189,7 +178,7 @@ label {
   width: 95%;
   padding: 12px 0px 12px 16px;
   /* margin-top: 10px; */
-  margin-right:50px; 
+  margin-right: 50px;
   border: 2px solid #e8e8e8;
   border-radius: 8px;
   font-size: 14px;
@@ -259,8 +248,13 @@ label {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .register-link {
@@ -298,16 +292,11 @@ label {
   bottom: 20px;
   right: 20px;
   z-index: 2;
-  
-  .admin-link {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 14px;
-    transition: all 0.3s;
-    
-    &:hover {
-      color: white;
-      text-decoration: underline;
-    }
-  }
 }
-</style> 
+
+.admin-link {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  transition: all 0.3s;
+}
+</style>
