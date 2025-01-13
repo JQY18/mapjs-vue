@@ -100,7 +100,10 @@ const handleSubmit = async () => {
         id: data.data  // 存储返回的用户ID
       }))
       
-      router.push("/")
+      // 跳转到主页并刷新
+      router.push("/").then(() => {
+        window.location.reload()
+      })
     } else {
       errorMessage.value = data.msg || '登录失败，请检查用户名和密码'
     }

@@ -2,8 +2,12 @@ import request from './request'
 
 export const locationApi = {
   // 获取所有地点
-  getLocations() {
-    return request.get('/locations')
+  getLocations(locationId) {
+    return request.get('/locations',{
+      params: {
+        locationId
+      }
+    })
   },
 
   // 添加地点
