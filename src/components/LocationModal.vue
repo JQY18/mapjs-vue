@@ -130,8 +130,6 @@ const setAsEnd = () => {
 const goToVR = () => {
   // 获取当前地点的 ID
   const locationId = props.location?.detailId || props.location?.id
-  
-  window.alert(JSON.stringify(props.location))
 
   if (!locationId) {
     console.warn('未找到地点ID，无法跳转到VR图')
