@@ -142,8 +142,8 @@ const goToVR = () => {
     'erliban': 'erliban',
     'xiaomen': 'gate',
     'byPlayground': 'playground',
-    'zhonghelou': 'zhonghe',
-    'zhonglieci': 'zhonglieci',
+    'zhonghelou': 'zhonghelou',
+    'zhonglie': 'zhonglieci',
     'yuewangting': 'yuewangting',
     'zhishanlou': 'zhishan'
     // 添加更多地点映射...

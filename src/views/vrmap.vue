@@ -55,14 +55,14 @@ const locations = [
     vrFolder: 'playground',  // 对应 public/vr1/playground 文件夹
   },
   {
-    id: 'zhonghe',
+    id: 'zhonghelou',
     name: '中和楼',
     vrFolder: 'zhonghe',  // 对应 public/vr1/zhonghe 文件夹
   },
   {
     id: 'zhonglieci',
     name: '忠烈祠',
-    vrFolder: 'zhonglieci',  // 对应 public/vr1/zhonglieci 文件夹
+    vrFolder: 'zhonglieci',  // 对应 public/vr1/zhonglie 文件夹
   },
   {
     id: 'yuewangting',
