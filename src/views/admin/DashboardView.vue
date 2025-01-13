@@ -14,7 +14,7 @@
         <div class="card-content">
           <div class="number">{{ stat.value }}</div>
           <div class="trend" :class="stat.trend > 0 ? 'up' : 'down'">
-            {{ Math.abs(stat.trend) }}% 较上周
+            本周新增：{{ Math.abs(stat.trend) }} 
             <el-icon><component :is="stat.trend > 0 ? 'ArrowUp' : 'ArrowDown'" /></el-icon>
           </div>
         </div>
@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import * as echarts from 'echarts'
 import {
   User,
@@ -59,44 +59,54 @@ import {
   ArrowUp,
   ArrowDown
 } from '@element-plus/icons-vue'
+import request from '../../api/request'
+
 
 const timeRange = ref('week')
 
 const statistics = ref([
   {
     title: '总用户数',
-    value: '1,234',
-    trend: 12.5,
+    value: 0,
+    trend: 0,
     icon: 'User',
     type: 'primary'
   },
   {
-    title: '地点总数',
-    value: '56',
-    trend: 8.2,
+    title: '总地点数',
+    value: 0,
+    trend: 0,
     icon: 'Location',
     type: 'success'
   },
   {
-    title: '今日访问',
-    value: '3,456',
-    trend: -2.1,
+    title: '总访问量',
+    value: 0,
+    trend: 0,
     icon: 'View',
     type: 'warning'
-  },
-  {
-    title: '评论数',
-    value: '789',
-    trend: 15.4,
-    icon: 'ChatDotRound',
-    type: 'danger'
   }
 ])
 
 onMounted(() => {
+  request.get('/admin/dashboard/countUser').then(res => {
+    statistics.value[0].value = res.data.data.userCount
+    statistics.value[0].trend = res.data.data.userTrend
+  })
+  request.get('/admin/dashboard/countLocation').then(res => {
+    statistics.value[1].value = res.data.data.locationCount
+    statistics.value[1].trend = res.data.data.locationTrend
+  })
+  request.get('/visit/all').then(res => {
+    statistics.value[2].value = res.data.data.visitCount
+    statistics.value[2].trend = res.data.data.visitTrend
+  })
+
   // 初始化访问趋势图表
   const visitChart = echarts.init(document.querySelector('.chart'))
-  visitChart.setOption({
+  
+  // 设置初始配置
+  const initOption = {
     tooltip: {
       trigger: 'axis'
     },
@@ -108,33 +118,57 @@ onMounted(() => {
       type: 'value'
     },
     series: [{
-      data: [820, 932, 901, 934, 1290, 1330, 1320],
+      data: [],
       type: 'line',
       smooth: true
     }]
+  }
+  
+  visitChart.setOption(initOption)
+
+  const updateChartData = (range) => {
+    const url = range === 'week' ? '/visit/week' : '/visit/month'
+    const xAxisData = range === 'week' 
+      ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] 
+      : Array.from({ length: 30 }, (_, i) => i + 1) // 假设月数据为30天
+    
+    request.get(url).then(res => {
+      visitChart.setOption({
+        xAxis: {
+          data: xAxisData
+        },
+        series: [{
+          data: res.data.data
+        }]
+      })
+    })
+  }
+
+  // 初始加载周数据
+  updateChartData(timeRange.value)
+
+  // 监听时间范围变化
+  watch(timeRange, (newRange) => {
+    updateChartData(newRange)
   })
 
   // 初始化地点分布图表
   const locationChart = echarts.init(document.querySelectorAll('.chart')[1])
-  locationChart.setOption({
+  const locationChartOption = {
     tooltip: {
-      trigger: 'item'
+      trigger: 'item',
+      formatter: '{b}: {c} ({d}%)'
     },
     legend: {
       orient: 'vertical',
-      left: 'left'
+      left: 'left',
+      padding: 20
     },
     series: [
       {
         type: 'pie',
         radius: '50%',
-        data: [
-          { value: 20, name: '教学楼' },
-          { value: 5, name: '图书馆' },
-          { value: 10, name: '食堂' },
-          { value: 15, name: '宿舍' },
-          { value: 6, name: '体育场所' }
-        ],
+        data: [],
         emphasis: {
           itemStyle: {
             shadowBlur: 10,
@@ -144,6 +178,31 @@ onMounted(() => {
         }
       }
     ]
+  }
+  locationChart.setOption(locationChartOption)
+
+  // 获取地点分布数据
+  request.get('/locations').then(res => {
+    if (res.data.code === 1) {
+      // 按category分类统计数量
+      const categoryCount = res.data.data.reduce((acc, item) => {
+        const category = item.category || '其他'
+        acc[category] = (acc[category] || 0) + 1
+        return acc
+      }, {})
+      
+      // 转换为饼图所需的数据格式
+      const pieData = Object.entries(categoryCount).map(([category, count]) => ({
+        name: category,
+        value: count
+      }))
+
+      locationChart.setOption({
+        series: [{
+          data: pieData
+        }]
+      })
+    }
   })
 })
 </script>

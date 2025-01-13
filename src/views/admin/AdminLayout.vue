@@ -187,6 +187,10 @@ const toggleCollapse = () => {
 
 
 onMounted(() => {
+  const adminId = localStorage.getItem('adminId')
+  if (!adminId) {
+    router.push('/admin/login')
+  }
   adminApi.getInfo().then(({ data }) => {
     if (data.code === 1) {
       adminName.value = data.data.username
