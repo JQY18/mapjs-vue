@@ -31,10 +31,11 @@
           <span>地点管理</span>
         </el-menu-item>
         
-        <el-menu-item index="/admin/comments">
+        <!-- <el-menu-item index="/admin/comments">
           <el-icon><ChatDotRound /></el-icon>
           <span>评论管理</span>
-        </el-menu-item>
+        </el-menu-item> -->
+        
       </el-menu>
 
       <div class="collapse-btn" @click="toggleCollapse">

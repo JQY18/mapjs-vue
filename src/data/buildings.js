@@ -5,7 +5,7 @@ export const buildingsData = [
       path: 'M1 337.5L345 1.5L760.5 393H20L1 337.5Z',
       color: 'rgba(255, 107, 107, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: ''
+      detailId: 'jyGym'
     },
     {
       id: 2,
@@ -21,7 +21,7 @@ export const buildingsData = [
       path: 'M16.5 130.5L153.5 1.5L197 41V87L168.5 113.5L254 166.5L366 176L393 130.5L463 189.5L431 227.5L427 326L531.5 419.5L586.5 364L636 410L630.5 440L495.5 571.5L442 520L463 482.5L366 419.5H309L273 453.5L246.5 440L229.5 469L153.5 398.5L168.5 385L153.5 364V311L197 265.5L98.5 176L54.5 218L1.5 176L16.5 130.5Z',
       color: 'rgba(46, 213, 115, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: ''
+      detailId: 'hxCollege'
     },
     {
       id: 4,
@@ -29,7 +29,7 @@ export const buildingsData = [
       path: 'M21.5 220L259 1.5L419 129L375 246.5L149 459.5L1 330.5L21.5 220Z',
       color: 'rgba(255, 159, 67, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: ''
+      detailId: 'hxCollege'
     },
     {
       id: 5,
@@ -37,7 +37,7 @@ export const buildingsData = [
       path: 'M127.5 47L176.5 1L332.5 132.5L319.5 228L151 386L1 259.5V162.5L52.5 116L159 205.5L176.5 190.5L123 142L127.5 47Z',
       color: 'rgba(165, 94, 234, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: ''
+      detailId: 'mulanlou'
     },
     {
       id: 6,
@@ -45,7 +45,7 @@ export const buildingsData = [
       path: 'M1 227.5L251.5 1.5L370.5 107L366 213L130 429.5L17 334L1 227.5Z',
       color: 'rgba(250, 211, 144, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: ''
+      detailId: 'yan5'
     },
     {
       id: 7,
@@ -61,7 +61,7 @@ export const buildingsData = [
       path: 'M1 76.5L81.5 1.5L184.5 98V121L234 174.5L246 245L167 315L22.5 185L1 76.5Z',
       color: 'rgba(162, 155, 254, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: ''
+      detailId: 'yan3'
     },
     {
       id: 9,
@@ -85,7 +85,7 @@ export const buildingsData = [
       path: 'M1 280L324.5 1.5L570.5 258.5L610.5 332.5L313.5 616L250.5 548L1 280Z',
       color: 'rgba(130, 88, 159, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: ''
+      detailId: 'lgyCanteen'
     },
     {
       id: 12,
@@ -93,7 +93,7 @@ export const buildingsData = [
       path: 'M1.5 159L182 1.5L439 231L459 306.5L283.5 462L40 245L1.5 159Z',
       color: 'rgba(255, 118, 117, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: ''
+      detailId: 'shichengshuyuan'
     },
     {
       id: 13,
@@ -101,7 +101,7 @@ export const buildingsData = [
       path: 'M1 263L306 1L563 238.5L549.5 252L580 317L286 577L56.5 347.5V326L1 263Z',
       color: 'rgba(99, 205, 218, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: ''
+      detailId: 'mlCanteen'
     },
     {
       id: 14,
@@ -109,7 +109,7 @@ export const buildingsData = [
       path: 'M1 150L168.5 1L376.5 175L384.5 305.5L222.5 452L135 375V361L19.5 261L1 150Z',
       color: 'rgba(248, 239, 186, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: ''
+      detailId: 'waiguoyulou'
     },
     {
       id: 15,
@@ -117,7 +117,7 @@ export const buildingsData = [
       path: 'M0.5 257L4.5 111.5L44 77.5L91.5 118V36L132 1L289 125.5C286.597 123.199 305.675 101.816 321 111.5C336.325 121.184 341.768 129.498 345 148.5L351.5 173L616 382.5C608.249 415.639 600.612 439.98 609.5 444L583 576.5L528 625.5L497.5 610L465 635L282 486.5L295.5 348L274.5 367.5C280.992 360.149 214.644 332.958 218.5 317.5C220.873 307.987 236.5 300 236.5 300L190.5 262.5L104.5 340L0.5 257Z',
       color: 'rgba(145, 210, 144, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: 'zhonghe'
+      detailId: 'zhonghelou'
     },
     {
       id: 16,
@@ -125,7 +125,7 @@ export const buildingsData = [
       path: 'M1.5 176L28 1H435L593 111.5L546.5 156L502 340L371.5 465L355 453L365.5 415.5L217 305.5L201.5 320L1.5 176Z',
       color: 'rgba(255, 184, 184, 0.4)',
       labelPosition: { x: 300, y: 200 },
-      detailId: ''
+      detailId: 'wenyuanlou'
     },
     {
       id: 17,
