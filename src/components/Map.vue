@@ -589,28 +589,27 @@ onMounted(() => {
         markers.value.push(marker)
       })
     }).catch(error => {
+      //添加标记
+      locations.value.forEach(location => {
+        const marker = L.marker(location.coords, {
+          icon: categoryIcons[location.category]
+        })
+          .addTo(mapInstance)
+          .on('click', (e) => {
+            // 阻止事件冒泡，防止触发地图的点击事件
+            L.DomEvent.stopPropagation(e)
+            openLocationModal(location, e)
+          })
+
+        // 根据初始类别状态决定是否显示标记
+        if (!selectedCategories.value.includes(location.category)) {
+          marker.removeFrom(mapInstance)
+        }
+
+        markers.value.push(marker)
+      })
       console.error('获取位置数据失败:', error)
       ElMessage.error('获取位置数据失败，请刷新页面重试')
-    })
-
-    //添加标记
-    locations.value.forEach(location => {
-      const marker = L.marker(location.coords, {
-        icon: categoryIcons[location.category]
-      })
-        .addTo(mapInstance)
-        .on('click', (e) => {
-          // 阻止事件冒泡，防止触发地图的点击事件
-          L.DomEvent.stopPropagation(e)
-          openLocationModal(location, e)
-        })
-
-      // 根据初始类别状态决定是否显示标记
-      if (!selectedCategories.value.includes(location.category)) {
-        marker.removeFrom(mapInstance)
-      }
-
-      markers.value.push(marker)
     })
 
     mapInstance.zoomControl.setPosition('bottomright')
