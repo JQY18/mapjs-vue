@@ -29,7 +29,7 @@
         <div v-else-if="searchHistory.length && !searchQuery" class="search-history">
           <div class="history-title">最近搜索</div>
           <div v-for="name in searchHistory" :key="name" class="search-result-item" @mousedown="() => {
-            const location = locations.find(l => l.name === name)
+            const location = locations.value.find(l => l.name === name)
             if (location) navigateToLocation(location)
           }">
             <Icon icon="mdi:history" class="history-icon" />
@@ -156,11 +156,11 @@ watch(
       showRoutePanel.value = true
       if (query.startPoint) {
         startPoint.value = query.startPoint
-        selectedStart.value = locations.find(loc => loc.name === query.startPoint)
+        selectedStart.value = locations.value.find(loc => loc.name === query.startPoint)
       }
       if (query.endPoint) {
         endPoint.value = query.endPoint
-        selectedEnd.value = locations.find(loc => loc.name === query.endPoint)
+        selectedEnd.value = locations.value.find(loc => loc.name === query.endPoint)
       }
     }
   },
@@ -168,14 +168,8 @@ watch(
 )
 
 
-onMounted(() => {
-  request.get('/locations').then(res => {
-    locations = res.data.data
-  })
-})
-
 // 重要地点数据
-const locations = [
+const locations = ref([
   // 食堂
   { name: '兰桂苑', coords: [28.1887, 112.94155], description: '湖南师范大学学生兰桂苑', image: '/images/library.png', detailId: 'lgyCanteen', category: '食堂' },
   { name: '木兰食堂', coords: [28.18940, 112.94155], description: '湖南师范大学木兰食堂', image: '/images/library.png', detailId: 'mlCanteen', category: '食堂' },
@@ -229,7 +223,7 @@ const locations = [
   { name: '江湾体育馆', coords: [28.18805, 112.9435], description: '湖南师范大学江湾体育馆', image: '/images/jyGym.png', detailId: 'jyGym', category: '重要场馆' },
   { name: '国际学术报告厅', coords: [28.18675, 112.94492], description: '湖南师范大学国际学术报告厅', image: '/images/library.png', detailId: 'baogaoting', category: '重要场馆' },
   { name: '田径场', coords: [28.18723, 112.94695], description: '湖南师范大学田径场', image: '/images/byPlayground.png', detailId: 'byPlayground', category: '重要场馆' }
-]
+])
 
 // 在 locations 数组后添加推荐路线数据
 const recommendedRoutes = [
@@ -273,7 +267,7 @@ const INITIAL_ZOOM = 16
 const filteredLocations = computed(() => {
   if (!searchQuery.value) return []
   const query = searchQuery.value.toLowerCase()
-  return locations.filter(location =>
+  return locations.value.filter(location =>
     location.name.toLowerCase().includes(query) ||
     (location.description?.toLowerCase().includes(query) || false)
   ).slice(0, 5)
@@ -308,6 +302,7 @@ const navigateToLocation = (location) => {
 
   // 设置选中的位置
   selectedLocation.value = location
+
 
   // 添加一次性事件监听器，等待地图移动完成
   const onMoveEnd = () => {
@@ -362,14 +357,14 @@ const selectedEnd = ref(null)
 // 添加建议列表计算属性
 const startSuggestions = computed(() => {
   if (!startPoint.value) return []
-  return locations.filter(location =>
+  return locations.value.filter(location =>
     location.name.toLowerCase().includes(startPoint.value.toLowerCase())
   )
 })
 
 const endSuggestions = computed(() => {
   if (!endPoint.value) return []
-  return locations.filter(location =>
+  return locations.value.filter(location =>
     location.name.toLowerCase().includes(endPoint.value.toLowerCase())
   )
 })
@@ -548,7 +543,7 @@ onMounted(() => {
 
   if (mapRef.value) {
     // 计算所有标记点的边界
-    const bounds = L.latLngBounds(locations.map(loc => loc.coords))
+    const bounds = L.latLngBounds(locations.value.map(loc => loc.coords))
 
     // 初始化地图，调整缩放范围
     const mapInstance = L.map(mapRef.value, {
@@ -570,25 +565,53 @@ onMounted(() => {
       showLocationModal.value = false
     })
 
-    // 添加标记
-    locations.forEach(location => {
-      const marker = L.marker(location.coords, {
-        icon: categoryIcons[location.category]
-      })
-        .addTo(mapInstance)
-        .on('click', (e) => {
-          // 阻止事件冒泡，防止触发地图的点击事件
-          L.DomEvent.stopPropagation(e)
-          openLocationModal(location, e)
+    // 获取位置数据
+    request.get('/locations').then(res => {
+      // 使用 .value 赋值给响应式引用
+      locations.value = res.data.data
+      
+      // 在获取数据后添加标记
+      locations.value.forEach(location => {
+        const marker = L.marker(location.coords, {
+          icon: categoryIcons[location.category]
         })
+          .addTo(mapInstance)
+          .on('click', (e) => {
+            L.DomEvent.stopPropagation(e)
+            openLocationModal(location, e)
+          })
 
-      // 根据初始类别状态决定是否显示标记
-      if (!selectedCategories.value.includes(location.category)) {
-        marker.removeFrom(mapInstance)
-      }
+        // 根据初始类别状态决定是否显示标记
+        if (!selectedCategories.value.includes(location.category)) {
+          marker.removeFrom(mapInstance)
+        }
 
-      markers.value.push(marker)
+        markers.value.push(marker)
+      })
+    }).catch(error => {
+      console.error('获取位置数据失败:', error)
+      ElMessage.error('获取位置数据失败，请刷新页面重试')
     })
+
+    // 添加标记
+    // locations.value.forEach(location => {
+    //   const marker = L.marker(location.coords, {
+    //     icon: categoryIcons[location.category]
+    //   })
+    //     .addTo(mapInstance)
+    //     .on('click', (e) => {
+    //       // 阻止事件冒泡，防止触发地图的点击事件
+    //       L.DomEvent.stopPropagation(e)
+    //       openLocationModal(location, e)
+    //     })
+
+    //   // 根据初始类别状态决定是否显示标记
+    //   if (!selectedCategories.value.includes(location.category)) {
+    //     marker.removeFrom(mapInstance)
+    //   }
+
+    //   markers.value.push(marker)
+    // })
 
     mapInstance.zoomControl.setPosition('bottomright')
   }
@@ -632,7 +655,7 @@ const toggleCategory = (category) => {
   }
 
   // 更新地图上的标记显示状态
-  locations.forEach((location, idx) => {
+  locations.value.forEach((location, idx) => {
     const marker = markers.value[idx]
     if (selectedCategories.value.includes(location.category)) {
       if (!map.value.hasLayer(marker)) {
@@ -696,7 +719,7 @@ const selectRecommendedRoute = (route) => {
   clearRoute()
 
   const waypoints = route.points.map(pointName => {
-    const location = locations.find(loc => loc.name === pointName)
+    const location = locations.value.find(loc => loc.name === pointName)
     return location ? L.latLng(location.coords[0], location.coords[1]) : null
   }).filter(point => point !== null)
 
@@ -758,8 +781,8 @@ const selectRecommendedRoute = (route) => {
 
   startPoint.value = route.points[0]
   endPoint.value = route.points[route.points.length - 1]
-  selectedStart.value = locations.find(loc => loc.name === route.points[0])
-  selectedEnd.value = locations.find(loc => loc.name === route.points[route.points.length - 1])
+  selectedStart.value = locations.value.find(loc => loc.name === route.points[0])
+  selectedEnd.value = locations.value.find(loc => loc.name === route.points[route.points.length - 1])
 }
 
 const getRouteColor = (routeId) => {
@@ -891,10 +914,10 @@ const closeLocationModal = () => {
 
 // 添加查找最近位置点的方法
 const findNearestLocation = (latitude, longitude) => {
-  let nearestLocation = locations[0];
-  let minDistance = calculateDistance(latitude, longitude, locations[0].coords[0], locations[0].coords[1]);
+  let nearestLocation = locations.value[0];
+  let minDistance = calculateDistance(latitude, longitude, locations.value[0].coords[0], locations.value[0].coords[1]);
 
-  locations.forEach(location => {
+  locations.value.forEach(location => {
     const distance = calculateDistance(latitude, longitude, location.coords[0], location.coords[1]);
     if (distance < minDistance) {
       minDistance = distance;
