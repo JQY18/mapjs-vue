@@ -818,8 +818,8 @@ const locateUser = () => {
       let { latitude, longitude } = position.coords;
 
       // 给坐标添加偏移量（根据需求调整偏移值）
-      const offsetLatitude = 0.00185 // 纬度偏移量
-      const offsetLongitude = -0.0007; // 经度偏移量
+      const offsetLatitude = 0.00148 // 纬度偏移量
+      const offsetLongitude = -0.0009; // 经度偏移量
 
       latitude += offsetLatitude;
       longitude += offsetLongitude;
