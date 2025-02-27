@@ -404,7 +404,7 @@ onMounted(() => {
 })
 
 // 修改为默认显示调试控制面板
-const showDebugControls = ref(true)
+const showDebugControls = ref(false)
 </script>
 
 <template>
