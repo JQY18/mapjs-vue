@@ -170,6 +170,16 @@ const navigateTo = (tabId) => {
     }
     return
   }
+
+  if(tabId === 'personal'){
+    if (isLoggedIn.value) {
+      const user = JSON.parse(localStorage.getItem('user'))
+      router.push(`/personal/${user.id}`)
+    } else {
+      router.push('/login')
+    }
+    return
+  }
   
   const tab = allTabs.find(t => t.id === tabId)
   if (tab) {

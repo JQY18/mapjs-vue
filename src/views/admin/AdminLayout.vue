@@ -21,7 +21,7 @@
           <span>仪表盘</span>
         </el-menu-item>
         
-        <el-menu-item index="/admin/users">
+        <el-menu-item index="/admin/admins">
           <el-icon><User /></el-icon>
           <span>管理员管理</span>
         </el-menu-item>
@@ -29,6 +29,11 @@
         <el-menu-item index="/admin/locations">
           <el-icon><Location /></el-icon>
           <span>地点管理</span>
+        </el-menu-item>
+
+        <el-menu-item index="/admin/users">
+          <el-icon><User /></el-icon>
+          <span>用户管理</span>
         </el-menu-item>
         
         <el-menu-item index="/admin/comments">

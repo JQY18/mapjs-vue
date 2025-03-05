@@ -92,7 +92,7 @@
       <div class="content-list">
         <div v-for="post in filteredPosts" :key="post.id" class="post-card">
           <div class="post-header">
-            <img :src="post.avatar" class="avatar" />
+            <img :src="post.avatar" class="avatar" @click="openUserProfile(post.userId)"/>
             <div class="user-info">
               <div class="username">{{ post.username }}</div>
               <div class="user-detail">
@@ -408,6 +408,10 @@ const handleCommentSubmit = () => {
   replyTo.value = null;
 };
 
+const openUserProfile = (userId) => {
+  router.push(`/personal/${userId}`);
+};
+
 // 获取用户信息的方法
 const getUserInfo = async (userId) => {
   try {
@@ -433,6 +437,7 @@ const fetchPosts = async () => {
           const userInfo = await getUserInfo(post.userId)
           return {
             id: post.id,
+            userId: post.userId,
             username: userInfo?.nickname || userInfo?.username || `用户${post.userId}`, // 优先使用昵称
             avatar: userInfo?.avatar || "/public/icon/icon.jpeg", // 使用用户头像或默认头像
             time: formatTime(post.createTime),

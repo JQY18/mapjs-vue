@@ -21,7 +21,7 @@
             <span class="label">年龄：</span>
             <span class="age">{{ userInfo.age }}岁</span>
           </div>
-          <div class="edit-btn" @click="showEditDialog = true">
+          <div class="edit-btn" v-if="userInfo.id === currentUserId" @click="showEditDialog = true">
             <Icon icon="mdi:edit" />
           </div>
         </div>
@@ -368,11 +368,16 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import ImageDialog from '../components/ImageDialog.vue'
 import { userApi } from '../api/user'
 import { postApi } from '../api/post'
 import request from '../api/request'
+
+const currentUserId = computed(() => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  return user.id
+})
 // 修改评论相关方法
 const getComments = async (postId) => {
   try {
@@ -459,7 +464,7 @@ const following = ref([])
 const collections = ref([])
 
 const removeCollection = (post: any) => {
-  userInfo.value.collections--
+  // userInfo.value.collections--
   const index = collections.value.findIndex(p => p.id === post.id)
   if (index > -1) {
     collections.value.splice(index, 1)
@@ -577,10 +582,13 @@ const toggleCollect = async (post) => {
     
     if (data.code === 1) {
       post.isCollected = !post.isCollected;
-      if(post.isCollected){
-        userInfo.value.collections++
-      }else{
-        userInfo.value.collections--
+      if(route.params.id == currentUserId.value){
+        if(post.isCollected){
+          userInfo.value.collections++
+        }else{
+          userInfo.value.collections--
+          removeCollection(post)
+        }
       }
     }
   } catch (error) {
@@ -644,10 +652,13 @@ const toggleReplies = (comment: Comment) => {
   comment.showReplies = !comment.showReplies
 }
 
+const route = useRoute()
 // 获取用户信息
 const fetchUserInfo = async () => {
   try {
-    const { data } = await userApi.getUserInfo()
+    const userId = route.params.id
+    // window.alert(userId)
+    const { data } = await userApi.getUserInfo(userId)
     if (data.code === 1) {
       userInfo.value = {
         username: data.data.username,  // 用户名
@@ -670,7 +681,8 @@ const fetchUserInfo = async () => {
 // 获取用户动态
 const fetchUserPosts = async () => {
   try {
-    const { data } = await userApi.getCurrentUserPosts()
+    const userId = route.params.id
+    const { data } = await userApi.getCurrentUserPosts(userId)
     if (data.code === 1) {
       // 更新动态数量
       userInfo.value.posts = data.data.length
@@ -733,7 +745,8 @@ const formatTime = (timestamp) => {
 // 获取收藏列表
 const fetchCollections = async () => {
   try {
-    const { data } = await userApi.getCurrentUserCollections()
+    const userId = route.params.id
+    const { data } = await userApi.getCurrentUserCollections(userId)
     if (data.code === 1) {
       collections.value = data.data;
     }

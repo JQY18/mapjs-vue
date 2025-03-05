@@ -21,19 +21,23 @@ export const userApi = {
   },
 
   // 获取当前登录用户的动态列表
-  getCurrentUserPosts() {
-    const user = JSON.parse(localStorage.getItem('user'))
+  getCurrentUserPosts(userId) {
+    // const user = JSON.parse(localStorage.getItem('user'))
     return request.get('/post/all', {
       params: {
-        userId: user.id,
-        currentUserId: user.id
+        userId: userId
       }
     })
   },
 
   // 获取当前登录用户的收藏列表
-  getCurrentUserCollections() {
-    return request.get('/post/current/collections')
+  getCurrentUserCollections(userId) {
+    // const user = JSON.parse(localStorage.getItem('user'))
+    return request.get('/post/current/collections',{
+      params: {
+        userId: userId
+      }
+    })
   },
 
   // 获取当前登录用户的粉丝列表

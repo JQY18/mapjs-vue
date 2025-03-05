@@ -32,7 +32,7 @@ const router = createRouter({
           component: CircleView
         },
         {
-          path: 'personal',
+          path: 'personal/:id',
           name: 'personal',
           component: PersonalView,
           meta: { requiresAuth: true }

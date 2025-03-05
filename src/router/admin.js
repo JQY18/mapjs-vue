@@ -27,6 +27,11 @@ const adminRoutes = [
         component: () => import('../views/admin/LocationDetailEditView.vue')
       },
       {
+        path: 'admins',
+        name: 'AdminManagement',
+        component: () => import('../views/admin/AdminManagementView.vue')
+      },
+      {
         path: 'users',
         name: 'UserManagement',
         component: () => import('../views/admin/UserManagementView.vue')
