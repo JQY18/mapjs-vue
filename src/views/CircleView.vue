@@ -442,7 +442,7 @@ const fetchPosts = async () => {
             likes: post.likes,
             comments: post.comments,
             isLiked: post.isLiked,
-            isCollected: false,
+            isCollected: post.isCollected,
             // 可以添加其他用户信息
             userSchool: userInfo?.school,
             userGender: userInfo?.gender
@@ -520,9 +520,9 @@ const toggleCollect = async (post) => {
     const { data } = post.isCollected
       ? await postApi.uncollectPost(post.id)
       : await postApi.collectPost(post.id);
-
-    if (data.code === 200) {
-      post.isCollected = data.data.isCollected;
+    
+    if (data.code === 1) {
+      post.isCollected = !post.isCollected;
     }
   } catch (error) {
     console.error("收藏操作失败:", error);

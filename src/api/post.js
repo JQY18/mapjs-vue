@@ -90,7 +90,7 @@ export const postApi = {
 
   // 收藏帖子
   collectPost(postId) {
-    return request.post(`/api/post/${postId}/collect`)
+    return request.post(`/post/${postId}/collect`)
     // 返回格式：
     // {
     //   code: 1,
@@ -103,7 +103,7 @@ export const postApi = {
 
   // 取消收藏帖子
   uncollectPost(postId) {
-    return request.delete(`/api/post/${postId}/collect`)
+    return request.post(`/post/${postId}/collect`)
     // 返回格式同 collectPost
   },
 
