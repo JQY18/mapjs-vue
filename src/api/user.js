@@ -33,7 +33,7 @@ export const userApi = {
 
   // 获取当前登录用户的收藏列表
   getCurrentUserCollections() {
-    return request.get('/api/user/current/collections')
+    return request.get('/post/current/collections')
   },
 
   // 获取当前登录用户的粉丝列表

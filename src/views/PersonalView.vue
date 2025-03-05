@@ -152,7 +152,7 @@
               <img :src="post.avatar" class="avatar" />
               <div class="user-info">
                 <div class="username">{{ post.username }}</div>
-                <div class="post-time">{{ post.time }}</div>
+                <div class="post-time">{{ formatTime(post.createTime) }}</div>
               </div>
             </div>
             <div class="post-content">{{ post.content }}</div>
@@ -450,44 +450,13 @@ const userInfo = ref({})
 const userPosts = ref([])
 
 // 粉丝数据
-const followers = ref([
-  {
-    id: 1,
-    name: '张同学',
-    avatar: '/avatars/default.png',
-    bio: '师大计算机系学生',
-    isFollowing: true
-  },
-  // ... 更多粉丝
-])
+const followers = ref([])
 
 // 关注数据
-const following = ref([
-  {
-    id: 1,
-    name: '李同学',
-    avatar: '/avatars/default.png',
-    bio: '热爱摄影的师大学子',
-    isFollowing: true
-  },
-  // ... 更多关注
-])
+const following = ref([])
 
 // 添加收藏数据
-const collections = ref([
-  {
-    id: 1,
-    username: '校园达人',
-    avatar: '/public/icon/icon.jpeg',
-    content: '逸夫图书馆是一座现代化的多功能图书馆，建筑面积达50,000平方米...',
-    images: ['/public/icon/icon.jpeg'],
-    time: '2024-03-15',
-    likes: 45,
-    comments: 12,
-    isLiked: false,
-    isCollected: true
-  }
-])
+const collections = ref([])
 
 const removeCollection = (post: any) => {
   userInfo.value.collections--
@@ -594,19 +563,30 @@ const isLoggedIn = computed(() => {
   return !!localStorage.getItem('user')
 })
 
-const toggleCollect = (post: any) => {
-  post.isCollected = !post.isCollected
-  if (post.isCollected) {
-    userInfo.value.collections++
-    collections.value.unshift(post)
-  } else {
-    userInfo.value.collections--
-    const index = collections.value.findIndex(p => p.id === post.id)
-    if (index > -1) {
-      collections.value.splice(index, 1)
-    }
+// 修改收藏方法
+const toggleCollect = async (post) => {
+  if (!isLoggedIn.value) {
+    router.push("/login");
+    return;
   }
-}
+
+  try {
+    const { data } = post.isCollected
+      ? await postApi.uncollectPost(post.id)
+      : await postApi.collectPost(post.id);
+    
+    if (data.code === 1) {
+      post.isCollected = !post.isCollected;
+      if(post.isCollected){
+        userInfo.value.collections++
+      }else{
+        userInfo.value.collections--
+      }
+    }
+  } catch (error) {
+    console.error("收藏操作失败:", error);
+  }
+};
 
 const handleInputClick = () => {
   if (!isLoggedIn.value) {
@@ -679,7 +659,7 @@ const fetchUserInfo = async () => {
         posts: 0,
         followers: 0,
         following: 0,
-        collections: 0
+        collections: data.data.collections
       }
     }
   } catch (error) {
@@ -710,7 +690,7 @@ const fetchUserPosts = async () => {
           likes: post.likes || 0,        // 使用后端返回的点赞数
           comments: post.comments || 0,   // 使用后端返回的评论数
           isLiked: post.isLiked || false, // 使用后端返回的点赞状态
-          isCollected: false
+          isCollected: post.isCollected || false
         }
       })
 
@@ -754,8 +734,8 @@ const formatTime = (timestamp) => {
 const fetchCollections = async () => {
   try {
     const { data } = await userApi.getCurrentUserCollections()
-    if (data.code === 0) {
-      collections.value = data.data.posts
+    if (data.code === 1) {
+      collections.value = data.data;
     }
   } catch (error) {
     console.error('获取收藏列表失败:', error)
