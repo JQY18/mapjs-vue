@@ -110,6 +110,20 @@
                   <span>添加管理员</span>
                 </el-button>
               </div>
+              
+              <!-- 地点内的用户评论 -->
+              <div class="button-row">
+                <el-button
+                  type="success"
+                  size="small"
+                  @click="handleEditDetailComments(row)"
+                  class="detail-button"
+                >
+                  <el-icon><Document /></el-icon>
+                  <span>评论信息</span>
+                </el-button>
+              </div>
+
             </div>
           </template>
         </el-table-column>
@@ -332,6 +346,18 @@ const router = useRouter();
 const handleEditDetail = (row) => {
   router.push({
     name: "LocationDetailEdit",
+    params: {
+      detailId: row.detailId,
+    },
+    query: {
+      name: row.name,
+    },
+  });
+};
+
+const handleEditDetailComments = (row) => {
+  router.push({
+    name: "LocationDetailComments",
     params: {
       detailId: row.detailId,
     },

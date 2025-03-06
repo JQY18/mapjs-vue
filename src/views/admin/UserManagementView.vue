@@ -90,7 +90,7 @@ import request from '../../api/request';
 const users = ref([]);
 const loading = ref(false);
 const currentPage = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(5);
 const total = ref(0);
 
 // 搜索表单数据
