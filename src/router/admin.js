@@ -45,7 +45,12 @@ const adminRoutes = [
         path: 'comments',
         name: 'CommentManagement',
         component: () => import('../views/admin/CommentManagementView.vue')
-      }
+      },
+      {
+        path: 'notices',
+        name: 'NoticeManagement',
+        component: () => import('../views/admin/NoticeManagementView.vue')
+      },
     ]
   }
 ]

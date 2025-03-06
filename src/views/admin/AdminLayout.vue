@@ -22,7 +22,7 @@
         </el-menu-item>
         
         <el-menu-item index="/admin/admins">
-          <el-icon><User /></el-icon>
+          <el-icon><Avatar /></el-icon>
           <span>管理员管理</span>
         </el-menu-item>
         
@@ -36,10 +36,16 @@
           <span>用户管理</span>
         </el-menu-item>
         
-        <el-menu-item index="/admin/comments">
+        <el-menu-item index="/admin/notices">
+          <el-icon><Notification /></el-icon>
+          <span>公告管理</span>
+        </el-menu-item>
+
+
+        <!-- <el-menu-item index="/admin/comments">
           <el-icon><ChatDotRound /></el-icon>
           <span>评论管理</span>
-        </el-menu-item>
+        </el-menu-item> -->
         
       </el-menu>
 
@@ -157,7 +163,9 @@ import {
   ChatDotRound,
   Expand,
   Fold,
-  CaretBottom
+  CaretBottom,
+  Notification,
+  Avatar
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { adminApi } from '../../api/admin'
@@ -180,8 +188,10 @@ const activeMenu = computed(() => route.path)
 const currentRoute = computed(() => {
   const routeMap = {
     '/admin': '仪表盘',
+    '/admin/admins': '管理员管理',
     '/admin/users': '用户管理',
     '/admin/locations': '地点管理',
+    '/admin/notices': '公告管理',
     '/admin/comments': '评论管理'
   }
   return routeMap[route.path] || '仪表盘'

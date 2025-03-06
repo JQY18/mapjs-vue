@@ -17,6 +17,11 @@ const router = createRouter({
       component: HomeView,
       children: [
         {
+          path: 'notice',
+          name: 'notice',
+          component: () => import('../views/NoticeView.vue')
+        },
+        {
           path: '',
           name: 'map',
           component: Map

@@ -27,6 +27,7 @@
         </div>
       </div>
       <div class="user-stats">
+        <!-- 动态 -->
         <div 
           class="stat-item"
           :class="{ active: currentTab === 'posts' }"
@@ -35,6 +36,8 @@
           <div class="stat-value">{{ userInfo.posts }}</div>
           <div class="stat-label">动态</div>
         </div>
+        
+        <!-- 关注 -->
         <div 
           class="stat-item"
           :class="{ active: currentTab === 'followers' }"
@@ -43,6 +46,8 @@
           <div class="stat-value">{{ userInfo.followers }}</div>
           <div class="stat-label">粉丝</div>
         </div>
+        
+        <!-- 粉丝-->
         <div 
           class="stat-item"
           :class="{ active: currentTab === 'following' }"
@@ -51,6 +56,8 @@
           <div class="stat-value">{{ userInfo.following }}</div>
           <div class="stat-label">关注</div>
         </div>
+        
+        <!-- 收藏 -->
         <div 
           class="stat-item"
           :class="{ active: currentTab === 'collections' }"

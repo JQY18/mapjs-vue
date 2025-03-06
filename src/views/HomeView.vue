@@ -106,7 +106,8 @@ const allTabs = [
   { id: '3dmap-home', name: '3D地图', path: '/3dmap-home' },
   { id: 'circle', name: '师大圈', path: '/circle' },
   { id: 'facilities', name: '生活设施', path: '#' },
-  { id: 'personal', name: '我的', path: '/personal' }
+  { id: 'personal', name: '我的', path: '/personal' },
+  { id: 'notice',name: '公告', path: '/notice' }
 ]
 
 const showLogoutConfirm = ref(false)
