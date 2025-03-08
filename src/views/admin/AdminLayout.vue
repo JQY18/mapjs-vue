@@ -216,7 +216,10 @@ onMounted(() => {
       } else{
         adminLevel.value = "普通管理员"
       }
+      // router.push('/admin/dashboard')
     }
+  }).catch(() => {
+    router.push('/admin/login')
   })
 })
 

@@ -10,11 +10,12 @@ const adminRoutes = [
     path: '/admin',
     name: 'AdminLayout',
     component: () => import('../views/admin/AdminLayout.vue'),
+    redirect: '/admin/dashboard',
     children: [
       {
         path: 'dashboard',
         name: 'AdminDashboard',
-        component: () => import('../views/admin/DashboardView.vue')
+        component: () => import('../views/admin/DashboardView.vue'),
       },
       {
         path: 'locations',
