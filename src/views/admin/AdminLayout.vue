@@ -36,10 +36,16 @@
           <span>用户管理</span>
         </el-menu-item>
         
+        <el-menu-item index="/admin/posts">
+          <el-icon><Postcard /></el-icon>
+          <span>帖子管理</span>
+        </el-menu-item>
+        
         <el-menu-item index="/admin/notices">
           <el-icon><Notification /></el-icon>
           <span>公告管理</span>
-        </el-menu-item>
+        </el-menu-item>        
+        
 
 
         <!-- <el-menu-item index="/admin/comments">
@@ -165,7 +171,8 @@ import {
   Fold,
   CaretBottom,
   Notification,
-  Avatar
+  Avatar,
+  Postcard
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { adminApi } from '../../api/admin'
@@ -192,6 +199,7 @@ const currentRoute = computed(() => {
     '/admin/users': '用户管理',
     '/admin/locations': '地点管理',
     '/admin/notices': '公告管理',
+    '/admin/posts': '帖子管理',
     '/admin/comments': '评论管理'
   }
   return routeMap[route.path] || '仪表盘'
