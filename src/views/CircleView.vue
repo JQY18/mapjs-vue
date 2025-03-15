@@ -852,6 +852,12 @@ const clearSearch = () => {
   margin-top: 6px;
 }
 
+.comment-time {
+  font-size: 12px;
+  color: #999;
+  margin-top: 6px;
+}
+
 .post-content {
   margin-bottom: 12px;
   line-height: 1.5;
