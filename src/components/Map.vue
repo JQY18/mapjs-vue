@@ -13,6 +13,15 @@
         <Icon icon="ic:baseline-search" class="search-icon" />
         <input type="text" placeholder="搜索校园地点..." v-model="searchQuery" @focus="showSearchResults = true"
           @blur="handleSearchBlur" />
+        <!-- 添加麦克风按钮 -->
+        <button 
+          class="mic-button" 
+          @click.stop="toggleVoiceRecognition"
+          :class="{ 'recording': isRecording }"
+          :disabled="isVoiceDisabled"
+        >
+          <Icon icon="mdi:microphone" class="mic-icon" />
+        </button>
       </div>
       <div class="search-results" v-if="showSearchResults">
         <div v-if="filteredLocations.length">
@@ -1093,6 +1102,113 @@ style.textContent = `
 `
 document.head.appendChild(style)
 
+// 新增语音识别相关状态
+const isRecording = ref(false)
+const isVoiceDisabled = ref(false)
+const recognition = ref(null)
+
+// 语音识别初始化
+onMounted(() => {
+  if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    recognition.value = new SpeechRecognition()
+    recognition.value.continuous = false
+    recognition.value.lang = 'zh-CN'
+    recognition.value.interimResults = false
+
+    recognition.value.onresult = (event) => {
+      const rawTranscript = event.results[0][0].transcript
+      console.log('原始语音识别结果:', rawTranscript)
+      
+      // 处理语音识别结果，提取关键词
+      const processedText = extractKeywords(rawTranscript)
+      searchQuery.value = processedText
+      showSearchResults.value = true
+      
+      // 如果有匹配的地点，自动选择第一个
+      if (filteredLocations.value.length === 1) {
+        setTimeout(() => {
+          navigateToLocation(filteredLocations.value[0])
+        }, 500)
+      }
+    }
+
+    recognition.value.onerror = (event) => {
+      console.error('语音识别错误:', event.error)
+      ElMessage.error('识别失败，请重试')
+    }
+
+    recognition.value.onend = () => {
+      isRecording.value = false
+    }
+  } else {
+    isVoiceDisabled.value = true
+    ElMessage.warning('当前浏览器不支持语音识别')
+  }
+})
+
+// 提取关键词函数
+const extractKeywords = (text) => {
+  // 1. 去除标点符号
+  let processed = text.replace(/[.,，。！？!?;；：:""''（）()【】[\]]/g, '')
+  
+  // 2. 去除常见的无关词语
+  const stopWords = ['我要', '我想', '我需要', '去', '到', '前往', '找', '搜索', 
+                     '帮我', '请', '麻烦', '查询', '查找', '在哪', '怎么走']
+  
+  stopWords.forEach(word => {
+    processed = processed.replace(new RegExp(word, 'g'), '')
+  })
+  
+  // 3. 尝试与地点列表匹配
+  const potentialPlaces = []
+  locations.value.forEach(location => {
+    if (processed.includes(location.name)) {
+      potentialPlaces.push(location.name)
+    }
+  })
+  
+  // 如果找到了匹配的地点名称，使用最长的那个
+  if (potentialPlaces.length > 0) {
+    return potentialPlaces.sort((a, b) => b.length - a.length)[0]
+  }
+  
+  // 4. 如果没有直接匹配，返回处理过的文本
+  console.log('处理后的关键词:', processed)
+  return processed.trim()
+}
+
+// 语音识别开关
+const toggleVoiceRecognition = () => {
+  if (!isRecording.value) {
+    startRecognition()
+  } else {
+    stopRecognition()
+  }
+}
+
+const startRecognition = () => {
+  if (recognition.value) {
+    isRecording.value = true
+    recognition.value.start()
+    ElMessage.info('请说出您想查找的地点...')
+  }
+}
+
+const stopRecognition = () => {
+  if (recognition.value) {
+    isRecording.value = false
+    recognition.value.stop()
+  }
+}
+
+// 组件卸载时清理
+onUnmounted(() => {
+  if (recognition.value) {
+    recognition.value.stop()
+  }
+})
+
 </script>
 
 <style scoped>
@@ -1166,6 +1282,8 @@ document.head.appendChild(style)
 
 .search-box {
   position: relative;
+  display: flex;
+  align-items: center;
   width: 100%;
 }
 
@@ -1175,11 +1293,12 @@ document.head.appendChild(style)
   top: 50%;
   transform: translateY(-50%);
   color: #666;
+  font-size: 20px;
 }
 
 input {
   width: 100%;
-  padding: 12px 12px 12px 40px;
+  padding: 12px 40px 12px 40px;  /* 左右都留出40px的空间 */
   border: none;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -1192,6 +1311,63 @@ input:focus {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.mic-button {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+  width: 36px;  /* 固定宽度 */
+  height: 36px;  /* 固定高度 */
+}
+
+.mic-button:hover {
+  color: #3388ff;
+  background-color: rgba(51, 136, 255, 0.1);
+}
+
+.mic-button.recording {
+  color: #ff4444;
+  background-color: rgba(255, 68, 68, 0.1);
+}
+
+.mic-button.recording .mic-icon {
+  animation: pulse-icon 1.5s infinite;
+}
+
+.mic-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: none;
+}
+
+.mic-icon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes pulse-icon {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 
 .search-results {
   max-height: 300px;
