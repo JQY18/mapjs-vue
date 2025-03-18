@@ -107,7 +107,9 @@ const allTabs = [
   { id: 'circle', name: '师大圈', path: '/circle' },
   { id: 'facilities', name: '生活设施', path: '#' },
   { id: 'personal', name: '我的', path: '/personal' },
-  { id: 'notice',name: '公告', path: '/notice' }
+  { id: 'notice',name: '公告', path: '/notice' },
+  { id: 'message',name: '消息', path: '/message' },
+  { id: 'mail',name: '信箱', path: '/mail' }
 ]
 
 const showLogoutConfirm = ref(false)

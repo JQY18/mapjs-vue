@@ -22,6 +22,16 @@ const router = createRouter({
           component: () => import('../views/NoticeView.vue')
         },
         {
+          path: 'message',
+          name: 'message',
+          component: () => import('../views/MessageView.vue')
+        },
+        {
+          path: 'mail',
+          name: 'mail',
+          component: () => import('../views/MailView.vue')
+        },
+        {
           path: '',
           name: 'map',
           component: Map

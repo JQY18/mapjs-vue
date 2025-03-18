@@ -30,7 +30,7 @@
           <div class="history-title">最近搜索</div>
           <div v-for="name in searchHistory" :key="name" class="search-result-item" @mousedown="() => {
             const location = locations.value.find(l => l.name === name)
-            if (location) navigateToLocation(location)
+              if (location) navigateToLocation(location)
           }">
             <Icon icon="mdi:history" class="history-icon" />
             <span>{{ name }}</span>
@@ -435,7 +435,7 @@ const planRoute = () => {
         // 自定义成本因子，使路线更倾向于直线
         weight_name: 'distance',  // 使用距离作为权重
         weight_factor: 1.0,       // 距离权重因子
-      }
+    }
     }),
     lineOptions: {
       styles: [{
@@ -544,7 +544,7 @@ onMounted(() => {
   if (mapRef.value) {
     // 计算所有标记点的边界
     const bounds = L.latLngBounds(locations.value.map(loc => loc.coords))
-
+    
     // 初始化地图，调整缩放范围
     const mapInstance = L.map(mapRef.value, {
       attributionControl: false,
@@ -553,7 +553,7 @@ onMounted(() => {
       maxBounds: bounds.pad(0.1),
       maxBoundsViscosity: 0.8
     }).setView(HNNU_CENTER, INITIAL_ZOOM)
-
+    
     map.value = mapInstance
 
     // 添加图层
@@ -572,10 +572,10 @@ onMounted(() => {
       
       // 在获取数据后添加标记
       locations.value.forEach(location => {
-        const marker = L.marker(location.coords, {
-          icon: categoryIcons[location.category]
-        })
-          .addTo(mapInstance)
+      const marker = L.marker(location.coords, {
+        icon: categoryIcons[location.category]
+      })
+        .addTo(mapInstance)
           .on('click', (e) => {
             L.DomEvent.stopPropagation(e)
             openLocationModal(location, e)
@@ -586,7 +586,7 @@ onMounted(() => {
           marker.removeFrom(mapInstance)
         }
 
-        markers.value.push(marker)
+      markers.value.push(marker)
       })
     }).catch(error => {
       //添加标记
@@ -652,7 +652,7 @@ const toggleCategory = (category) => {
     // 否则只显示选中的分类
     selectedCategories.value = [category]
   }
-
+  
   // 更新地图上的标记显示状态
   locations.value.forEach((location, idx) => {
     const marker = markers.value[idx]
