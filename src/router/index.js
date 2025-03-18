@@ -1,11 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import Map from '../components/Map.vue'
-import LocationDetail from '../views/LocationDetail.vue'
-import CircleView from '../views/CircleView.vue'
-import PersonalView from '../views/PersonalView.vue'
-import LoginView from '../views/LoginView.vue'
-import RegisterView from '../views/RegisterView.vue'
 import adminRoutes from './admin'
 
 const router = createRouter({
@@ -14,7 +7,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: () => import('../views/HomeView.vue'),
       children: [
         {
           path: 'notice',
@@ -34,33 +27,33 @@ const router = createRouter({
         {
           path: '',
           name: 'map',
-          component: Map
+          component: () => import('../components/Map.vue')
         },
         {
           path: 'location/:id',
           name: 'LocationDetail',
-          component: LocationDetail
+          component: () => import('../views/LocationDetail.vue')
         },
         {
           path: 'circle',
           name: 'circle',
-          component: CircleView
+          component: () => import('../views/CircleView.vue')
         },
         {
           path: 'personal/:id',
           name: 'personal',
-          component: PersonalView,
+          component: () => import('../views/PersonalView.vue'),
           meta: { requiresAuth: true }
         },
         {
           path: 'login',
           name: 'login',
-          component: LoginView
+          component: () => import('../views/LoginView.vue')
         },
         {
           path: '/register',
           name: 'register',
-          component: RegisterView
+          component: () => import('../views/RegisterView.vue')
         },
         {
           path: '/3dmap',
