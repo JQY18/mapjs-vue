@@ -63,7 +63,7 @@
       <div class="chat-header">
         <div class="chat-title">
           <span>{{ currentChat.name }}</span>
-          <span class="online-status" v-if="chatType === 'private'">
+          <span class="online-status" v-if="currentChat.type === 'private'">
             <el-tag
               size="small"
               :type="currentChat.online ? 'success' : 'info'"
@@ -79,7 +79,7 @@
         </div>
         <div class="chat-actions">
           <el-button
-            v-if="chatType === 'group'"
+            v-if="currentChat.type === 'group'"
             size="small"
             @click="showGroupMembers"
           >

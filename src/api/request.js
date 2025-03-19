@@ -12,9 +12,9 @@ const request = axios.create({
 request.interceptors.request.use(
   config => {
     // 从 localStorage 获取 token
-    const user = JSON.parse(localStorage.getItem('user'))
-    if (user) {
-      config.headers.Authorization = `Bearer ${user.id}`
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },

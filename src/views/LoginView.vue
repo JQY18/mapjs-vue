@@ -13,7 +13,14 @@
               <Icon icon="mdi:account" class="input-icon" />
               用户名
             </label>
-            <input id="username" v-model="username" type="text" required placeholder="请输入用户名" class="input-with-icon" />
+            <input
+              id="username"
+              v-model="username"
+              type="text"
+              required
+              placeholder="请输入用户名"
+              class="input-with-icon"
+            />
           </div>
 
           <div class="form-group">
@@ -21,8 +28,14 @@
               <Icon icon="mdi:lock" class="input-icon" />
               密码
             </label>
-            <input id="password" v-model="password" type="password" required placeholder="请输入密码"
-              class="input-with-icon" />
+            <input
+              id="password"
+              v-model="password"
+              type="password"
+              required
+              placeholder="请输入密码"
+              class="input-with-icon"
+            />
           </div>
 
           <div class="error-message" v-if="errorMessage">
@@ -32,14 +45,19 @@
 
           <button type="submit" :disabled="isLoading" class="submit-button">
             <span class="button-content">
-              <Icon :icon="isLoading ? 'mdi:loading' : 'mdi:login'" class="button-icon"
-                :class="{ 'spin': isLoading }" />
-              {{ isLoading ? '登录中...' : '立即登录' }}
+              <Icon
+                :icon="isLoading ? 'mdi:loading' : 'mdi:login'"
+                class="button-icon"
+                :class="{ spin: isLoading }"
+              />
+              {{ isLoading ? "登录中..." : "立即登录" }}
             </span>
           </button>
 
           <div class="register-link">
-            还没有账号？<router-link to="/register" class="link">去注册</router-link>
+            还没有账号？<router-link to="/register" class="link"
+              >去注册</router-link
+            >
           </div>
         </form>
       </div>
@@ -55,52 +73,58 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { userApi } from '../api/user'
-import { Icon } from '@iconify/vue'
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { userApi } from "../api/user";
+import { Icon } from "@iconify/vue";
 
-const router = useRouter()
-const username = ref('')
-const password = ref('')
-const errorMessage = ref('')
-const isLoading = ref(false)
+const router = useRouter();
+const username = ref("");
+const password = ref("");
+const errorMessage = ref("");
+const isLoading = ref(false);
 
 const handleSubmit = async () => {
-  if (isLoading.value) return
+  if (isLoading.value) return;
 
-  errorMessage.value = ''
-  isLoading.value = true
+  errorMessage.value = "";
+  isLoading.value = true;
 
   try {
     const { data } = await userApi.login({
       username: username.value,
-      password: password.value
-    })
+      password: password.value,
+    });
 
     if (data.code === 1) {
       // 登录成功，保存用户ID
-      localStorage.setItem('user', JSON.stringify({
-        id: data.data  // 存储返回的用户ID
-      }))
+      //保存jwt token到localStorage中
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: data.data.userId, // 存储返回的用户ID
+        })
+      );
+
+      localStorage.setItem("token", data.data.token);
 
       // 跳转到主页并刷新
       router.push("/").then(() => {
-        window.location.reload()
-      })
+        window.location.reload();
+      });
     } else {
-      errorMessage.value = data.msg || '登录失败，请检查用户名和密码'
+      errorMessage.value = data.msg || "登录失败，请检查用户名和密码";
     }
   } catch (error) {
-    errorMessage.value = '登录失败，请检查网络连接'
+    errorMessage.value = "登录失败，请检查网络连接";
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 const goToAdminLogin = () => {
-  router.push('/admin/login')
-}
+  router.push("/admin/login");
+};
 </script>
 
 <style scoped>
