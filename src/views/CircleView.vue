@@ -104,7 +104,7 @@
           </div>
           <div class="post-content">{{ post.content }}</div>
           <div class="post-actions">
-            <div
+            <div 
               class="action-item"
               :class="{ liked: post.isLiked }"
               @click="toggleLike(post)"
@@ -117,14 +117,14 @@
             <div class="action-item" @click="openComments(post)">
               <Icon icon="mdi:comment-outline" /> {{ post.comments }}
             </div>
-            <div
+            <div 
               v-if="post.images?.length"
               class="action-item"
               @click="openImageViewer(post.images)"
             >
               <Icon icon="mdi:image" /> {{ post.images.length }}
             </div>
-            <div
+            <div 
               class="action-item"
               :class="{ collected: post.isCollected }"
               @click="toggleCollect(post)"
@@ -140,7 +140,7 @@
     </div>
 
     <!-- 遮罩层 -->
-    <div
+    <div 
       class="drawer-overlay"
       :class="{ show: showComments }"
       @click="showComments = false"
@@ -167,7 +167,7 @@
             <div class="comment-footer">
               <span class="comment-time">{{ comment.time }}</span>
               <div class="comment-actions">
-                <div
+                <div 
                   class="comment-action"
                   :class="{ liked: comment.isLiked }"
                   @click="toggleCommentLike(comment)"
@@ -182,7 +182,7 @@
                 <div class="comment-action" @click="replyToComment(comment)">
                   <Icon icon="mdi:reply" /> 回复
                 </div>
-                <div
+                <div 
                   v-if="comment.replies?.length"
                   class="comment-action"
                   @click="toggleComment(comment)"
@@ -203,8 +203,8 @@
               </div>
             </div>
             <!-- 回复列表 -->
-            <div
-              class="replies"
+            <div 
+              class="replies" 
               v-if="comment.replies?.length && comment.showReplies"
               :class="{ expanded: comment.showReplies }"
             >
@@ -226,7 +226,7 @@
                   <div class="reply-footer">
                     <span class="reply-time">{{ reply.time }}</span>
                     <div class="comment-actions">
-                      <div
+                      <div 
                         class="comment-action"
                         @click="replyToComment(comment, reply)"
                       >
@@ -246,16 +246,16 @@
         <div v-if="replyTo" class="cancel-reply" @click="cancelReply">
           <Icon icon="mdi:close" /> 取消回复
         </div>
-
-        <input
-          type="text"
+        
+        <input 
+          type="text" 
           v-model="newComment"
           :placeholder="getInputPlaceholder()"
           @click="handleInputClick"
           @keyup.enter="handleCommentSubmit"
         />
-        <button
-          class="submit-btn"
+        <button 
+          class="submit-btn" 
           :disabled="!newComment.trim() || !isLoggedIn"
           @click="handleCommentSubmit"
         >
@@ -745,7 +745,7 @@ const submitPost = async () => {
 
     if (data.code === 1) {
       // 发布成功后刷新帖子列表
-      fetchPosts()
+  fetchPosts()
       // 清空表单
       newPost.value = {
         content: '',

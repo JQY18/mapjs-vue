@@ -3,7 +3,13 @@
     <!-- 左侧会话列表 -->
     <div class="conversation-list">
       <div class="list-header">
-        <h3>消息列表</h3>
+        <div class="header-top">
+          <h3>消息列表</h3>
+          <div class="create-group-btn" @click="showCreateGroupDialog = true">
+            <Icon icon="mdi:account-group-outline" />
+            创建群聊
+          </div>
+        </div>
         <el-radio-group v-model="chatType" size="small">
           <el-radio-button label="all">全部</el-radio-button>
           <el-radio-button label="private">私聊</el-radio-button>
@@ -35,8 +41,12 @@
             <div class="chat-header">
               <div class="chat-title-wrapper">
                 <span class="chat-name">{{ chat.name }}</span>
-                <el-tag size="small" :type="chat.type === 'private' ? 'info' : 'warning'" class="chat-type-tag">
-                  {{ chat.type === 'private' ? '私聊' : '群聊' }}
+                <el-tag
+                  size="small"
+                  :type="chat.type === 'private' ? 'info' : 'warning'"
+                  class="chat-type-tag"
+                >
+                  {{ chat.type === "private" ? "私聊" : "群聊" }}
                 </el-tag>
               </div>
               <span class="chat-time">{{
@@ -78,13 +88,37 @@
           </span>
         </div>
         <div class="chat-actions">
-          <el-button
-            v-if="currentChat.type === 'group'"
-            size="small"
-            @click="showGroupMembers"
-          >
-            成员列表
-          </el-button>
+          <template v-if="currentChat.type === 'private'">
+            <el-popconfirm
+              title="确定要删除该好友吗？"
+              @confirm="handleDeleteFriend"
+              confirm-button-text="确定"
+              cancel-button-text="取消"
+            >
+              <template #reference>
+                <el-button size="small" type="danger">删除好友</el-button>
+              </template>
+            </el-popconfirm>
+          </template>
+          <template v-else>
+            <el-button size="small" @click="showGroupMembers">
+              成员列表
+            </el-button>
+            <el-popconfirm
+              :title="
+                isGroupOwner ? '确定要解散该群聊吗？' : '确定要退出该群聊吗？'
+              "
+              @confirm="handleGroupAction"
+              confirm-button-text="确定"
+              cancel-button-text="取消"
+            >
+              <template #reference>
+                <el-button size="small" type="danger">
+                  {{ isGroupOwner ? "解散群聊" : "退出群聊" }}
+                </el-button>
+              </template>
+            </el-popconfirm>
+          </template>
         </div>
       </div>
 
@@ -116,14 +150,14 @@
       <!-- 输入区域 -->
       <div class="input-area">
         <div class="toolbar">
-          <el-button size="small" icon="Picture" @click="handleUploadImage"
-            >图片</el-button
+          <el-button size="small" @click="handleUploadImage">
+            <el-icon><Picture /></el-icon>图片</el-button
           >
-          <el-button size="small" icon="VideoCamera" @click="handleUploadVideo"
-            >视频</el-button
-          >
-          <el-button size="small" icon="Files" @click="handleUploadFile"
-            >文件</el-button
+          <el-button size="small" @click="handleUploadVideo">
+            <el-icon><VideoCamera /></el-icon>视频</el-button>
+
+          <el-button size="small" @click="handleUploadFile"
+            ><el-icon><Files /></el-icon>文件</el-button
           >
         </div>
         <div class="message-editor">
@@ -153,28 +187,97 @@
     <!-- 群成员对话框 -->
     <el-dialog v-model="showMembersDialog" title="群成员" width="400px">
       <div class="member-list">
-        <div
-          v-for="member in currentChat?.members"
-          :key="member.id"
-          class="member-item"
-        >
-          <el-avatar :size="32" :src="member.avatar" />
-          <span class="member-name">{{ member.nickname }}</span>
-          <el-tag size="small" type="success" v-if="member.isAdmin"
-            >管理员</el-tag
-          >
-        </div>
+        <template v-for="role in ['owner', 'admin', 'member']" :key="role">
+          <div v-if="getMembersByRole(role).length > 0" class="role-section">
+            <div class="role-title">
+              {{ getRoleTitle(role) }}
+              <span class="role-count"
+                >({{ getMembersByRole(role).length }})</span
+              >
+            </div>
+            <div
+              v-for="member in getMembersByRole(role)"
+              :key="member.id"
+              class="member-item"
+            >
+              <el-avatar :size="32" :src="member.avatar" />
+              <span class="member-name">{{ member.nickname }}</span>
+              <el-tag size="small" :type="getRoleTagType(role)">
+                {{ getRoleLabel(role) }}
+              </el-tag>
+            </div>
+          </div>
+        </template>
       </div>
     </el-dialog>
+
+    <!-- 添加创建群聊对话框 -->
+    <div v-if="showCreateGroupDialog" class="dialog-overlay">
+      <div class="create-group-dialog">
+        <div class="dialog-header">
+          <h3>创建群聊</h3>
+          <button class="close-btn" @click="showCreateGroupDialog = false">
+            <Icon icon="mdi:close" />
+          </button>
+        </div>
+
+        <div class="dialog-content">
+          <div class="group-name-input">
+            <label>群聊名称</label>
+            <input v-model="groupName" placeholder="请输入群聊名称" />
+          </div>
+
+          <div class="friends-list">
+            <div class="list-header">选择好友</div>
+            <div class="friends-container">
+              <div
+                v-for="chat in privateChatList"
+                :key="chat.id"
+                class="friend-item"
+                :class="{ selected: selectedFriends.includes(chat.userId) }"
+                @click="toggleFriendSelection(chat.userId)"
+              >
+                <img :src="chat.avatar" class="friend-avatar" />
+                <div class="friend-info">
+                  <div class="friend-name">{{ chat.name }}</div>
+                </div>
+                <Icon
+                  :icon="
+                    selectedFriends.includes(chat.userId)
+                      ? 'mdi:checkbox-marked-circle'
+                      : 'mdi:checkbox-blank-circle-outline'
+                  "
+                  class="select-icon"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dialog-footer">
+          <button class="cancel-btn" @click="showCreateGroupDialog = false">
+            取消
+          </button>
+          <button
+            class="submit-btn"
+            :disabled="!groupName.trim() || selectedFriends.length === 0"
+            @click="handleCreateGroup"
+          >
+            创建
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onUnmounted } from "vue";
-import { Search, Picture, VideoCamera, Files } from "@element-plus/icons-vue";
+import { Search, Picture, Files, VideoCamera } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import request from "../api/request";
 import websocketService from "../utils/websocketService";
+import { Icon } from "@iconify/vue";
 
 // 状态变量
 const chatType = ref("all");
@@ -185,6 +288,9 @@ const showMembersDialog = ref(false);
 const messageList = ref(null);
 const currentUserId = ref(1); // 当前用户ID，实际应从用户状态获取
 const currentUser = ref(null);
+const showCreateGroupDialog = ref(false);
+const groupName = ref("");
+const selectedFriends = ref([]);
 
 // 聊天列表数据
 // const chats = ref([
@@ -300,7 +406,7 @@ const chats = ref([]);
 // 过滤后的聊天列表
 const filteredChats = computed(() => {
   return chats.value
-    .filter((chat) => chatType.value === 'all' || chat.type === chatType.value)
+    .filter((chat) => chatType.value === "all" || chat.type === chatType.value)
     .filter(
       (chat) =>
         chat.name.toLowerCase().includes(searchText.value.toLowerCase()) ||
@@ -327,7 +433,7 @@ const fetchChats = async () => {
 // 选择聊天
 const selectChat = async (chat) => {
   currentChat.value = chat;
-  
+
   // 获取聊天历史记录
   try {
     const response = await request.get(`/chat/messages/${chat.id}`);
@@ -378,7 +484,7 @@ const fetchUserInfo = async (userId) => {
       ElMessage.error("获取用户信息失败");
     }
   } catch (error) {
-    console.error('获取用户信息失败:', error);
+    console.error("获取用户信息失败:", error);
     ElMessage.error("获取用户信息失败");
   }
 };
@@ -391,22 +497,24 @@ const sendMessage = async () => {
     content: messageText.value,
     chatId: currentChat.value.id,
     senderId: currentUserId.value,
-    senderName: currentUser.value?.nickname || '用户' + currentUserId.value,
-    senderAvatar: currentUser.value?.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
+    senderName: currentUser.value?.nickname || "用户" + currentUserId.value,
+    senderAvatar:
+      currentUser.value?.avatar ||
+      "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
     createdTime: new Date().toISOString(),
     tempId: Date.now(), // 添加临时ID
-    status: 'sending'
+    status: "sending",
   };
 
   try {
     // 添加消息到本地聊天记录（状态为发送中）
     addMessageToChat(currentChat.value, message);
-    
+
     // 清空输入框
-    messageText.value = '';
+    messageText.value = "";
 
     // 发送消息
-    if (currentChat.value.type === 'private') {
+    if (currentChat.value.type === "private") {
       websocketService.sendPrivateMessage(currentChat.value.userId, message);
     } else {
       websocketService.sendGroupMessage(currentChat.value.id, message);
@@ -415,9 +523,11 @@ const sendMessage = async () => {
     console.error(error);
     ElMessage.error("发送消息失败");
     // 更新消息状态为发送失败
-    const failedMessage = currentChat.value.messages.find(m => m.tempId === message.tempId);
+    const failedMessage = currentChat.value.messages.find(
+      (m) => m.tempId === message.tempId
+    );
     if (failedMessage) {
-      failedMessage.status = 'failed';
+      failedMessage.status = "failed";
     }
   }
 };
@@ -485,12 +595,12 @@ onMounted(async () => {
     ElMessage.error("用户未登录");
     return;
   }
-  
+
   // 设置消息处理回调
   websocketService.onMessage((type, data) => {
     handleWebSocketMessage(type, data);
   });
-  
+
   // 获取聊天列表
   fetchChats();
 });
@@ -502,17 +612,19 @@ onUnmounted(() => {
 
 // 处理 WebSocket 消息
 const handleWebSocketMessage = (type, data) => {
-  if (type === 'private') {
+  if (type === "private") {
     handlePrivateMessage(data);
-  } else if (type === 'group') {
+  } else if (type === "group") {
     handleGroupMessage(data);
   }
 };
 
 // 处理群聊消息
 const handleGroupMessage = (data) => {
-  const chat = chats.value.find(c => c.type === 'group' && c.id === data.sendTo);
-  
+  const chat = chats.value.find(
+    (c) => c.type === "group" && c.id === data.sendTo
+  );
+
   if (chat) {
     // 将有新消息的群聊移到列表开头
     const index = chats.value.indexOf(chat);
@@ -523,20 +635,22 @@ const handleGroupMessage = (data) => {
 
     // 如果是发送者收到自己的消息确认
     if (data.senderId === currentUserId.value) {
-      const existingMessage = chat.messages.find(m => m.tempId === data.tempId);
+      const existingMessage = chat.messages.find(
+        (m) => m.tempId === data.tempId
+      );
       if (existingMessage) {
         // 更新现有消息的状态和ID
         Object.assign(existingMessage, {
           id: data.id,
-          status: 'sent',
-          createdTime: data.createdTime
+          status: "sent",
+          createdTime: data.createdTime,
         });
       }
     } else {
       // 如果是接收到他人的消息
       addMessageToChat(chat, {
         ...data,
-        status: 'received'
+        status: "received",
       });
     }
   }
@@ -544,9 +658,10 @@ const handleGroupMessage = (data) => {
 
 // 处理私聊消息
 const handlePrivateMessage = (data) => {
-  const chat = chats.value.find(c => 
-    c.type === 'private' && 
-    (c.userId === data.senderId || c.userId === data.targetUserId)
+  const chat = chats.value.find(
+    (c) =>
+      c.type === "private" &&
+      (c.userId === data.senderId || c.userId === data.targetUserId)
   );
 
   if (chat) {
@@ -559,20 +674,22 @@ const handlePrivateMessage = (data) => {
 
     // 如果是发送者收到自己的消息确认
     if (data.senderId === currentUserId.value) {
-      const existingMessage = chat.messages.find(m => m.tempId === data.tempId);
+      const existingMessage = chat.messages.find(
+        (m) => m.tempId === data.tempId
+      );
       if (existingMessage) {
         // 更新现有消息的状态和ID
         Object.assign(existingMessage, {
           id: data.id,
-          status: 'sent',
-          createdTime: data.createdTime
+          status: "sent",
+          createdTime: data.createdTime,
         });
       }
     } else {
       // 如果是接收到他人的消息
       addMessageToChat(chat, {
         ...data,
-        status: 'received'
+        status: "received",
       });
     }
   }
@@ -586,8 +703,8 @@ const fetchGroupInfo = async (groupId) => {
       return response.data.data;
     }
   } catch (error) {
-    console.error('获取群聊信息失败:', error);
-    ElMessage.error('获取群聊信息失败');
+    console.error("获取群聊信息失败:", error);
+    ElMessage.error("获取群聊信息失败");
   }
   return null;
 };
@@ -595,29 +712,176 @@ const fetchGroupInfo = async (groupId) => {
 // 向聊天添加消息
 const addMessageToChat = (chat, message) => {
   chat.messages = chat.messages || [];
-  
+
   // 更新最后一条消息
   chat.lastMessage = {
     content: message.content,
     createdTime: message.createdTime,
-    contentType: message.contentType || 'text'
+    contentType: message.contentType || "text",
   };
-  
+
   // 如果不是发送中的消息，直接添加
-  if (message.status !== 'sending' || !chat.messages.find(m => m.tempId === message.tempId)) {
+  if (
+    message.status !== "sending" ||
+    !chat.messages.find((m) => m.tempId === message.tempId)
+  ) {
     chat.messages.push(message);
   }
-  
+
   // 如果消息不是自己发的，且不是当前聊天，增加未读计数
-  if (message.senderId !== currentUserId.value && currentChat.value?.id !== chat.id) {
+  if (
+    message.senderId !== currentUserId.value &&
+    currentChat.value?.id !== chat.id
+  ) {
     chat.unreadCount = (chat.unreadCount || 0) + 1;
   }
-  
+
   // 如果是当前聊天，滚动到底部
   if (currentChat.value?.id === chat.id) {
     nextTick(() => {
       scrollToBottom();
     });
+  }
+};
+
+// 获取私聊列表
+const privateChatList = computed(() => {
+  return chats.value.filter((chat) => chat.type === "private");
+});
+
+// 选择/取消选择好友
+const toggleFriendSelection = (userId) => {
+  const index = selectedFriends.value.indexOf(userId);
+  if (index === -1) {
+    selectedFriends.value.push(userId);
+  } else {
+    selectedFriends.value.splice(index, 1);
+  }
+};
+
+// 创建群聊
+const handleCreateGroup = async () => {
+  if (!groupName.value.trim() || selectedFriends.value.length === 0) return;
+
+  try {
+    const response = await request.post("/chat/group/add", {
+      name: groupName.value.trim(),
+      userIds: selectedFriends.value,
+    });
+
+    if (response.data.code === 1) {
+      ElMessage.success("创建群聊成功");
+      showCreateGroupDialog.value = false;
+      groupName.value = "";
+      selectedFriends.value = [];
+      // 刷新聊天列表
+      await fetchChats();
+    } else {
+      ElMessage.error(response.data.msg || "创建群聊失败");
+    }
+  } catch (error) {
+    console.error("创建群聊失败:", error);
+    ElMessage.error("创建群聊失败");
+  }
+};
+
+// 根据角色获取成员列表
+const getMembersByRole = (role) => {
+  return (
+    currentChat.value?.members?.filter((member) => member.role === role) || []
+  );
+};
+
+// 获取角色标题
+const getRoleTitle = (role) => {
+  const titles = {
+    owner: "群主",
+    admin: "管理员",
+    member: "群成员",
+  };
+  return titles[role];
+};
+
+// 获取角色标签
+const getRoleLabel = (role) => {
+  const labels = {
+    owner: "群主",
+    admin: "管理员",
+    member: "成员",
+  };
+  return labels[role];
+};
+
+// 获取角色标签类型
+const getRoleTagType = (role) => {
+  const types = {
+    owner: "danger",
+    admin: "warning",
+    member: "info",
+  };
+  return types[role];
+};
+
+// 判断是否为群主
+const isGroupOwner = computed(() => {
+  if (!currentChat.value || currentChat.value.type !== "group") return false;
+  const currentMember = currentChat.value.members?.find(
+    (m) => m.id === currentUserId.value
+  );
+  return currentMember?.role === "owner";
+});
+
+// 处理删除好友
+const handleDeleteFriend = async () => {
+  try {
+    const response = await request.delete(
+      `/user/deleteFriend/${currentChat.value.userId}`
+    );
+    if (response.data.code === 1) {
+      ElMessage.success("删除好友成功");
+      // 从聊天列表中移除
+      const index = chats.value.findIndex((c) => c.id === currentChat.value.id);
+      if (index > -1) {
+        chats.value.splice(index, 1);
+      }
+      // 清空当前聊天
+      currentChat.value = null;
+    } else {
+      ElMessage.error(response.data.msg || "删除好友失败");
+    }
+  } catch (error) {
+    console.error("删除好友失败:", error);
+    ElMessage.error("删除好友失败");
+  }
+};
+
+// 处理群聊操作（退出或解散）
+const handleGroupAction = async () => {
+  try {
+    const chatId = currentChat.value.id;
+    const url = isGroupOwner.value
+      ? `/chat/group/delete/${chatId}`
+      : `/chat/group/exit/${chatId}`;
+
+    const response = await request.delete(url);
+    if (response.data.code === 1) {
+      ElMessage.success(isGroupOwner.value ? "解散群聊成功" : "退出群聊成功");
+      // 从聊天列表中移除
+      const index = chats.value.findIndex((c) => c.id === chatId);
+      if (index > -1) {
+        chats.value.splice(index, 1);
+      }
+      // 清空当前聊天
+      currentChat.value = null;
+    } else {
+      ElMessage.error(
+        response.data.msg ||
+          (isGroupOwner.value ? "解散群聊失败" : "退出群聊失败")
+      );
+    }
+  } catch (error) {
+    console.error("群聊操作失败:", error);
+    ElMessage.error(isGroupOwner.value ? "解散群聊失败" : "退出群聊失败");
   }
 };
 </script>
@@ -637,11 +901,18 @@ const addMessageToChat = (chat, message) => {
   border-right: 1px solid #ebeef5;
   display: flex;
   flex-direction: column;
+  margin-bottom: 25px;
 }
 
 .list-header {
   padding: 16px;
   border-bottom: 1px solid #ebeef5;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -807,16 +1078,22 @@ const addMessageToChat = (chat, message) => {
 
 .input-area {
   border-top: 1px solid #ebeef5;
-  padding: 12px;
+  padding: 4px;
+  padding-bottom: 24px;
+  background-color: #fff;
+  border-radius: 0 0 8px 0;
+  margin-bottom: 10px;
 }
 
 .toolbar {
-  padding: 8px;
+  padding: 4px;
   border-bottom: 1px solid #ebeef5;
+  margin-bottom: 4px;
 }
 
 .message-editor {
-  padding: 12px;
+  padding: 8px;
+  padding-bottom: 12px;
   display: flex;
   gap: 12px;
 }
@@ -835,17 +1112,210 @@ const addMessageToChat = (chat, message) => {
 .member-list {
   max-height: 400px;
   overflow-y: auto;
+  padding: 0 12px;
+}
+
+.role-section {
+  margin-bottom: 16px;
+}
+
+.role-title {
+  font-size: 14px;
+  color: #606266;
+  padding: 8px 0;
+  border-bottom: 1px solid #ebeef5;
+  margin-bottom: 8px;
+}
+
+.role-count {
+  color: #909399;
+  font-size: 12px;
+  margin-left: 4px;
 }
 
 .member-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px;
-  border-bottom: 1px solid #ebeef5;
+  padding: 10px;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.member-item:hover {
+  background-color: #f5f7fa;
 }
 
 .member-name {
   flex: 1;
+  font-size: 14px;
+  color: #303133;
+}
+
+.el-tag {
+  min-width: 48px;
+  text-align: center;
+}
+
+.create-group-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #1890ff;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.3s;
+}
+
+.create-group-btn:hover {
+  background: #40a9ff;
+}
+
+.create-group-btn .iconify {
+  font-size: 16px;
+}
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.create-group-dialog {
+  width: 90%;
+  max-width: 500px;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dialog-header {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dialog-header h3 {
+  margin: 0;
+}
+
+.dialog-content {
+  padding: 20px;
+}
+
+.group-name-input {
+  margin-bottom: 20px;
+}
+
+.group-name-input label {
+  display: block;
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.group-name-input input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  outline: none;
+}
+
+.friends-list {
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+}
+
+.list-header {
+  padding: 12px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.friends-container {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.friend-item:hover {
+  background: #f5f5f5;
+}
+
+.friend-item.selected {
+  background: #e6f7ff;
+}
+
+.friend-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 12px;
+}
+
+.friend-info {
+  flex: 1;
+}
+
+.friend-name {
+  font-size: 14px;
+  color: #333;
+}
+
+.select-icon {
+  font-size: 20px;
+  color: #1890ff;
+}
+
+.dialog-footer {
+  padding: 16px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-btn,
+.submit-btn {
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background: #f5f5f5;
+  border: none;
+  color: #666;
+}
+
+.submit-btn {
+  background: #1890ff;
+  border: none;
+  color: white;
+}
+
+.submit-btn:disabled {
+  background: #d9d9d9;
+  cursor: not-allowed;
 }
 </style>

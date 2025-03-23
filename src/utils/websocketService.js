@@ -1,6 +1,9 @@
-import { Client } from '@stomp/stompjs';
-import { ElMessage } from 'element-plus';
-import request from '../api/request';
+import {
+  Client
+} from '@stomp/stompjs';
+import {
+  ElMessage
+} from 'element-plus';
 import SockJS from 'sockjs-client';
 
 class WebSocketService {
@@ -14,9 +17,10 @@ class WebSocketService {
 
   async connect(userId, groups = []) {
     this.stompClient = new Client({
-      brokerURL: 'http://localhost:8080/ws',
+      brokerURL: `ws://localhost:8080/ws?token=${localStorage.getItem('token')}`,
       connectHeaders: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
       },
       debug: function (str) {
         console.log('STOMP: ' + str);
@@ -24,27 +28,32 @@ class WebSocketService {
       reconnectDelay: 3000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
-      webSocketFactory: () => {
+    });
+
+    // 如果浏览器不支持 WebSocket，则使用 SockJS
+    if (typeof WebSocket !== 'function') {
+      ElMessage.error('当前浏览器不支持 WebSocket');
+      this.stompClient.webSocketFactory = () => {
         console.log('创建 SockJS 连接...');
-        const sockjs = new SockJS('http://localhost:8080/ws');
-        
+        const sockjs = new SockJS(`http://localhost:8080/ws?token=${localStorage.getItem('token')}`);
+
         sockjs.onopen = () => {
           console.log('SockJS 连接已打开:', sockjs.url);
         };
-        
+
         sockjs.onclose = (e) => {
           console.log('SockJS 连接已关闭:', e.reason);
         };
-        
+
         return sockjs;
       }
-    });
+    }
 
     this.stompClient.onConnect = async () => {
       this.connected = true;
       this.reconnectAttempts = 0;
       console.log('WebSocket 连接成功');
-      
+
       // 订阅用户私聊频道
       this.subscribeToPrivateChat(userId);
 
@@ -64,7 +73,7 @@ class WebSocketService {
         headers: frame.headers,
         body: frame.body
       });
-      this.handleConnectionError();
+      // this.handleConnectionError();
     };
 
     this.stompClient.onWebSocketError = (event) => {
@@ -77,7 +86,7 @@ class WebSocketService {
         timeStamp: event.timeStamp,
         isTrusted: event.isTrusted
       });
-      this.handleConnectionError();
+      // this.handleConnectionError();
     };
 
     this.stompClient.onWebSocketClose = (event) => {
@@ -104,14 +113,14 @@ class WebSocketService {
     } catch (error) {
       console.error('WebSocket 激活失败:', error);
       console.error('错误堆栈:', error.stack);
-      this.handleConnectionError();
+      // this.handleConnectionError();
     }
   }
 
   // 订阅私聊频道
   subscribeToPrivateChat(userId) {
     if (!this.connected) return;
-    
+
     const subscription = this.stompClient.subscribe(
       `/user/${userId}/private`,
       (message) => {
@@ -123,14 +132,14 @@ class WebSocketService {
         }
       }
     );
-    
+
     this.subscriptions.set(`private_${userId}`, subscription);
   }
 
   // 订阅群聊频道
   subscribeToGroupChat(groupId) {
     if (!this.connected) return;
-    
+
     const subscription = this.stompClient.subscribe(
       `/topic/group/${groupId}`,
       (message) => {
@@ -142,7 +151,7 @@ class WebSocketService {
         }
       }
     );
-    
+
     this.subscriptions.set(`group_${groupId}`, subscription);
   }
 
@@ -182,7 +191,7 @@ class WebSocketService {
       ElMessage.error('WebSocket 未连接');
       return;
     }
-    
+
     this.stompClient.publish({
       destination: '/app/group-message',
       body: JSON.stringify({
@@ -215,7 +224,6 @@ class WebSocketService {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       console.log(`尝试重新连接 (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-      setTimeout(() => this.connect(), 3000);
     } else {
       ElMessage.error('WebSocket 连接失败，请刷新页面重试');
     }
@@ -229,7 +237,7 @@ class WebSocketService {
         subscription.unsubscribe();
       });
       this.subscriptions.clear();
-      
+
       this.stompClient.deactivate();
       this.connected = false;
       this.stompClient = null;
@@ -237,4 +245,4 @@ class WebSocketService {
   }
 }
 
-export default new WebSocketService(); 
+export default new WebSocketService();

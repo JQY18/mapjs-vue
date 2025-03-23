@@ -21,8 +21,22 @@
             <span class="label">年龄：</span>
             <span class="age">{{ userInfo.age }}岁</span>
           </div>
-          <div class="edit-btn" v-if="userInfo.id === currentUserId" @click="showEditDialog = true">
+          <div 
+            class="action-btn" 
+            v-if="userInfo.id === currentUserId" 
+            @click="showEditDialog = true"
+          >
             <Icon icon="mdi:edit" />
+            <span>修改信息</span>
+          </div>
+          <div 
+            class="action-btn" 
+            :class="{ 'add-friend': !isFriend, 'delete-friend': isFriend }" 
+            v-else 
+            @click="isFriend ? handleDeleteFriend() : handleAddFriend()"
+          >
+            <Icon :icon="isFriend ? 'mdi:account-remove' : 'mdi:account-plus'" />
+            <span>{{ isFriend ? '删除好友' : '加好友' }}</span>
           </div>
         </div>
       </div>
@@ -38,7 +52,7 @@
         </div>
         
         <!-- 关注 -->
-        <div 
+        <!-- <div 
           class="stat-item"
           :class="{ active: currentTab === 'followers' }"
           @click="switchTab('followers')"
@@ -46,16 +60,16 @@
           <div class="stat-value">{{ userInfo.followers }}</div>
           <div class="stat-label">粉丝</div>
         </div>
-        
+         -->
         <!-- 粉丝-->
-        <div 
+        <!-- <div 
           class="stat-item"
           :class="{ active: currentTab === 'following' }"
           @click="switchTab('following')"
         >
           <div class="stat-value">{{ userInfo.following }}</div>
           <div class="stat-label">关注</div>
-        </div>
+        </div> -->
         
         <!-- 收藏 -->
         <div 
@@ -76,7 +90,11 @@
         <div v-if="currentTab === 'posts'" class="tab-content">
           <div v-for="post in userPosts" :key="post.id" class="post-card">
             <div class="post-header">
-              <img :src="post.avatar" class="avatar" />
+              <img 
+                :src="post.avatar" 
+                class="avatar" 
+                @click="handleAvatarClick(post.userId)"
+              />
               <div class="user-info">
                 <div class="username">{{ post.username }}</div>
                 <div class="post-time">{{ post.time }}</div>
@@ -156,7 +174,7 @@
         <div v-if="currentTab === 'collections'" class="tab-content">
           <div v-for="post in collections" :key="post.id" class="post-card">
             <div class="post-header">
-              <img :src="post.avatar" class="avatar" />
+              <img :src="post.avatar" class="avatar" @click="handleAvatarClick(post.userId)" />
               <div class="user-info">
                 <div class="username">{{ post.username }}</div>
                 <div class="post-time">{{ formatTime(post.createTime) }}</div>
@@ -380,6 +398,7 @@ import ImageDialog from '../components/ImageDialog.vue'
 import { userApi } from '../api/user'
 import { postApi } from '../api/post'
 import request from '../api/request'
+import { ElMessage,ElMessageBox } from 'element-plus'
 
 const currentUserId = computed(() => {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -616,7 +635,7 @@ const submitComment = async () => {
   try {
     if (!replyTo.value) {
       // 发表新评论
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
       const { data } = await postApi.addComment(
         currentPost.value.id,
         user.id,
@@ -627,20 +646,20 @@ const submitComment = async () => {
         await getComments(currentPost.value.id)
         newComment.value = ''
       }
-    } else {
+  } else {
       // 发表回复
       const response = await request.post("/reply/add", {
         fatherId: replyTo.value.comment.id,
         commenterId: replyTo.value.comment.commenterId,
         replierId: JSON.parse(localStorage.getItem("user") || "{}").id,
-        content: newComment.value,
+      content: newComment.value,
       })
 
       if (response.data.code === 1) {
         await getComments(currentPost.value.id)
-        newComment.value = ''
-        replyTo.value = null
-      }
+  newComment.value = ''
+  replyTo.value = null
+}
     }
   } catch (error) {
     console.error('发表评论/回复失败:', error)
@@ -700,6 +719,7 @@ const fetchUserPosts = async () => {
         const user = JSON.parse(localStorage.getItem('user') || '{}')
         return {
           id: post.id,
+          userId: post.userId,
           username: userInfo.value.nickname || userInfo.value.username,
           avatar: userInfo.value.avatar,
           content: post.content,
@@ -811,11 +831,20 @@ watch(() => userInfo.value, (newValue) => {
   }
 }, { immediate: true })
 
+// 监听路由变化
+watch(() => route.params.id, (newId) => {
+  if (newId) {
+    fetchUserInfo()
+    // 重置当前标签为动态
+    currentTab.value = 'posts'
+  }
+}, { immediate: true })
+
 // 组件挂载时获取用户信息
 onMounted(() => {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
   if (user.id) {
-    fetchUserInfo()
+  fetchUserInfo()
   } else {
     router.push('/login')
   }
@@ -879,6 +908,75 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('更新用户信息失败:', error)
   }
+}
+
+// 添加好友状态
+const isFriend = ref(false)
+
+// 获取好友状态
+const checkFriendStatus = async () => {
+  try {
+    const response = await request.get(`/user/checkFriend/${userInfo.value.id}`)
+    if (response.data.code === 1) {
+      isFriend.value = response.data.data
+    }
+  } catch (error) {
+    console.error('检查好友状态失败:', error)
+  }
+}
+
+// 添加好友方法
+const handleAddFriend = async () => {
+  try {
+    const response = await request.post(`/user/addFriend/${userInfo.value.id}`)
+    if (response.data.code === 1) {
+      ElMessage.success('好友请求已发送')
+      checkFriendStatus() // 重新检查好友状态
+    } else {
+      ElMessage.error(response.data.msg || '发送好友请求失败')
+    }
+  } catch (error) {
+    console.error('发送好友请求失败:', error)
+    ElMessage.error('发送好友请求失败')
+  }
+}
+
+// 删除好友方法
+const handleDeleteFriend = async () => {
+  try {
+    await ElMessageBox.confirm('确定要删除该好友吗？你将会丢失与该好友的全部聊天记录！！', '提示', {
+      type: 'warning'
+    })
+    const response = await request.delete(`/user/deleteFriend/${userInfo.value.id}`)
+    if (response.data.code === 1) {
+      ElMessage.success('删除好友成功')
+      isFriend.value = false
+    } else {
+      ElMessage.error(response.data.msg || '删除好友失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除好友失败:', error)
+      ElMessage.error('删除好友失败')
+    }
+  }
+}
+
+// 监听用户信息变化，检查好友状态
+watch(() => userInfo.value, (newValue) => {
+  if (newValue && newValue.id) {
+    checkFriendStatus()
+  }
+}, { immediate: true })
+
+// 添加头像点击处理方法
+const handleAvatarClick = (userId: number) => {
+  // 如果点击的是当前页面的用户头像，则不进行跳转
+  if (userId === userInfo.value.id) {
+    return
+  }
+  // 跳转到对应用户的个人主页
+  router.push(`/personal/${userId}`)
 }
 </script>
 
@@ -1024,6 +1122,12 @@ const handleSubmit = async () => {
   height: 32px;
   border-radius: 50%;
   margin-right: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.avatar:hover {
+  transform: scale(1.1);
 }
 
 .username {
@@ -1619,5 +1723,43 @@ const handleSubmit = async () => {
   background: #1890ff;
   border: none;
   color: white;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  background: #1890ff;
+  color: white;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btn:hover {
+  background: #40a9ff;
+  transform: translateY(-1px);
+}
+
+.action-btn .iconify {
+  font-size: 16px;
+}
+
+.action-btn.add-friend {
+  background: #52c41a;
+}
+
+.action-btn.add-friend:hover {
+  background: #73d13d;
+}
+
+.action-btn.delete-friend {
+  background: #ff4d4f;
+}
+
+.action-btn.delete-friend:hover {
+  background: #ff7875;
 }
 </style> 

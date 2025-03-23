@@ -34,6 +34,7 @@ request.interceptors.response.use(
         case 401:
           // 未授权，跳转到登录页
           localStorage.removeItem('token')
+          localStorage.removeItem('user')
           window.location.href = '/login'
           break
         case 403:
