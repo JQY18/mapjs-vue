@@ -70,6 +70,11 @@ const router = createRouter({
           name: 'VRMap',
           component: () => import('../views/vrmap.vue')
         },
+        {
+          path: '/lost-found',
+          name: 'LostFound',
+          component: () => import('../views/LostFound.vue')
+        },
       ]
     },
     

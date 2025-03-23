@@ -109,7 +109,8 @@ const allTabs = [
   { id: 'personal', name: '我的', path: '/personal' },
   { id: 'notice',name: '公告', path: '/notice' },
   { id: 'message',name: '消息', path: '/message' },
-  { id: 'mail',name: '信箱', path: '/mail' }
+  { id: 'mail',name: '信箱', path: '/mail' },
+  {id:'lost-found',name:'失物招领',path:'/lost-found'}
 ]
 
 const showLogoutConfirm = ref(false)
