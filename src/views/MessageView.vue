@@ -460,6 +460,18 @@ const selectChat = async (chat) => {
     }
   }
 
+  // 获取当前私聊对方在线状态
+  if (chat.type === "private") {
+    try {
+      const response = await request.get(`/chat/online/${chat.userId}`);
+      if (response.data.code === 1) {
+        chat.online = response.data.data;
+      }
+    } catch (error) {
+      ElMessage.error("获取在线状态失败");
+    }
+  }
+
   // 获取群聊成员列表
   if (chat.type === "group") {
     try {
