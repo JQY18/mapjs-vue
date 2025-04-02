@@ -20,7 +20,9 @@
               required
               placeholder="请输入昵称"
               class="input-with-icon"
+              @blur="validateNickname"
             />
+            <div class="field-error" v-if="errors.nickname">{{ errors.nickname }}</div>
           </div>
 
           <div class="form-group">
@@ -35,7 +37,9 @@
               required
               placeholder="请输入用户名"
               class="input-with-icon"
+              @blur="validateUsername"
             />
+            <div class="field-error" v-if="errors.username">{{ errors.username }}</div>
           </div>
           
           <div class="form-group">
@@ -50,7 +54,53 @@
               required
               placeholder="请输入密码"
               class="input-with-icon"
+              @blur="validatePassword"
             />
+            <div class="field-error" v-if="errors.password">{{ errors.password }}</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="email">
+              <Icon icon="mdi:email" class="input-icon"/>
+              邮箱
+            </label>
+            <div class="input-with-button">
+              <input
+                id="email"
+                v-model="email"
+                type="email"
+                required
+                placeholder="请输入邮箱"
+                class="input-with-icon"
+                @blur="validateEmail"
+              />
+              <button 
+                type="button" 
+                @click="sendCode" 
+                :disabled="!canSendCode || isCodeSending || cooldown > 0" 
+                class="code-button"
+              >
+                {{ cooldown > 0 ? `${cooldown}秒后重试` : '发送验证码' }}
+              </button>
+            </div>
+            <div class="field-error" v-if="errors.email">{{ errors.email }}</div>
+          </div>
+          
+          <div class="form-group">
+            <label for="code">
+              <Icon icon="mdi:numeric" class="input-icon"/>
+              验证码
+            </label>
+            <input
+              id="code"
+              v-model="code"
+              type="text"
+              required
+              placeholder="请输入验证码"
+              class="input-with-icon"
+              @blur="validateCode"
+            />
+            <div class="field-error" v-if="errors.code">{{ errors.code }}</div>
           </div>
 
           <div class="error-message" v-if="errorMessage">
@@ -58,7 +108,7 @@
             {{ errorMessage }}
           </div>
 
-          <button type="submit" :disabled="isLoading" class="submit-button">
+          <button type="submit" :disabled="!canSubmit || isLoading" class="submit-button">
             <span class="button-content">
               <Icon :icon="isLoading ? 'mdi:loading' : 'mdi:account-plus'" 
                     class="button-icon" 
@@ -77,20 +127,165 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { userApi } from '../api/user'
 import { Icon } from '@iconify/vue'
-
+import { ElMessage } from 'element-plus'
 const router = useRouter()
 const nickname = ref('')
 const username = ref('')
 const password = ref('')
+const email = ref('')
+const code = ref('')
 const errorMessage = ref('')
 const isLoading = ref(false)
+const isCodeSending = ref(false)
+const cooldown = ref(0)
+let cooldownTimer = null
 
+// 错误信息对象
+const errors = ref({
+  nickname: '',
+  username: '',
+  password: '',
+  email: '',
+  code: ''
+})
+
+// 验证昵称
+const validateNickname = () => {
+  if (!nickname.value) {
+    errors.value.nickname = '请输入昵称'
+    return false
+  }
+  if (nickname.value.length < 2 || nickname.value.length > 20) {
+    errors.value.nickname = '昵称长度应为2-20个字符'
+    return false
+  }
+  errors.value.nickname = ''
+  return true
+}
+
+// 验证用户名
+const validateUsername = () => {
+  if (!username.value) {
+    errors.value.username = '请输入用户名'
+    return false
+  }
+  if (username.value.length < 4 || username.value.length > 20) {
+    errors.value.username = '用户名长度应为4-20个字符'
+    return false
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(username.value)) {
+    errors.value.username = '用户名只能包含字母、数字和下划线'
+    return false
+  }
+  errors.value.username = ''
+  return true
+}
+
+// 验证密码
+const validatePassword = () => {
+  if (!password.value) {
+    errors.value.password = '请输入密码'
+    return false
+  }
+  if (password.value.length < 6 || password.value.length > 20) {
+    errors.value.password = '密码长度应为6-20个字符'
+    return false
+  }
+  errors.value.password = ''
+  return true
+}
+
+// 验证邮箱
+const validateEmail = () => {
+  if (!email.value) {
+    errors.value.email = '请输入邮箱'
+    return false
+  }
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailPattern.test(email.value)) {
+    errors.value.email = '请输入有效的邮箱地址'
+    return false
+  }
+  errors.value.email = ''
+  return true
+}
+
+// 验证验证码
+const validateCode = () => {
+  if (!code.value) {
+    errors.value.code = '请输入验证码'
+    return false
+  }
+  if (!/^[a-zA-Z0-9]{6}$/.test(code.value)) {
+    errors.value.code = '验证码应为6位字母或数字'
+    return false
+  }
+  errors.value.code = ''
+  return true
+}
+
+// 验证所有基本字段（不包括验证码）
+const validateBasicFields = () => {
+  const isNicknameValid = validateNickname()
+  const isUsernameValid = validateUsername()
+  const isPasswordValid = validatePassword()
+  const isEmailValid = validateEmail()
+  
+  return isNicknameValid && isUsernameValid && isPasswordValid && isEmailValid
+}
+
+// 判断是否可以发送验证码
+const canSendCode = computed(() => {
+  return validateBasicFields()
+})
+
+// 判断是否可以提交表单
+const canSubmit = computed(() => {
+  return canSendCode.value && validateCode()
+})
+
+// 发送验证码
+const sendCode = async () => {
+  if (isCodeSending.value || cooldown.value > 0 || !canSendCode.value) return
+  
+  errorMessage.value = ''
+  isCodeSending.value = true
+  
+  try {
+    const { data } = await userApi.sendEmailCode(email.value)
+    
+    if (data.code === 1) {
+      // 发送成功，开始倒计时
+      cooldown.value = 60
+      cooldownTimer = setInterval(() => {
+        cooldown.value--
+        if (cooldown.value <= 0) {
+          clearInterval(cooldownTimer)
+        }
+      }, 1000)
+    } else {
+      errorMessage.value = data.msg || '验证码发送失败，请重试'
+    }
+  } catch (error) {
+    errorMessage.value = '验证码发送失败，请检查网络连接'
+    console.error(error)
+  } finally {
+    isCodeSending.value = false
+  }
+}
+
+// 注册提交
 const handleSubmit = async () => {
-  if (isLoading.value) return
+  if (isLoading.value || !canSubmit.value) return
+  
+  // 再次验证所有字段
+  if (!validateBasicFields() || !validateCode()) {
+    return
+  }
   
   errorMessage.value = ''
   isLoading.value = true
@@ -99,10 +294,13 @@ const handleSubmit = async () => {
     const { data } = await userApi.register({
       nickname: nickname.value,
       username: username.value,
-      password: password.value
+      password: password.value,
+      email: email.value,
+      code: code.value
     })
     
     if (data.code === 1) {
+      ElMessage.success("注册成功!")
       // 注册成功，跳转到登录页
       router.push('/login')
     } else {
@@ -110,24 +308,34 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     errorMessage.value = '注册失败，请检查网络连接'
+    console.error(error)
   } finally {
     isLoading.value = false
   }
 }
+
+// 组件销毁时清除定时器
+onUnmounted(() => {
+  if (cooldownTimer) {
+    clearInterval(cooldownTimer)
+  }
+})
 </script>
 
 <style scoped>
 .register-container {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px 0;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .register-content {
   flex: 1;
-  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -135,7 +343,7 @@ const handleSubmit = async () => {
 
 .register-box {
   background: white;
-  padding: 40px;
+  padding: 30px;
   border-radius: 16px;
   width: 90%;
   max-width: 420px;
@@ -153,24 +361,24 @@ const handleSubmit = async () => {
 
 .header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 h2 {
   margin: 0;
   color: #1a1a1a;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 600;
 }
 
 .subtitle {
-  margin: 8px 0 0;
+  margin: 5px 0 0;
   color: #666;
   font-size: 14px;
 }
 
 .form-group {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   position: relative;
 }
 
@@ -185,17 +393,48 @@ label {
 }
 
 .input-icon {
-  font-size: 18px;
+  font-size: 16px;
   color: #666;
 }
 
 .input-with-icon {
   width: 95%;
-  padding: 12px 0px 12px 16px;
+  padding: 10px 0px 10px 16px;
   border: 2px solid #e8e8e8;
   border-radius: 8px;
   font-size: 14px;
   transition: all 0.3s ease;
+}
+
+.input-with-button {
+  display: flex;
+  gap: 10px;
+}
+
+.input-with-button .input-with-icon {
+  flex: 1;
+}
+
+.code-button {
+  min-width: 110px;
+  white-space: nowrap;
+  padding: 0 8px;
+  background: #1890ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.code-button:hover:not(:disabled) {
+  background: #40a9ff;
+}
+
+.code-button:disabled {
+  background: #bfbfbf;
+  cursor: not-allowed;
 }
 
 .input-with-icon:focus {
@@ -204,14 +443,21 @@ label {
   outline: none;
 }
 
+.field-error {
+  color: #ff4d4f;
+  font-size: 12px;
+  margin-top: 4px;
+  padding-left: 2px;
+}
+
 .error-message {
   display: flex;
   align-items: center;
   gap: 6px;
   color: #ff4d4f;
-  margin-bottom: 16px;
-  font-size: 14px;
-  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  padding: 6px 10px;
   background: #fff2f0;
   border-radius: 6px;
 }
@@ -222,7 +468,7 @@ label {
 
 .submit-button {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   background: #1890ff;
   color: white;
   border: none;
@@ -253,7 +499,7 @@ label {
 }
 
 .button-icon {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .spin {
@@ -267,7 +513,7 @@ label {
 
 .login-link {
   text-align: center;
-  margin-top: 24px;
+  margin-top: 14px;
   font-size: 14px;
   color: #666;
 }
@@ -287,11 +533,33 @@ label {
 /* 响应式调整 */
 @media (max-width: 480px) {
   .register-box {
-    padding: 30px 20px;
+    padding: 25px 15px;
   }
 
   h2 {
-    font-size: 24px;
+    font-size: 22px;
+  }
+  
+  .form-group {
+    margin-bottom: 14px;
+  }
+  
+  .input-with-icon {
+    padding: 8px 0px 8px 12px;
+  }
+}
+
+@media (max-height: 700px) {
+  .header {
+    margin-bottom: 15px;
+  }
+  
+  .form-group {
+    margin-bottom: 12px;
+  }
+  
+  .input-with-icon {
+    padding: 8px 0px 8px 12px;
   }
 }
 </style> 

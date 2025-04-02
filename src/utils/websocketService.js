@@ -26,8 +26,8 @@ class WebSocketService {
         console.log('STOMP: ' + str);
       },
       reconnectDelay: 3000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
+      heartbeatIncoming: 20000,
+      heartbeatOutgoing: 20000,
     });
 
     // 如果浏览器不支持 WebSocket，则使用 SockJS

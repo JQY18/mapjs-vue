@@ -11,7 +11,23 @@ export const userApi = {
   // 用户注册
   register(data) {
     return request.post('/user/register', data)
-    // 请求体：{ nickname: string, username: string, password: string }
+    // 请求体：{ nickname: string, username: string, password: string, email: string, code: string }
+    // 返回：{ code: 1, msg: "success", data: null }
+  },
+
+  // 发送邮箱验证码
+  sendEmailCode(email) {
+    return request.post('/user/email/code', {
+      email
+    })
+    // 请求体：{ email: string }
+    // 返回：{ code: 1, msg: "success", data: null }
+  },
+
+  // 使用邮箱验证码注册
+  registerWithEmail(data) {
+    return request.post('/user/register/email', data)
+    // 请求体：{ nickname: string, username: string, password: string, email: string, code: string }
     // 返回：{ code: 1, msg: "success", data: null }
   },
 
@@ -33,7 +49,7 @@ export const userApi = {
   // 获取当前登录用户的收藏列表
   getCurrentUserCollections(userId) {
     // const user = JSON.parse(localStorage.getItem('user'))
-    return request.get('/post/current/collections',{
+    return request.get('/post/current/collections', {
       params: {
         userId: userId
       }

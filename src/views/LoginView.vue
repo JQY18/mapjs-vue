@@ -64,7 +64,7 @@
 
       <!-- 添加管理员入口 -->
       <div class="admin-entry">
-        <el-button type="text" class="admin-link" @click="goToAdminLogin">
+        <el-button type="primary" class="admin-link" @click="goToAdminLogin">
           管理员登录
         </el-button>
       </div>
@@ -130,7 +130,7 @@ const goToAdminLogin = () => {
 <style scoped>
 .login-view {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -138,7 +138,7 @@ const goToAdminLogin = () => {
 
 .login-content {
   flex: 1;
-  min-height: 0;
+  min-height: 0px;
   display: flex;
   align-items: center;
   justify-content: center;
