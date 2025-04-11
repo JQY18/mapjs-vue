@@ -108,6 +108,7 @@ const allTabs = [
   { id: 'facilities', name: '生活设施', path: '#' },
   { id: 'personal', name: '我的', path: '/personal' },
   { id: 'notice',name: '公告', path: '/notice' },
+  { id: 'match', name: '找搭子', path: '/match' },
   { id: 'message',name: '消息', path: '/message' },
   { id: 'mail',name: '信箱', path: '/mail' },
   {id:'lost-found',name:'失物招领',path:'/lost-found'}

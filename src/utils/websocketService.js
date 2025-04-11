@@ -6,6 +6,8 @@ import {
 } from 'element-plus';
 import SockJS from 'sockjs-client';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 class WebSocketService {
   constructor() {
     this.stompClient = null;
@@ -14,10 +16,9 @@ class WebSocketService {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
   }
-
   async connect(userId, groups = []) {
     this.stompClient = new Client({
-      brokerURL: `ws://localhost:8080/ws?token=${localStorage.getItem('token')}`,
+      brokerURL: `ws://${API_BASE_URL}/ws/chat?token=${localStorage.getItem('token')}`,
       connectHeaders: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('token')}`

@@ -25,6 +25,11 @@ const router = createRouter({
           component: () => import('../views/MailView.vue')
         },
         {
+          path: 'match',
+          name: 'match',
+          component: () => import('../views/MatchPartnerView.vue')
+        },
+        {
           path: '',
           name: 'map',
           component: () => import('../components/Map.vue')
